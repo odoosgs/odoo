@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- 1. Menú Principal de la Aplicación -->
+    <menuitem
+        id="menu_custody_services_root"
+        name="Servicios de Custodia"
+        sequence="10"
+        web_icon="custody_services,static/description/icon.png"
+        groups="custody_services.group_custody_user"
+    />
+
+    <!-- 2. Menú Horizontal: Servicios (Placeholder para el modelo principal) -->
+    <menuitem
+        id="menu_custody_services"
+        name="Servicios"
+        parent="menu_custody_services_root"
+        sequence="10"
+        groups="custody_services.group_custody_user"
+        # action="custody_services.action_custody_service" <-- Será añadido más tarde
+    />
+    
+    <!-- 3. Menú Horizontal: Carriers -->
+    <menuitem
+        id="menu_custody_carriers"
+        name="Carriers"
+        parent="menu_custody_services_root"
+        sequence="20"
+        action="action_custody_carrier"
+        groups="custody_services.group_custody_user"
+    />
+    
+    <!-- 4. Menú Horizontal: Reportes (Placeholder) -->
+    <menuitem
+        id="menu_custody_reports"
+        name="Reportes"
+        parent="menu_custody_services_root"
+        sequence="30"
+        groups="custody_services.group_custody_user"
+    />
+    
+    <!-- 5. Menú Horizontal: Configuración (Placeholder) -->
+    <menuitem
+        id="menu_custody_configuration"
+        name="Configuración"
+        parent="menu_custody_services_root"
+        sequence="99"
+        groups="custody_services.group_custody_manager"
+    />
+    
+</odoo>
