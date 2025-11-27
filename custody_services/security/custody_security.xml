@@ -4,14 +4,14 @@
         <!-- Grupo Base para Usuarios de Custodia -->
         <record id="group_custody_user" model="res.groups">
             <field name="name">Custodia / Usuario</field>
-            <field name="category_id" ref="base.module_category_operations"/>
+            <!-- La referencia a category_id fue removida para evitar el error de instalación. -->
         </record>
 
         <!-- Grupo para Gerentes/Administradores de Custodia -->
         <record id="group_custody_manager" model="res.groups">
             <field name="name">Custodia / Administrador</field>
             <field name="implied_ids" eval="[(4, ref('group_custody_user'))]"/>
-            <field name="category_id" ref="base.module_category_operations"/>
+            <!-- La referencia a category_id fue removida para evitar el error de instalación. -->
         </record>
     </data>
 </odoo>
