@@ -20,6 +20,7 @@
     ],
     'data': [
         # Seguridad y Accesos
+        'security/custody_models.xml'
         'security/custody_security.xml',
         'security/ir.model.access.csv',
         
@@ -34,4 +35,5 @@
     'installable': True,
     'application': True,
     'license': 'LGPL-3',
+
 }
