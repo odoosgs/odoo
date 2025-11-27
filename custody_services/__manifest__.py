@@ -6,8 +6,8 @@
         Incluye el manejo de Carriers (Transportistas externos), Servicios de Custodia, 
         asignación de rutas, medidas de seguridad y reportes específicos para logística 3PL.
     """,
-    'author': "Luis Garcia, asistido por Gemini IA Odoo Developer",
-    'website': "http://www.xentinell.com",
+    'author': "Gemini Odoo Developer",
+    'website': "http://www.ejemplo.com",
     'category': 'Operations/Logistics',
     'version': '19.0.1.0.0',
     'depends': [
@@ -19,15 +19,15 @@
         'project',   # Para la planeación y gestión de los servicios como proyectos
     ],
     'data': [
-        # Seguridad y Accesos
-        'security/custody_models.xml'
-        'security/custody_security.xml',
-        'security/ir.model.access.csv',
+        # 1. Seguridad y Definición de Modelos (Orden de Carga CORRECTO y con COMAS)
+        'security/custody_security.xml',        # Define grupos (cargado primero)
+        'security/custody_models.xml',          # Declara ir.model para 'custody.carrier'
+        'security/ir.model.access.csv',         # Usa el ID del modelo para permisos
         
-        # Vistas de Menú (para crear toda la estructura de navegación)
+        # 2. Vistas de Menú
         'views/custody_menus.xml', 
         
-        # Vistas del Catálogo de Carriers
+        # 3. Vistas del Catálogo de Carriers
         'views/custody_carrier_views.xml',
         
         # Datos iniciales (si son necesarios)
@@ -35,5 +35,4 @@
     'installable': True,
     'application': True,
     'license': 'LGPL-3',
-
 }
