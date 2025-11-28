@@ -4,6 +4,6 @@
          antes de que ir.model.access.csv lo referencie. -->
     <record id="model_custody_carrier" model="ir.model">
         <field name="name">Transportista de Custodia</field>
-        <field name="model">custody.carrier</field>
+        <field name="model">x_custody.carrier</field>
     </record>
 </odoo>
