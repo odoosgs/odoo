@@ -1,91 +1,99 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
+
     <!-- *** SE ELIMINA LA DECLARACIÓN EXPLÍCITA DEL MODELO (ir.model) PARA EVITAR CONFLICTOS *** -->
-         
-    <!-- Acción de Ventana para el Catálogo de Carriers -->
-    <record id="action_custody_carrier" model="ir.actions.act_window">
-        <field name="name">Carriers (Transportistas)</field>
-        <field name="res_model">x_custody_carrier</field>
+    
+    <!-- Acción de Ventana para el Servicio de Custodia -->
+    <record id="action_custody_service" model="ir.actions.act_window">
+        <field name="name">Servicios de Custodia</field>
+        <field name="res_model">x_custody_service</field>
         <field name="view_mode">list,form</field>
+        <!-- Se eliminó la referencia groups_id para evitar errores de instalación -->
         <field name="help" type="html">
             <p class="o_view_nocontent_smiling_face">
-                Crea el primer Transportista (Carrier) para gestionar los servicios de custodia.
+                Crea un nuevo servicio de custodia vehicular para iniciar la trazabilidad de la operación.
             </p>
         </field>
     </record>
 
-    <!-- Vista de Lista (List View) de Carriers -->
-    <record id="view_custody_carrier_list" model="ir.ui.view">
-        <field name="name">x.custody.carrier.list</field>
-        <field name="model">x_custody_carrier</field>
+    <!-- Vista de Lista (List View) de Servicios - Usando <list> en lugar de <tree> -->
+    <record id="view_custody_service_list" model="ir.ui.view">
+        <field name="name">x.custody.service.list</field>
+        <field name="model">x_custody_service</field>
         <field name="arch" type="xml">
-            <list string="Transportistas" sample="1">
-                <field name="name" string="Carrier"/>
-                <field name="carrier_type"/>
-                <field name="vat" string="RFC/ID Fiscal"/>
-                <field name="contact_name"/>
-                <field name="phone"/>
-                <field name="city"/>
-                <field name="country_id"/>
-                <field name="is_active" widget="boolean_toggle"/>
+            <list string="Servicios de Custodia" decoration-success="state == 'finished'" decoration-info="state == 'in_progress'" sample="1">
+                <field name="name" string="Referencia"/>
+                <field name="client_id"/>
+                <field name="carrier_id"/>
+                <field name="origin_location"/>
+                <field name="dest_location"/>
+                <field name="start_date"/>
+                <field name="custody_agent_id"/>
+                <field name="state" widget="badge"/>
             </list>
         </field>
     </record>
 
-    <!-- Vista de Formulario (Form View) de Carriers -->
-    <record id="view_custody_carrier_form" model="ir.ui.view">
-        <field name="name">x.custody.carrier.form</field>
-        <field name="model">x_custody_carrier</field>
+    <!-- Vista de Formulario (Form View) de Servicios -->
+    <record id="view_custody_service_form" model="ir.ui.view">
+        <field name="name">x.custody.service.form</field>
+        <field name="model">x_custody_service</field>
         <field name="arch" type="xml">
-            <form string="Detalle del Carrier">
+            <form string="Servicio de Custodia">
+                <header>
+                    <button name="action_confirm" string="Confirmar Servicio" type="object" states="draft" class="oe_highlight"/>
+                    <button name="action_start" string="Iniciar Custodia" type="object" states="confirmed" class="oe_highlight"/>
+                    <button name="action_finish" string="Finalizar Servicio" type="object" states="in_progress" class="oe_highlight"/>
+                    <field name="state" widget="statusbar" statusbar_visible="draft,confirmed,in_progress,finished"/>
+                </header>
+                
                 <sheet>
-                    <div class="oe_button_box" name="button_box">
-                        <!-- Botones futuros: e.g., servicios, vehículos, etc. -->
-                    </div>
                     <div class="oe_title">
-                        <label for="name" class="oe_edit_only"/>
                         <h1><field name="name"/></h1>
                     </div>
                     
                     <group>
-                        <group string="Información General">
-                            <field name="carrier_type"/>
-                            <field name="vat" string="RFC/ID Fiscal"/>
-                            <field name="is_active" widget="toggle_button"/>
+                        <group string="Detalles del Servicio">
+                            <field name="client_id" options="{'no_create_edit': True}"/>
+                            <field name="carrier_id" options="{'no_create_edit': True}" domain="[('is_active', '=', True)]"/>
+                            <field name="security_level"/>
+                            <field name="currency_id" invisible="1"/>
                         </group>
-                        <group string="Contacto Principal">
-                            <field name="contact_name"/>
-                            <field name="contact_phone"/>
-                            <field name="phone"/>
-                            <field name="email"/>
+                        <group string="Tiempos">
+                            <field name="start_date"/>
+                            <field name="end_date"/>
+                            <field name="actual_start_date"/>
+                            <field name="actual_end_date"/>
+                            <field name="total_duration" widget="float_time"/>
                         </group>
                     </group>
-                    
+
                     <notebook>
-                        <page name="address" string="Dirección">
+                        <page name="route_info" string="Ruta y Ubicación">
                             <group>
-                                <field name="street"/>
-                                <field name="street2"/>
-                                <field name="zip"/>
-                                <field name="city"/>
-                                <field name="country_id" options="{'no_open': True, 'no_create': True}"/>
-                                <field name="state_id" options="{'no_open': True, 'no_create': True}" 
-                                       context="{'country_id': country_id}"
-                                       domain="[('country_id', '=', country_id)]"/>
+                                <group string="Origen">
+                                    <field name="origin_location"/>
+                                    <field name="origin_coords"/>
+                                </group>
+                                <group string="Destino">
+                                    <field name="dest_location"/>
+                                    <field name="dest_coords"/>
+                                </group>
                             </group>
                         </page>
-                        <page name="compliance" string="Cumplimiento y Seguridad">
-                            <group string="Seguro y Documentación">
-                                <field name="insurance_policy"/>
-                                <field name="insurance_expiry_date"/>
-                                <label for="insurance_expiry_date" string="Estatus de Vigencia"/>
-                                <div>
-                                    <span class="text-muted">Añadir aquí lógica de semáforo (Verde/Rojo)</span>
-                                </div>
+                        <page name="cargo_security" string="Carga y Seguridad">
+                            <group>
+                                <group string="Carga">
+                                    <field name="cargo_description"/>
+                                    <field name="cargo_value"/>
+                                    <field name="insured_value"/>
+                                </group>
+                                <group string="Asignación Interna">
+                                    <field name="custody_agent_id" options="{'no_create_edit': True}"/>
+                                    <!-- ¡CORRECCIÓN! Usamos el ID externo del estado 'in_service' del módulo fleet -->
+                                    <field name="custody_vehicle_id" domain="[('state_id', '=', ref('fleet.state_in_service'))]" options="{'no_create_edit': True}"/>
+                                </group>
                             </group>
-                        </page>
-                        <page name="internal_notes" string="Notas Internas">
-                            <field name="message_ids" widget="mail_thread"/>
                         </page>
                     </notebook>
                 </sheet>
@@ -96,34 +104,5 @@
             </form>
         </field>
     </record>
-    
-    <!-- Vista de Búsqueda (Search View) de Carriers -->
-    <record id="view_custody_carrier_search" model="ir.ui.view">
-        <field name="name">x.custody.carrier.search</field>
-        <field name="model">x_custody_carrier</field>
-        <field name="arch" type="xml">
-            <search string="Buscar Transportista">
-                <field name="name" filter_domain="['|', ('name', 'ilike', self), ('vat', 'ilike', self)]"/>
-                <field name="vat" string="RFC"/>
-                <filter string="Activos" name="filter_active" domain="[('is_active', '=', True)]"/>
-                <separator/>
-                <field name="city"/>
-                <group expand="0" string="Agrupar Por">
-                    <filter string="Tipo de Carrier" name="groupby_type" context="{'group_by':'carrier_type'}"/>
-                    <filter string="Estado" name="groupby_state" context="{'group_by':'state_id'}"/>
-                </group>
-            </search>
-        </field>
-    </record>
-    
+
 </odoo>
-```
-
-**¡Nota importante!** El mismo conflicto de declaración de modelo está presente en el Canvas que seleccionaste:
-
-```xml
-    <!-- Declaración del modelo de servicio para asegurar el ID externo -->
-    <record id="model_x_custody_service" model="ir.model">
-        <field name="name">Servicio de Custodia</field>
-        <field name="model">x_custody_service</field> 
-    </record>
