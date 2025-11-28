@@ -9,23 +9,23 @@
         groups="custody_services.group_custody_user"
     />
 
-    <!-- 2. Menú Horizontal: Servicios (Placeholder para el modelo principal) -->
-    <!-- NOTA: La acción action="custody_services.action_custody_service" se añadirá más tarde. -->
+    <!-- 2. Menú Horizontal: Servicios (Añadimos la acción) -->
     <menuitem
         id="menu_custody_services"
         name="Servicios"
         parent="menu_custody_services_root"
         sequence="10"
+        action="custody_services.action_custody_service"
         groups="custody_services.group_custody_user"
     />
     
-    <!-- 3. Menú Horizontal: Carriers -->
+    <!-- 3. Menú Horizontal: Carriers (CORRECCIÓN: Se añade el prefijo del módulo) -->
     <menuitem
         id="menu_custody_carriers"
         name="Carriers"
         parent="menu_custody_services_root"
         sequence="20"
-        action="action_custody_carrier"
+        action="custody_services.action_custody_carrier"
         groups="custody_services.group_custody_user"
     />
     
