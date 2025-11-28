@@ -3,7 +3,8 @@
 from odoo import models, fields, api
 
 class CustodyCarrier(models.Model):
-    _name = 'x_custody.carrier'
+    # ¡CORRECCIÓN FINAL! Se usa el nombre técnico sin puntos después del prefijo x_.
+    _name = 'x_custody_carrier'
     _description = 'Catálogo de Transportistas Externos (Carriers)'
     _inherit = ['mail.thread', 'mail.activity.mixin']
     _order = 'name'
@@ -36,9 +37,6 @@ class CustodyCarrier(models.Model):
     contact_name = fields.Char(string='Contacto Operativo')
     contact_phone = fields.Char(string='Teléfono Contacto')
     
-    # --- Relaciones (Futuras) ---
-    # service_ids = fields.One2many('custody.service', 'carrier_id', string='Servicios Realizados')
-    
     @api.onchange('country_id')
     def _onchange_country_id(self):
         # Limpia el campo de estado si el país cambia y ya no es México
@@ -48,5 +46,4 @@ class CustodyCarrier(models.Model):
     # Restricción para asegurar que el RFC/VAT es único (si aplica)
     _sql_constraints = [
         ('vat_unique', 'unique(vat)', '¡El RFC/ID Fiscal ya existe en el sistema!'),
-
     ]
