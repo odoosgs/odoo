@@ -1,3 +1,3 @@
 id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
-access_custody_carrier_user,Custody Carrier User,model_custody_carrier,custody_services.group_custody_user,1,1,1,0
-access_custody_carrier_manager,Custody Carrier Manager,model_custody_carrier,custody_services.group_custody_manager,1,1,1,1
+access_custody_carrier_user,Custody Carrier User,model_x_custody_carrier,custody_services.group_custody_user,1,1,1,0
+access_custody_carrier_manager,Custody Carrier Manager,model_x_custody_carrier,custody_services.group_custody_manager,1,1,1,1
