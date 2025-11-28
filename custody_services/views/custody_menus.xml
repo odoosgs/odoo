@@ -10,13 +10,13 @@
     />
 
     <!-- 2. Menú Horizontal: Servicios (Placeholder para el modelo principal) -->
+    <!-- NOTA: La acción action="custody_services.action_custody_service" se añadirá más tarde. -->
     <menuitem
         id="menu_custody_services"
         name="Servicios"
         parent="menu_custody_services_root"
         sequence="10"
         groups="custody_services.group_custody_user"
-        <!-- action="custody_services.action_custody_service" <-- Será añadido más tarde -->
     />
     
     <!-- 3. Menú Horizontal: Carriers -->
