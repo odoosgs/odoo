@@ -4,7 +4,7 @@
     <!-- Acción de Ventana para el Catálogo de Carriers -->
     <record id="action_custody_carrier" model="ir.actions.act_window">
         <field name="name">Carriers (Transportistas)</field>
-        <field name="res_model">custody.carrier</field>
+        <field name="res_model">x_custody.carrier</field>
         <field name="view_mode">tree,form</field>
         <field name="help" type="html">
             <p class="o_view_nocontent_smiling_face">
@@ -15,8 +15,8 @@
 
     <!-- Vista de Lista (Tree View) de Carriers -->
     <record id="view_custody_carrier_tree" model="ir.ui.view">
-        <field name="name">custody.carrier.tree</field>
-        <field name="model">custody.carrier</field>
+        <field name="name">x_custody.carrier.tree</field>
+        <field name="model">x_custody.carrier</field>
         <field name="arch" type="xml">
             <tree string="Transportistas" sample="1">
                 <field name="name" string="Carrier"/>
@@ -33,8 +33,8 @@
 
     <!-- Vista de Formulario (Form View) de Carriers -->
     <record id="view_custody_carrier_form" model="ir.ui.view">
-        <field name="name">custody.carrier.form</field>
-        <field name="model">custody.carrier</field>
+        <field name="name">x_custody.carrier.form</field>
+        <field name="model">x_custody.carrier</field>
         <field name="arch" type="xml">
             <form string="Detalle del Carrier">
                 <sheet>
@@ -95,8 +95,8 @@
     
     <!-- Vista de Búsqueda (Search View) de Carriers -->
     <record id="view_custody_carrier_search" model="ir.ui.view">
-        <field name="name">custody.carrier.search</field>
-        <field name="model">custody.carrier</field>
+        <field name="name">x_custody.carrier.search</field>
+        <field name="model">x_custody.carrier</field>
         <field name="arch" type="xml">
             <search string="Buscar Transportista">
                 <field name="name" filter_domain="['|', ('name', 'ilike', self), ('vat', 'ilike', self)]"/>
@@ -112,4 +112,5 @@
         </field>
     </record>
     
+
 </odoo>
