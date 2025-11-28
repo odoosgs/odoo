@@ -3,7 +3,7 @@
 from odoo import models, fields, api
 
 class CustodyCarrier(models.Model):
-    _name = 'custody.carrier'
+    _name = 'x_custody.carrier'
     _description = 'Catálogo de Transportistas Externos (Carriers)'
     _inherit = ['mail.thread', 'mail.activity.mixin']
     _order = 'name'
@@ -48,4 +48,5 @@ class CustodyCarrier(models.Model):
     # Restricción para asegurar que el RFC/VAT es único (si aplica)
     _sql_constraints = [
         ('vat_unique', 'unique(vat)', '¡El RFC/ID Fiscal ya existe en el sistema!'),
+
     ]
