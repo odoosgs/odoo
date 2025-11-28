@@ -15,7 +15,7 @@
 
     <!-- Vista de Lista (List View) de Carriers -->
     <record id="view_custody_carrier_list" model="ir.ui.view">
-        <field name="name">x.custody.carrier.list</field>
+        <field name="name">x_custody_carrier_list</field> <!-- Simplificado el nombre (sin puntos) -->
         <field name="model">x_custody_carrier</field>
         <field name="arch" type="xml">
             <list string="Transportistas" sample="1">
@@ -33,7 +33,7 @@
 
     <!-- Vista de Formulario (Form View) de Carriers -->
     <record id="view_custody_carrier_form" model="ir.ui.view">
-        <field name="name">x.custody.carrier.form</field>
+        <field name="name">x_custody_carrier_form</field> <!-- Simplificado el nombre (sin puntos) -->
         <field name="model">x_custody_carrier</field>
         <field name="arch" type="xml">
             <form string="Detalle del Carrier">
@@ -96,9 +96,9 @@
         </field>
     </record>
     
-    <!-- Vista de Búsqueda (Search View) de Carriers - CORREGIDA -->
+    <!-- Vista de Búsqueda (Search View) de Carriers -->
     <record id="view_custody_carrier_search" model="ir.ui.view">
-        <field name="name">x.custody.carrier.search</field>
+        <field name="name">x_custody_carrier_search</field> <!-- Simplificado el nombre (sin puntos) -->
         <field name="model">x_custody_carrier</field>
         <field name="arch" type="xml">
             <search string="Buscar Transportista">
@@ -107,10 +107,8 @@
                 <filter string="Activos" name="filter_active" domain="[('is_active', '=', True)]"/>
                 <separator/>
                 <field name="city"/>
-                <!-- Simplificamos los grupos para evitar errores de instalación -->
                 <group expand="0" string="Agrupar Por">
                     <filter string="Tipo de Carrier" name="groupby_carrier_type" context="{'group_by':'carrier_type'}"/>
-                    <!-- Se remueve la agrupación por state_id para evitar conflictos de ORM durante la instalación -->
                 </group>
             </search>
         </field>
