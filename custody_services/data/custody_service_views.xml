@@ -20,12 +20,12 @@
         </field>
     </record>
 
-    <!-- Vista de Lista (Tree View) de Servicios -->
+    <!-- Vista de Lista (Tree View) de Servicios - CORREGIDA: Cambiado <tree> por <list> -->
     <record id="view_custody_service_tree" model="ir.ui.view">
         <field name="name">x.custody.service.tree</field>
         <field name="model">x_custody.service</field>
         <field name="arch" type="xml">
-            <tree string="Servicios de Custodia" decoration-success="state == 'finished'" decoration-info="state == 'in_progress'" sample="1">
+            <list string="Servicios de Custodia" decoration-success="state == 'finished'" decoration-info="state == 'in_progress'" sample="1">
                 <field name="name" string="Referencia"/>
                 <field name="client_id"/>
                 <field name="carrier_id"/>
@@ -34,7 +34,7 @@
                 <field name="start_date"/>
                 <field name="custody_agent_id"/>
                 <field name="state" widget="badge"/>
-            </tree>
+            </list>
         </field>
     </record>
 
