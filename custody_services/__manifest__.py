@@ -19,9 +19,10 @@
         'project',   # Para la planeación y gestión de los servicios como proyectos
     ],
     'data': [
-        # 1. Seguridad y Definición de Modelos (Orden de Carga CORRECTO y con COMAS)
-        'security/custody_security.xml',        # Define grupos (cargado primero)
-        'security/ir.model.access.csv',         # Usa el ID del modelo para permisos
+        # 1. Seguridad
+        'security/custody_security.xml',        # Define grupos
+        # *** SE REMUEVE EL ARCHIVO 'custody_models.xml' AQUÍ PARA EVITAR EL ERROR DE DUPLICIDAD. ***
+        'security/ir.model.access.csv',         # Permisos (usa el modelo creado por Python)
         
         # 2. Vistas de Menú
         'views/custody_menus.xml', 
@@ -35,4 +36,3 @@
     'application': True,
     'license': 'LGPL-3',
 }
-
