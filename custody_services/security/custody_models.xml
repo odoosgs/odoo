@@ -1,9 +1,0 @@
-<?xml version="1.0" encoding="utf-8"?>
-<odoo>
-    <!-- Declaración explícita del modelo custody.carrier para asegurar que el ID exista
-         antes de que ir.model.access.csv lo referencie. -->
-    <record id="model_custody_carrier" model="ir.model">
-        <field name="name">Transportista de Custodia</field>
-        <field name="model">x_custody.carrier</field>
-    </record>
-</odoo>
