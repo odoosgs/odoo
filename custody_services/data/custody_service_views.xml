@@ -1,0 +1,111 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- Declaración del modelo de servicio para asegurar el ID externo -->
+    <record id="model_x_custody_service" model="ir.model">
+        <field name="name">Servicio de Custodia</field>
+        <field name="model">x_custody.service</field>
+    </record>
+
+    <!-- Acción de Ventana para el Servicio de Custodia -->
+    <record id="action_custody_service" model="ir.actions.act_window">
+        <field name="name">Servicios de Custodia</field>
+        <field name="res_model">x_custody.service</field>
+        <field name="view_mode">tree,form</field>
+        <field name="groups_id" eval="[(6, 0, [ref('custody_services.group_custody_user')])]"/>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Crea un nuevo servicio de custodia vehicular para iniciar la trazabilidad de la operación.
+            </p>
+        </field>
+    </record>
+
+    <!-- Vista de Lista (Tree View) de Servicios -->
+    <record id="view_custody_service_tree" model="ir.ui.view">
+        <field name="name">x.custody.service.tree</field>
+        <field name="model">x_custody.service</field>
+        <field name="arch" type="xml">
+            <tree string="Servicios de Custodia" decoration-success="state == 'finished'" decoration-info="state == 'in_progress'" sample="1">
+                <field name="name" string="Referencia"/>
+                <field name="client_id"/>
+                <field name="carrier_id"/>
+                <field name="origin_location"/>
+                <field name="dest_location"/>
+                <field name="start_date"/>
+                <field name="custody_agent_id"/>
+                <field name="state" widget="badge"/>
+            </tree>
+        </field>
+    </record>
+
+    <!-- Vista de Formulario (Form View) de Servicios -->
+    <record id="view_custody_service_form" model="ir.ui.view">
+        <field name="name">x.custody.service.form</field>
+        <field name="model">x_custody.service</field>
+        <field name="arch" type="xml">
+            <form string="Servicio de Custodia">
+                <header>
+                    <button name="action_confirm" string="Confirmar Servicio" type="object" states="draft" class="oe_highlight"/>
+                    <button name="action_start" string="Iniciar Custodia" type="object" states="confirmed" class="oe_highlight"/>
+                    <button name="action_finish" string="Finalizar Servicio" type="object" states="in_progress" class="oe_highlight"/>
+                    <field name="state" widget="statusbar" statusbar_visible="draft,confirmed,in_progress,finished"/>
+                </header>
+                
+                <sheet>
+                    <div class="oe_title">
+                        <h1><field name="name"/></h1>
+                    </div>
+                    
+                    <group>
+                        <group string="Detalles del Servicio">
+                            <field name="client_id" options="{'no_create_edit': True}"/>
+                            <field name="carrier_id" options="{'no_create_edit': True}" domain="[('is_active', '=', True)]"/>
+                            <field name="security_level"/>
+                            <field name="currency_id" invisible="1"/>
+                        </group>
+                        <group string="Tiempos">
+                            <field name="start_date"/>
+                            <field name="end_date"/>
+                            <field name="actual_start_date"/>
+                            <field name="actual_end_date"/>
+                            <field name="total_duration" widget="float_time"/>
+                        </group>
+                    </group>
+
+                    <notebook>
+                        <page name="route_info" string="Ruta y Ubicación">
+                            <group>
+                                <group string="Origen">
+                                    <field name="origin_location"/>
+                                    <field name="origin_coords"/>
+                                </group>
+                                <group string="Destino">
+                                    <field name="dest_location"/>
+                                    <field name="dest_coords"/>
+                                </group>
+                            </group>
+                        </page>
+                        <page name="cargo_security" string="Carga y Seguridad">
+                            <group>
+                                <group string="Carga">
+                                    <field name="cargo_description"/>
+                                    <field name="cargo_value"/>
+                                    <field name="insured_value"/>
+                                </group>
+                                <group string="Asignación Interna">
+                                    <field name="custody_agent_id" options="{'no_create_edit': True}"/>
+                                    <field name="custody_vehicle_id" domain="[('state_id', '=', 'in_service')]" options="{'no_create_edit': True}"/>
+                                </group>
+                            </group>
+                        </page>
+                    </notebook>
+                </sheet>
+                <div class="oe_chatter">
+                    <field name="message_follower_ids" widget="mail_followers"/>
+                    <field name="message_ids" widget="mail_thread"/>
+                </div>
+            </form>
+        </field>
+    </record>
+
+</odoo>
