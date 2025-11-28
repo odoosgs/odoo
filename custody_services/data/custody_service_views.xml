@@ -2,15 +2,16 @@
 <odoo>
 
     <!-- Declaración del modelo de servicio para asegurar el ID externo -->
+    <!-- ¡CORRECCIÓN! El campo 'model' debe usar guion bajo: x_custody_service -->
     <record id="model_x_custody_service" model="ir.model">
         <field name="name">Servicio de Custodia</field>
-        <field name="model">x_custody.service</field>
+        <field name="model">x_custody_service</field> 
     </record>
 
     <!-- Acción de Ventana para el Servicio de Custodia -->
     <record id="action_custody_service" model="ir.actions.act_window">
         <field name="name">Servicios de Custodia</field>
-        <field name="res_model">x_custody.service</field>
+        <field name="res_model">x_custody_service</field>
         <field name="view_mode">list,form</field>
         <!-- Se eliminó la referencia groups_id para evitar errores de instalación -->
         <field name="help" type="html">
@@ -23,7 +24,7 @@
     <!-- Vista de Lista (List View) de Servicios - Usando <list> en lugar de <tree> -->
     <record id="view_custody_service_list" model="ir.ui.view">
         <field name="name">x.custody.service.list</field>
-        <field name="model">x_custody.service</field>
+        <field name="model">x_custody_service</field>
         <field name="arch" type="xml">
             <list string="Servicios de Custodia" decoration-success="state == 'finished'" decoration-info="state == 'in_progress'" sample="1">
                 <field name="name" string="Referencia"/>
@@ -41,7 +42,7 @@
     <!-- Vista de Formulario (Form View) de Servicios -->
     <record id="view_custody_service_form" model="ir.ui.view">
         <field name="name">x.custody.service.form</field>
-        <field name="model">x_custody.service</field>
+        <field name="model">x_custody_service</field>
         <field name="arch" type="xml">
             <form string="Servicio de Custodia">
                 <header>
