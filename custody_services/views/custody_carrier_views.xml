@@ -15,7 +15,7 @@
 
     <!-- Vista de Lista (List View) de Carriers -->
     <record id="view_custody_carrier_list" model="ir.ui.view">
-        <field name="name">x_custody_carrier_list</field> <!-- Simplificado el nombre (sin puntos) -->
+        <field name="name">x_custody_carrier_list</field>
         <field name="model">x_custody_carrier</field>
         <field name="arch" type="xml">
             <list string="Transportistas" sample="1">
@@ -33,7 +33,7 @@
 
     <!-- Vista de Formulario (Form View) de Carriers -->
     <record id="view_custody_carrier_form" model="ir.ui.view">
-        <field name="name">x_custody_carrier_form</field> <!-- Simplificado el nombre (sin puntos) -->
+        <field name="name">x_custody_carrier_form</field>
         <field name="model">x_custody_carrier</field>
         <field name="arch" type="xml">
             <form string="Detalle del Carrier">
@@ -98,7 +98,7 @@
     
     <!-- Vista de Búsqueda (Search View) de Carriers -->
     <record id="view_custody_carrier_search" model="ir.ui.view">
-        <field name="name">x_custody_carrier_search</field> <!-- Simplificado el nombre (sin puntos) -->
+        <field name="name">x_custody_carrier_search</field>
         <field name="model">x_custody_carrier</field>
         <field name="arch" type="xml">
             <search string="Buscar Transportista">
@@ -113,5 +113,6 @@
             </search>
         </field>
     </record>
-    
+
 </odoo>
+
