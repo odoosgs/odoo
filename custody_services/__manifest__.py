@@ -21,7 +21,6 @@
     'data': [
         # 1. Seguridad y Definición de Modelos (Orden de Carga CORRECTO y con COMAS)
         'security/custody_security.xml',        # Define grupos (cargado primero)
-        'security/custody_models.xml',          # Declara ir.model para 'custody.carrier'
         'security/ir.model.access.csv',         # Usa el ID del modelo para permisos
         
         # 2. Vistas de Menú
@@ -36,3 +35,4 @@
     'application': True,
     'license': 'LGPL-3',
 }
+
