@@ -1,119 +1,130 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
 
-    <!-- Acción de Ventana para el Catálogo de Carriers -->
+    <!-- Action Window for Carrier Catalog -->
     <record id="action_custody_carrier" model="ir.actions.act_window">
         <field name="name">Carriers (Transportistas)</field>
         <field name="res_model">x_custody_carrier</field>
         <field name="view_mode">list,form</field>
         <field name="help" type="html">
             <p class="o_view_nocontent_smiling_face">
-                Crea el primer Transportista (Carrier) para gestionar los servicios de custodia.
+                Create the first Carrier to manage custody services.
             </p>
         </field>
     </record>
 
-    <!-- Vista de Lista (List View) de Carriers -->
+    <!-- List View (Updated from tree to list for Odoo 17+) -->
     <record id="view_custody_carrier_list" model="ir.ui.view">
-        <field name="name">x_custody_carrier_list</field>
+        <field name="name">x_custody_carrier.list</field>
         <field name="model">x_custody_carrier</field>
         <field name="arch" type="xml">
             <list string="Transportistas" sample="1">
                 <field name="name" string="Carrier"/>
                 <field name="carrier_type"/>
-                <field name="vat" string="RFC/ID Fiscal"/>
-                <field name="contact_name"/>
-                <field name="phone"/>
-                <field name="city"/>
-                <field name="country_id"/>
+                <field name="vat" string="RFC/ID Fiscal" optional="show"/>
+                <field name="contact_name" optional="hide"/>
+                <field name="phone" optional="show"/>
+                <field name="city" optional="show"/>
+                <field name="country_id" optional="hide"/>
                 <field name="is_active" widget="boolean_toggle"/>
             </list>
         </field>
     </record>
 
-    <!-- Vista de Formulario (Form View) de Carriers -->
+    <!-- Form View -->
     <record id="view_custody_carrier_form" model="ir.ui.view">
-        <field name="name">x_custody_carrier_form</field>
+        <field name="name">x_custody_carrier.form</field>
         <field name="model">x_custody_carrier</field>
         <field name="arch" type="xml">
-            <form string="Detalle del Carrier">
+            <form string="Carrier Detail">
                 <sheet>
                     <div class="oe_button_box" name="button_box">
-                        <!-- Botones futuros: e.g., servicios, vehículos, etc. -->
+                        <!-- Future buttons go here -->
                     </div>
+                    <widget name="web_ribbon" title="Archived" bg_color="bg-danger" invisible="is_active"/>
                     <div class="oe_title">
                         <label for="name" class="oe_edit_only"/>
-                        <h1><field name="name"/></h1>
+                        <h1><field name="name" placeholder="e.g. DHL Logistics"/></h1>
                     </div>
                     
                     <group>
-                        <group string="Información General">
+                        <group string="General Information">
                             <field name="carrier_type"/>
-                            <field name="vat" string="RFC/ID Fiscal"/>
-                            <field name="is_active" widget="toggle_button"/>
+                            <field name="vat" string="RFC/ID Fiscal" placeholder="e.g. MX123456789"/>
+                            <field name="is_active" widget="boolean_toggle"/>
                         </group>
-                        <group string="Contacto Principal">
+                        <group string="Main Contact">
                             <field name="contact_name"/>
-                            <field name="contact_phone"/>
-                            <field name="phone"/>
-                            <field name="email"/>
+                            <field name="contact_phone" widget="phone"/>
+                            <field name="phone" widget="phone"/>
+                            <field name="email" widget="email"/>
                         </group>
                     </group>
                     
                     <notebook>
-                        <page name="address" string="Dirección">
+                        <page name="address" string="Address">
                             <group>
-                                <field name="street"/>
-                                <field name="street2"/>
-                                <field name="zip"/>
-                                <field name="city"/>
-                                <field name="country_id" options="{'no_open': True, 'no_create': True}"/>
-                                <field name="state_id" options="{'no_open': True, 'no_create': True}" 
-                                       context="{'country_id': country_id}"
-                                       domain="[('country_id', '=', country_id)]"/>
-                            </group>
-                        </page>
-                        <page name="compliance" string="Cumplimiento y Seguridad">
-                            <group string="Seguro y Documentación">
-                                <field name="insurance_policy"/>
-                                <field name="insurance_expiry_date"/>
-                                <label for="insurance_expiry_date" string="Estatus de Vigencia"/>
-                                <div>
-                                    <span class="text-muted">Añadir aquí lógica de semáforo (Verde/Rojo)</span>
+                                <span class="o_form_label o_td_label" name="address_name">
+                                    <b>Address</b>
+                                </span>
+                                <div class="o_address_format">
+                                    <field name="street" placeholder="Street..." class="o_address_street"/>
+                                    <field name="street2" placeholder="Street 2..." class="o_address_street"/>
+                                    <field name="city" placeholder="City" class="o_address_city"/>
+                                    <field name="state_id" class="o_address_state" placeholder="State" 
+                                           options="{'no_open': True, 'no_create': True}" 
+                                           context="{'country_id': country_id}"/>
+                                    <field name="zip" placeholder="ZIP" class="o_address_zip"/>
+                                    <field name="country_id" placeholder="Country" class="o_address_country" 
+                                           options="{'no_open': True, 'no_create': True}"/>
                                 </div>
                             </group>
                         </page>
-                        <page name="internal_notes" string="Notas Internas">
-                            <field name="message_ids" widget="mail_thread"/>
+                        <page name="compliance" string="Compliance &amp; Security">
+                            <group string="Insurance &amp; Docs">
+                                <field name="insurance_policy"/>
+                                <field name="insurance_expiry_date"/>
+                                <!-- Note: Logic for traffic light should be a computed field or widget in Python -->
+                            </group>
+                        </page>
+                        <page name="internal_notes" string="Internal Notes">
+                            <!-- Fixed: Replaced mail_thread with a text field. Chatter belongs in the footer. -->
+                            <field name="description" placeholder="Add internal notes here..." nolabel="1"/>
                         </page>
                     </notebook>
                 </sheet>
                 <div class="oe_chatter">
                     <field name="message_follower_ids" widget="mail_followers"/>
+                    <field name="activity_ids"/>
                     <field name="message_ids" widget="mail_thread"/>
                 </div>
             </form>
         </field>
     </record>
     
-<!-- Vista de Búsqueda (Search View) de Carriers -->
-<record id="view_custody_carrier_search" model="ir.ui.view">
-    <field name="name">x_custody_carrier_search</field>
-    <field name="model">x_custody_carrier</field>
-    <field name="arch" type="xml">
-        <search string="Buscar Transportista">
-            <field name="name" filter_domain="['|', ('name', 'ilike', self), ('vat', 'ilike', self)]"/>
-            <field name="vat" string="RFC"/>
-            <filter string="Activos" name="filter_active" domain="[('is_active', '=', True)]"/>
-            <separator/>
-            <field name="city"/>
-            <group expand="0" string="Agrupar Por">
-                <filter string="Tipo de Carrier" name="groupby_carrier_type" context="{'group_by':'carrier_type'}"/>
-            </group>
-        </search>
-    </field>
-</record>
+    <!-- Search View -->
+    <record id="view_custody_carrier_search" model="ir.ui.view">
+        <field name="name">x_custody_carrier.search</field>
+        <field name="model">x_custody_carrier</field>
+        <field name="arch" type="xml">
+            <search string="Search Carrier">
+                <field name="name" filter_domain="['|', ('name', 'ilike', self), ('vat', 'ilike', self)]"/>
+                <field name="vat" string="RFC"/>
+                <field name="contact_name"/>
+                <filter string="Active" name="filter_active" domain="[('is_active', '=', True)]"/>
+                <filter string="Inactive" name="filter_inactive" domain="[('is_active', '=', False)]"/>
+                <separator/>
+                <field name="city"/>
+                <group expand="0" string="Group By">
+                    <filter string="Carrier Type" name="groupby_carrier_type" context="{'group_by':'carrier_type'}"/>
+                    <filter string="Country" name="groupby_country" context="{'group_by':'country_id'}"/>
+                </group>
+                <!-- Search Panel for quick filtering -->
+                <searchpanel>
+                    <field name="carrier_type" icon="fa-truck" enable_counters="1"/>
+                </searchpanel>
+            </search>
+        </field>
+    </record>
 
 </odoo>
-
-
