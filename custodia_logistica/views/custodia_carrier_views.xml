@@ -30,7 +30,7 @@
                         </page>
                     </notebook>
                 </sheet>
-                <!-- Chatter: Ensure model inherits mail.thread and mail.activity.mixin -->
+                <!-- Chatter -->
                 <div class="oe_chatter">
                     <field name="message_follower_ids" groups="base.group_user"/>
                     <field name="activity_ids"/>
@@ -40,24 +40,23 @@
         </field>
     </record>
 
-    <!-- Vista Lista (List - Modern Odoo 17+) -->
-    <record id="view_custodia_carrier_list" model="ir.ui.view">
-        <field name="name">custodia.carrier.list</field>
+    <!-- Vista Lista (Tree clásico para Odoo 19) -->
+    <record id="view_custodia_carrier_tree" model="ir.ui.view">
+        <field name="name">custodia.carrier.tree</field>
         <field name="model">custodia.carrier</field>
         <field name="arch" type="xml">
-            <!-- Use <list> tag for Odoo 17/18/19 -->
-            <list string="Carriers">
+            <tree string="Carriers">
                 <field name="name"/>
                 <field name="rfc"/>
                 <field name="tipo_servicio"/>
                 <field name="telefono"/>
                 <field name="email"/>
                 <field name="active" column_invisible="1"/>
-            </list>
+            </tree>
         </field>
     </record>
 
-    <!-- Vista Búsqueda (Search View - Essential for 'active' field) -->
+    <!-- Vista Búsqueda -->
     <record id="view_custodia_carrier_search" model="ir.ui.view">
         <field name="name">custodia.carrier.search</field>
         <field name="model">custodia.carrier</field>
@@ -76,12 +75,6 @@
     <record id="action_custodia_carrier" model="ir.actions.act_window">
         <field name="name">Carriers</field>
         <field name="res_model">custodia.carrier</field>
-        <!-- 
-            FIX: Even though the XML tag is <list>, the view_mode identifier 
-            in ir.actions.act_window usually remains 'tree' for compatibility 
-            in Odoo 17/18/19 unless specifically patched. 
-            Using 'list' here can cause 'View type list not found' errors in some contexts.
-        -->
         <field name="view_mode">tree,form</field>
         <field name="search_view_id" ref="view_custodia_carrier_search"/>
         <field name="help" type="html">
