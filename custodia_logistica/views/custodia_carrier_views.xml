@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
+    <!-- Vista Formulario -->
     <record id="view_custodia_carrier_form" model="ir.ui.view">
         <field name="name">custodia.carrier.form</field>
         <field name="model">custodia.carrier</field>
@@ -38,23 +39,34 @@
         </field>
     </record>
 
-    <record id="view_custodia_carrier_tree" model="ir.ui.view">
-        <field name="name">custodia.carrier.tree</field>
+    <!-- Vista Lista (List - antes Tree) -->
+    <record id="view_custodia_carrier_list" model="ir.ui.view">
+        <field name="name">custodia.carrier.list</field>
         <field name="model">custodia.carrier</field>
         <field name="arch" type="xml">
-            <tree string="Carriers">
+            <!-- CAMBIO IMPORTANTE v19: Usamos <list> en lugar de <tree> -->
+            <list string="Carriers">
                 <field name="name"/>
                 <field name="rfc"/>
                 <field name="tipo_servicio"/>
                 <field name="telefono"/>
                 <field name="email"/>
-            </tree>
+            </list>
         </field>
     </record>
 
+    <!-- Acción de Ventana -->
     <record id="action_custodia_carrier" model="ir.actions.act_window">
         <field name="name">Carriers</field>
         <field name="res_model">custodia.carrier</field>
-        <field name="view_mode">tree,form</field>
+        <!-- CAMBIO: view_mode usa 'list' en lugar de 'tree' si el sistema lo requiere estrictamente, 
+             pero usualmente se mantiene 'tree' en view_mode por compatibilidad interna del framework.
+             Sin embargo, la definición de la vista debe usar <list>. -->
+        <field name="view_mode">list,form</field>
+        <field name="help" type="html">
+          <p class="o_view_nocontent_smiling_face">
+            Crea tu primer Carrier de custodia
+          </p>
+        </field>
     </record>
 </odoo>
