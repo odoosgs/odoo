@@ -5,41 +5,49 @@
         <field name="name">custodia.carrier.form</field>
         <field name="model">custodia.carrier</field>
         <field name="arch" type="xml">
-            <form string="Carrier">
+            <form string="Carrier de Custodia">
                 <sheet>
                     <div class="oe_title">
                         <h1>
                             <field name="name" placeholder="Nombre del Carrier"/>
                         </h1>
                     </div>
-                    <group>
-                        <group>
-                            <field name="partner_id"/>
-                            <field name="rfc"/>
-                            <field name="tipo_servicio"/>
-                        </group>
-                        <group>
-                            <field name="telefono"/>
-                            <field name="email"/>
-                            <field name="active" widget="boolean_toggle"/>
-                        </group>
-                    </group>
+
                     <notebook>
+                        <!-- Pestaña: Información General -->
+                        <page string="Información General">
+                            <group string="Datos del Carrier">
+                                <field name="partner_id"/>
+                                <field name="rfc"/>
+                                <field name="tipo_servicio"/>
+                            </group>
+                            <group string="Contacto">
+                                <field name="telefono"/>
+                                <field name="email"/>
+                                <field name="active" widget="boolean_toggle"/>
+                            </group>
+                        </page>
+
+                        <!-- Pestaña: Notas -->
                         <page string="Notas">
                             <field name="notas" placeholder="Agregue notas adicionales aquí..."/>
                         </page>
+
+                        <!-- Pestaña: Seguimiento -->
+                        <page string="Seguimiento">
+                            <div class="oe_chatter">
+                                <field name="message_follower_ids"/>
+                                <field name="activity_ids"/>
+                                <field name="message_ids"/>
+                            </div>
+                        </page>
                     </notebook>
                 </sheet>
-                <div class="oe_chatter">
-                    <field name="message_follower_ids" groups="base.group_user"/>
-                    <field name="activity_ids"/>
-                    <field name="message_ids"/>
-                </div>
             </form>
         </field>
     </record>
 
-    <!-- Vista Lista (List en Odoo 19) -->
+    <!-- Vista Lista -->
     <record id="view_custodia_carrier_list" model="ir.ui.view">
         <field name="name">custodia.carrier.list</field>
         <field name="model">custodia.carrier</field>
