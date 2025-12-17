@@ -11,27 +11,29 @@
         - Integración futura con APIs (SCT, Casetas)
         - Control de Servicios de Custodia
     """,
-    'author': "sgs seguridad",
+    'author': "Grupo Brame",
     'website': "https://www.grupobrame.com",
     'category': 'Logistics',
     'license': 'LGPL-3',
     
     # Dependencias base.
-    # 'base' es esencial. 'contacts' puede ser útil si los carriers son partners.
-    'depends': ['base', 'contacts'],
+    # 'base' y 'contacts' son esenciales. 'mail' se añade porque usamos mail.thread en los modelos.
+    'depends': ['base', 'contacts', 'mail'],
 
     # Carga de datos (Vistas, Seguridad, Datos)
+    # --- IMPORTANTE: EL ORDEN ES CRÍTICO ---
+    # 1. Seguridad: Siempre primero para definir accesos.
+    # 2. Vistas de Modelos: Definen las acciones (ir.actions.act_window).
+    # 3. Menús: Usan las acciones definidas anteriormente.
     'data': [
         'security/ir.model.access.csv',
-        'views/custodia_menus.xml',
-        'views/custodia_carrier_views.xml',
-        'views/custodia_ruta_views.xml',
+        'views/custodia_carrier_views.xml', # Define action_custodia_carrier
+        'views/custodia_ruta_views.xml',    # Define action_custodia_ruta
+        'views/custodia_menus.xml',         # Usa las acciones anteriores
     ],
 
     # Archivos estáticos (Iconos, CSS, JS)
     'assets': {
-        # En Odoo 19+ la estructura de assets puede variar, pero esta es la estándar actual.
-        # El icono del módulo se busca automáticamente en static/description/icon.png
     },
 
     'installable': True,
