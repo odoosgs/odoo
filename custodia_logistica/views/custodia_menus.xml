@@ -1,28 +1,18 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
-    <!-- 
-        MENÚ PRINCIPAL (App Icon)
-        Este es el icono principal que aparecerá en el dashboard de Odoo.
-        web_icon="nombre_modulo,static/description/icon.png"
-    -->
+    <!-- MENÚ PRINCIPAL (App Icon) -->
     <menuitem id="menu_custodia_root"
-              name="Servicio de Custodia"
+              name="Servicios de Custodia"
               web_icon="custodia_logistica,static/description/icon.png"
               sequence="10"/>
 
-    <!-- 
-        SUBMENÚ: Catálogos
-        Aquí agruparemos Carriers y Rutas para mantener el orden.
-    -->
+    <!-- SUBMENÚ: Catálogos -->
     <menuitem id="menu_custodia_catalogos"
               name="Catálogos"
               parent="menu_custodia_root"
               sequence="20"/>
 
-    <!-- 
-        ACCIONES DE MENÚ
-        Apuntan a las acciones definidas en los archivos de vista.
-    -->
+    <!-- ACCIONES DE MENÚ -->
     <menuitem id="menu_custodia_carriers"
               name="Carriers"
               parent="menu_custodia_catalogos"
