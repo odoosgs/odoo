@@ -26,12 +26,13 @@
                     </group>
                     <notebook>
                         <page string="Notas">
-                            <field name="notas"/>
+                            <field name="notas" placeholder="Agregue notas adicionales aquí..."/>
                         </page>
                     </notebook>
                 </sheet>
+                <!-- Chatter: Ensure model inherits mail.thread and mail.activity.mixin -->
                 <div class="oe_chatter">
-                    <field name="message_follower_ids"/>
+                    <field name="message_follower_ids" groups="base.group_user"/>
                     <field name="activity_ids"/>
                     <field name="message_ids"/>
                 </div>
@@ -39,19 +40,35 @@
         </field>
     </record>
 
-    <!-- Vista Lista (List - antes Tree) -->
+    <!-- Vista Lista (List - Modern Odoo 17+) -->
     <record id="view_custodia_carrier_list" model="ir.ui.view">
         <field name="name">custodia.carrier.list</field>
         <field name="model">custodia.carrier</field>
         <field name="arch" type="xml">
-            <!-- CAMBIO IMPORTANTE v19: Usamos <list> en lugar de <tree> -->
+            <!-- Use <list> tag for Odoo 17/18/19 -->
             <list string="Carriers">
                 <field name="name"/>
                 <field name="rfc"/>
                 <field name="tipo_servicio"/>
                 <field name="telefono"/>
                 <field name="email"/>
+                <field name="active" column_invisible="1"/>
             </list>
+        </field>
+    </record>
+
+    <!-- Vista Búsqueda (Search View - Essential for 'active' field) -->
+    <record id="view_custodia_carrier_search" model="ir.ui.view">
+        <field name="name">custodia.carrier.search</field>
+        <field name="model">custodia.carrier</field>
+        <field name="arch" type="xml">
+            <search string="Buscar Carriers">
+                <field name="name"/>
+                <field name="rfc"/>
+                <field name="partner_id"/>
+                <separator/>
+                <filter string="Archivados" name="inactive" domain="[('active', '=', False)]"/>
+            </search>
         </field>
     </record>
 
@@ -59,10 +76,14 @@
     <record id="action_custodia_carrier" model="ir.actions.act_window">
         <field name="name">Carriers</field>
         <field name="res_model">custodia.carrier</field>
-        <!-- CAMBIO: view_mode usa 'list' en lugar de 'tree' si el sistema lo requiere estrictamente, 
-             pero usualmente se mantiene 'tree' en view_mode por compatibilidad interna del framework.
-             Sin embargo, la definición de la vista debe usar <list>. -->
-        <field name="view_mode">list,form</field>
+        <!-- 
+            FIX: Even though the XML tag is <list>, the view_mode identifier 
+            in ir.actions.act_window usually remains 'tree' for compatibility 
+            in Odoo 17/18/19 unless specifically patched. 
+            Using 'list' here can cause 'View type list not found' errors in some contexts.
+        -->
+        <field name="view_mode">tree,form</field>
+        <field name="search_view_id" ref="view_custodia_carrier_search"/>
         <field name="help" type="html">
           <p class="o_view_nocontent_smiling_face">
             Crea tu primer Carrier de custodia
