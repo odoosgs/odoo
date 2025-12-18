@@ -7,11 +7,11 @@
     <field name="arch" type="xml">
       <form string="Servicio de Custodia">
         <header>
-          <button name="action_asignar" type="object" string="Asignar" states="solicitado" class="oe_highlight"/>
-          <button name="action_aprobar" type="object" string="Aprobar" states="asignado" class="oe_highlight"/>
-          <button name="action_iniciar" type="object" string="Iniciar" states="aprobado" class="oe_highlight"/>
-          <button name="action_finalizar" type="object" string="Finalizar" states="en_ejecucion" class="oe_highlight"/>
-          <button name="action_cancelar" type="object" string="Cancelar" states="solicitado,asignado,aprobado,en_ejecucion"/>
+          <button name="action_asignar" type="object" string="Asignar" class="oe_highlight"/>
+          <button name="action_aprobar" type="object" string="Aprobar" class="oe_highlight"/>
+          <button name="action_iniciar" type="object" string="Iniciar" class="oe_highlight"/>
+          <button name="action_finalizar" type="object" string="Finalizar" class="oe_highlight"/>
+          <button name="action_cancelar" type="object" string="Cancelar"/>
           <button name="action_generar_asignaciones_por_nivel" type="object" string="Generar Asignaciones" class="oe_highlight"/>
           <!-- Smart buttons -->
           <button name="action_view_purchases" type="object" class="oe_stat_button" icon="fa-shopping-cart">
@@ -23,7 +23,8 @@
           <button name="action_view_planning" type="object" class="oe_stat_button" icon="fa-calendar">
             <field name="planning_count" widget="statinfo"/>
           </button>
-          <field name="state" widget="statusbar" statusbar_visible="solicitado,asignado,aprobado,en_ejecucion,finalizado,cancelado"/>
+          <field name="state" widget="statusbar"
+                 statusbar_visible="solicitado,asignado,aprobado,en_ejecucion,finalizado,cancelado"/>
         </header>
 
         <sheet>
@@ -105,7 +106,6 @@
                   <field name="state"/>
                 </tree>
               </field>
-              <button type="action" name="%(purchase.purchase_form_action)d" string="Crear Orden de Compra" class="oe_highlight"/>
             </page>
 
             <!-- Facturación -->
@@ -120,7 +120,6 @@
                   <field name="state"/>
                 </tree>
               </field>
-              <button type="action" name="%(account.action_move_out_invoice_type)d" string="Crear Factura" class="oe_highlight"/>
             </page>
 
             <!-- Planeación -->
