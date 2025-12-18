@@ -3,7 +3,7 @@ from odoo import models, fields
 
 class CustodiaAsignacion(models.Model):
     _name = 'custodia.asignacion'
-    _description = 'Asignación de Recursos de Custodia'
+    _description = 'Asignación de Custodia'
     _inherit = ['mail.thread']
 
     service_id = fields.Many2one(
@@ -13,10 +13,7 @@ class CustodiaAsignacion(models.Model):
         ondelete='cascade'
     )
 
-    nivel_seguridad = fields.Selection(
-        related='service_id.nivel_seguridad',
-        store=True
-    )
+    notes = fields.Text(string='Notas de asignación')
 
     employee_ids = fields.Many2many(
         'hr.employee',
@@ -47,6 +44,3 @@ class CustodiaAsignacion(models.Model):
         string='Radios',
         domain=[('type','=','product')]
     )
-
-    # Campo notes que causaba el error
-    notes = fields.Text(string='Notas de asignación')
