@@ -52,7 +52,7 @@ class CustodiaService(models.Model):
 
     planner_id = fields.Many2one('res.users', string='Planeador', tracking=True)
 
-    # One2many hacia el modelo hijo correcto
+    # Relación hacia el modelo hijo
     asignacion_ids = fields.One2many('custodia.asignacion', 'service_id', string='Asignaciones')
 
     # Smart buttons
