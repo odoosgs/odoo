@@ -18,18 +18,20 @@
         'planning',
     ],
     'data': [
-        # Datos primero (secuencias, seguridad, menus base)
+        # Datos primero
         'data/sequence.xml',
         'security/ir_model_access.xml',
         'security/ir_rule.xml',
-        'views/custodia_menus.xml',
 
-        # Catálogos existentes
+        # Catálogos
         'views/custodia_carrier_views.xml',
         'views/custodia_ruta_views.xml',
 
-        # Servicio principal
+        # Servicio principal (define la acción antes de usarla en menús)
         'views/custodia_service_views.xml',
+
+        # Menús (usan las acciones ya definidas)
+        'views/custodia_menus.xml',
 
         # Portal
         'views/portal_templates.xml',
