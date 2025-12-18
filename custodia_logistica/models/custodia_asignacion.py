@@ -51,5 +51,5 @@ class CustodiaAsignacion(models.Model):
         domain=[('type', '=', 'product')]
     )
 
-    # Notas
+    # Notas de asignación (campo que causaba el error si faltaba)
     notes = fields.Text(string='Notas de asignación')
