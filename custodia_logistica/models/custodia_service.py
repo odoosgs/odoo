@@ -12,13 +12,16 @@ class CustodiaService(models.Model):
     sequence = fields.Char(string='Consecutivo', copy=False, readonly=True, default='Nuevo')
 
     # Cliente y contacto
-    partner_id = fields.Many2one('res.partner', string='Cliente', required=True, domain=[('is_company','=',True)], tracking=True)
-    contact_id = fields.Many2one('res.partner', string='Persona solicitante', required=True, domain="[('parent_id','=',partner_id)]", tracking=True)
+    partner_id = fields.Many2one('res.partner', string='Cliente', required=True,
+                                 domain=[('is_company','=',True)], tracking=True)
+    contact_id = fields.Many2one('res.partner', string='Persona solicitante', required=True,
+                                 domain="[('parent_id','=',partner_id)]", tracking=True)
 
     # Catálogos
     carrier_id = fields.Many2one('custodia.carrier', string='Carrier', required=True, tracking=True)
     ruta_id = fields.Many2one('custodia.ruta', string='Ruta', required=True, tracking=True)
-    ruta_tipo = fields.Selection([('local','Local'), ('foraneo','Foráneo')], string='Tipo de ruta', related='ruta_id.tipo', store=True)
+    ruta_tipo = fields.Selection([('local','Local'), ('foraneo','Foráneo')],
+                                 string='Tipo de ruta', related='ruta_id.tipo', store=True)
 
     # Parámetros del servicio
     start_datetime = fields.Datetime(string='Inicio del servicio', required=True, tracking=True)
@@ -31,7 +34,7 @@ class CustodiaService(models.Model):
     ], string='Nivel de seguridad', required=True, tracking=True)
     load_id = fields.Char(string='Load ID', required=True, index=True, tracking=True)
 
-    # Datos Carrier (mandatorios salvo los explícitamente opcionales)
+    # Datos Carrier
     tipo_unidad = fields.Char(string='Tipo de unidad', required=True)
     placas = fields.Char(string='Placas', required=True)
     operador1_nombre = fields.Char(string='Nombre del operador 1', required=True)
@@ -61,6 +64,18 @@ class CustodiaService(models.Model):
     purchase_ids = fields.One2many('purchase.order', 'custodia_service_id', string='Órdenes de compra')
     account_move_ids = fields.One2many('account.move', 'custodia_service_id', string='Facturas')
     planning_slot_ids = fields.One2many('planning.slot', 'custodia_service_id', string='Planeación')
+
+    # Contadores para smart buttons
+    purchase_count = fields.Integer(string='Órdenes de compra', compute='_compute_counts')
+    invoice_count = fields.Integer(string='Facturas', compute='_compute_counts')
+    planning_count = fields.Integer(string='Planeaciones', compute='_compute_counts')
+
+    @api.depends('purchase_ids', 'account_move_ids', 'planning_slot_ids')
+    def _compute_counts(self):
+        for rec in self:
+            rec.purchase_count = len(rec.purchase_ids)
+            rec.invoice_count = len(rec.account_move_ids)
+            rec.planning_count = len(rec.planning_slot_ids)
 
     # Validación de tiempo mínimo según ruta
     @api.constrains('start_datetime', 'ruta_tipo')
@@ -104,3 +119,37 @@ class CustodiaService(models.Model):
 
     def action_cancelar(self):
         self.write({'state': 'cancelado'})
+
+    # Stub para botón "Generar Asignaciones"
+    def action_generar_asignaciones_por_nivel(self):
+        for rec in self:
+            rec.message_post(body=f'Asignaciones generadas automáticamente para nivel {rec.nivel_seguridad}.')
+        return True
+
+    # Smart button actions
+    def action_view_purchases(self):
+        return {
+            'type': 'ir.actions.act_window',
+            'name': 'Órdenes de compra',
+            'res_model': 'purchase.order',
+            'domain': [('custodia_service_id','=',self.id)],
+            'view_mode': 'list,form',
+        }
+
+    def action_view_invoices(self):
+        return {
+            'type': 'ir.actions.act_window',
+            'name': 'Facturas',
+            'res_model': 'account.move',
+            'domain': [('custodia_service_id','=',self.id)],
+            'view_mode': 'list,form',
+        }
+
+    def action_view_planning(self):
+        return {
+            'type': 'ir.actions.act_window',
+            'name': 'Planeaciones',
+            'res_model': 'planning.slot',
+            'domain': [('custodia_service_id','=',self.id)],
+            'view_mode': 'list,form',
+        }
