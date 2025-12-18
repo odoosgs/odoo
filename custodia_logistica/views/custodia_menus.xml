@@ -1,27 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
-    <!-- MENÚ PRINCIPAL (App Icon) -->
-    <menuitem id="menu_custodia_root"
-              name="Servicios de Custodia"
-              web_icon="custodia_logistica,static/description/icon.png"
-              sequence="10"/>
+  <menuitem id="menu_custodia_root" name="Servicios de Custodia" sequence="10"/>
 
-    <!-- SUBMENÚ: Catálogos -->
-    <menuitem id="menu_custodia_catalogos"
-              name="Catálogos"
-              parent="menu_custodia_root"
-              sequence="20"/>
+  <menuitem id="menu_custodia_catalogos" name="Catálogos" parent="menu_custodia_root" sequence="20"/>
+  <menuitem id="menu_custodia_carriers" name="Carriers" parent="menu_custodia_catalogos" action="action_custodia_carrier" sequence="10"/>
+  <menuitem id="menu_custodia_rutas" name="Rutas" parent="menu_custodia_catalogos" action="action_custodia_ruta" sequence="20"/>
 
-    <!-- ACCIONES DE MENÚ -->
-    <menuitem id="menu_custodia_carriers"
-              name="Carriers"
-              parent="menu_custodia_catalogos"
-              action="action_custodia_carrier"
-              sequence="10"/>
-
-    <menuitem id="menu_custodia_rutas"
-              name="Rutas"
-              parent="menu_custodia_catalogos"
-              action="action_custodia_ruta"
-              sequence="20"/>
+  <menuitem id="menu_custodia_servicios" name="Servicios" parent="menu_custodia_root" action="action_custodia_service" sequence="30"/>
 </odoo>
