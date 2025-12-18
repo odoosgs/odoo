@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
+  <!-- Vista Formulario -->
   <record id="view_custodia_service_form" model="ir.ui.view">
     <field name="name">custodia.service.form</field>
     <field name="model">custodia.service</field>
@@ -11,16 +12,30 @@
           <button name="action_iniciar" type="object" string="Iniciar" states="aprobado" class="oe_highlight"/>
           <button name="action_finalizar" type="object" string="Finalizar" states="en_ejecucion" class="oe_highlight"/>
           <button name="action_cancelar" type="object" string="Cancelar" states="solicitado,asignado,aprobado,en_ejecucion"/>
+          <button name="action_generar_asignaciones_por_nivel" type="object" string="Generar Asignaciones" class="oe_highlight"/>
+          <!-- Smart buttons -->
+          <button name="action_view_purchases" type="object" class="oe_stat_button" icon="fa-shopping-cart">
+            <field name="purchase_count" widget="statinfo"/>
+          </button>
+          <button name="action_view_invoices" type="object" class="oe_stat_button" icon="fa-file-text-o">
+            <field name="invoice_count" widget="statinfo"/>
+          </button>
+          <button name="action_view_planning" type="object" class="oe_stat_button" icon="fa-calendar">
+            <field name="planning_count" widget="statinfo"/>
+          </button>
           <field name="state" widget="statusbar" statusbar_visible="solicitado,asignado,aprobado,en_ejecucion,finalizado,cancelado"/>
         </header>
+
         <sheet>
           <div class="oe_title">
             <h1><field name="sequence" readonly="1"/></h1>
           </div>
+
           <group string="Datos del cliente">
             <field name="partner_id"/>
             <field name="contact_id"/>
           </group>
+
           <group string="Servicio">
             <field name="carrier_id"/>
             <field name="ruta_id"/>
@@ -31,6 +46,7 @@
           </group>
 
           <notebook>
+            <!-- Datos del Carrier -->
             <page string="Datos del Carrier">
               <group>
                 <field name="tipo_unidad"/>
@@ -52,11 +68,12 @@
               </group>
             </page>
 
+            <!-- Asignaciones -->
             <page string="Asignaciones">
               <group>
                 <field name="planner_id"/>
               </group>
-              <field name="asignacion_ids" context="{'default_service_id': active_id}">
+              <field name="asignacion_ids">
                 <tree editable="bottom">
                   <field name="notes"/>
                   <field name="employee_ids"/>
@@ -78,8 +95,9 @@
               </field>
             </page>
 
+            <!-- Compras -->
             <page string="Compras">
-              <field name="purchase_ids" context="{'default_custodia_service_id': active_id}">
+              <field name="purchase_ids">
                 <tree>
                   <field name="name"/>
                   <field name="partner_id"/>
@@ -90,8 +108,9 @@
               <button type="action" name="%(purchase.purchase_form_action)d" string="Crear Orden de Compra" class="oe_highlight"/>
             </page>
 
+            <!-- Facturación -->
             <page string="Facturación">
-              <field name="account_move_ids" context="{'default_custodia_service_id': active_id}">
+              <field name="account_move_ids">
                 <tree>
                   <field name="name"/>
                   <field name="invoice_date"/>
@@ -104,8 +123,9 @@
               <button type="action" name="%(account.action_move_out_invoice_type)d" string="Crear Factura" class="oe_highlight"/>
             </page>
 
+            <!-- Planeación -->
             <page string="Planeación">
-              <field name="planning_slot_ids" context="{'default_custodia_service_id': active_id}">
+              <field name="planning_slot_ids">
                 <tree>
                   <field name="name"/>
                   <field name="start_datetime"/>
@@ -116,6 +136,7 @@
               </field>
             </page>
 
+            <!-- Seguimiento -->
             <page string="Seguimiento">
               <div class="oe_chatter">
                 <field name="message_follower_ids"/>
@@ -129,6 +150,7 @@
     </field>
   </record>
 
+  <!-- Vista Lista -->
   <record id="view_custodia_service_list" model="ir.ui.view">
     <field name="name">custodia.service.list</field>
     <field name="model">custodia.service</field>
@@ -147,6 +169,7 @@
     </field>
   </record>
 
+  <!-- Acción -->
   <record id="action_custodia_service" model="ir.actions.act_window">
     <field name="name">Servicios</field>
     <field name="res_model">custodia.service</field>
