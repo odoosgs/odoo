@@ -1,2 +1,7 @@
 from . import custodia_carrier
 from . import custodia_ruta
+from . import custodia_service
+from . import custodia_asignacion
+from . import purchase_ext
+from . import account_move_ext
+from . import planning_ext
