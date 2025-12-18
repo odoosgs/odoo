@@ -1,33 +1,44 @@
+# -*- coding: utf-8 -*-
 {
-    'name': "Gestión de Servicios de Custodia",
-    'version': '1.0',
-    'summary': "Gestión integral de servicios de custodia, carriers y rutas.",
-    'description': """
-        Módulo para la administración de servicios de custodia logística.
-        
-        Funcionalidades Principales:
-        - Gestión de Carriers (Transportistas)
-        - Gestión de Rutas y Tramos
-        - Integración futura con APIs (SCT, Casetas)
-        - Control de Servicios de Custodia
-    """,
-    'author': "Grupo Brame",
-    'website': "https://www.grupobrame.com",
-    'category': 'Services',
-    'license': 'LGPL-3',
-    
-    # Dependencias base
-    'depends': ['base', 'contacts', 'mail'],
-
-    # Orden de carga: seguridad → vistas → menús
-    'data': [
-        'security/ir.model.access.csv',
-        'views/custodia_carrier_views.xml',  # Define action_custodia_carrier
-        'views/custodia_ruta_views.xml',     # Define action_custodia_ruta
-        'views/custodia_menus.xml',          # Usa las acciones anteriores
+    'name': 'Custodia Logística',
+    'version': '19.0.1.0',
+    'summary': 'Gestión de servicios de custodia con portal, asignaciones y seguimiento',
+    'category': 'Operations',
+    'author': 'Xentinell',
+    'license': 'OEEL-1',
+    'depends': [
+        'base',
+        'mail',
+        'website',
+        'portal',
+        'hr',
+        'fleet',
+        'purchase',
+        'account',
+        'planning',
     ],
+    'data': [
+        # Datos primero (secuencias, seguridad, menus base)
+        'data/sequence.xml',
+        'security/ir_model_access.xml',
+        'security/ir_rule.xml',
+        'views/custodia_menus.xml',
 
-    'installable': True,
+        # Catálogos existentes
+        'views/custodia_carrier_views.xml',
+        'views/custodia_ruta_views.xml',
+
+        # Servicio principal
+        'views/custodia_service_views.xml',
+
+        # Portal
+        'views/portal_templates.xml',
+    ],
+    'assets': {
+        'web.assets_frontend': [
+            # Si necesitas CSS/JS para el portal, agrégalo aquí
+        ],
+    },
     'application': True,
-    'auto_install': False,
+    'installable': True,
 }
