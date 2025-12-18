@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
-    <!-- Vista Formulario -->
     <record id="view_custodia_carrier_form" model="ir.ui.view">
         <field name="name">custodia.carrier.form</field>
         <field name="model">custodia.carrier</field>
@@ -8,13 +7,9 @@
             <form string="Carrier de Custodia">
                 <sheet>
                     <div class="oe_title">
-                        <h1>
-                            <field name="name" placeholder="Nombre del Carrier"/>
-                        </h1>
+                        <h1><field name="name" placeholder="Nombre del Carrier"/></h1>
                     </div>
-
                     <notebook>
-                        <!-- Pestaña: Información General -->
                         <page string="Información General">
                             <group string="Datos del Carrier">
                                 <field name="partner_id"/>
@@ -27,13 +22,9 @@
                                 <field name="active" widget="boolean_toggle"/>
                             </group>
                         </page>
-
-                        <!-- Pestaña: Notas -->
                         <page string="Notas">
                             <field name="notas" placeholder="Agregue notas adicionales aquí..."/>
                         </page>
-
-                        <!-- Pestaña: Seguimiento -->
                         <page string="Seguimiento">
                             <div class="oe_chatter">
                                 <field name="message_follower_ids"/>
@@ -47,7 +38,6 @@
         </field>
     </record>
 
-    <!-- Vista Lista -->
     <record id="view_custodia_carrier_list" model="ir.ui.view">
         <field name="name">custodia.carrier.list</field>
         <field name="model">custodia.carrier</field>
@@ -63,7 +53,6 @@
         </field>
     </record>
 
-    <!-- Vista Búsqueda -->
     <record id="view_custodia_carrier_search" model="ir.ui.view">
         <field name="name">custodia.carrier.search</field>
         <field name="model">custodia.carrier</field>
@@ -78,16 +67,10 @@
         </field>
     </record>
 
-    <!-- Acción de Ventana -->
     <record id="action_custodia_carrier" model="ir.actions.act_window">
         <field name="name">Carriers</field>
         <field name="res_model">custodia.carrier</field>
         <field name="view_mode">list,form</field>
         <field name="search_view_id" ref="view_custodia_carrier_search"/>
-        <field name="help" type="html">
-          <p class="o_view_nocontent_smiling_face">
-            Crea tu primer Carrier de custodia
-          </p>
-        </field>
     </record>
 </odoo>
