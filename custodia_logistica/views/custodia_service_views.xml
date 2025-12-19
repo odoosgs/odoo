@@ -6,7 +6,6 @@
     <field name="arch" type="xml">
       <form string="Servicio de Custodia">
         <sheet>
-          <!-- Datos principales del servicio -->
           <group>
             <field name="sequence"/>
             <field name="partner_id"/>
@@ -20,33 +19,22 @@
           </group>
 
           <notebook>
-            <!-- Pestaña de asignaciones -->
             <page string="Asignaciones">
-              <!-- Este bloque apunta al modelo hijo custodia.asignacion -->
-              <field name="asignacion_ids">
-                <tree editable="bottom">
-                  <field name="notes"/>
-                  <field name="employee_ids"/>
-                  <field name="vehicle_ids"/>
-                  <field name="candado_ids"/>
-                  <field name="radio_ids"/>
-                </tree>
-                <form>
-                  <sheet>
-                    <group>
-                      <field name="notes"/>
-                      <field name="employee_ids"/>
-                      <field name="vehicle_ids"/>
-                      <field name="candado_ids"/>
-                      <field name="radio_ids"/>
-                    </group>
-                  </sheet>
-                </form>
-              </field>
+              <!-- Usar las vistas del hijo -->
+              <field name="asignacion_ids" mode="tree,form" context="{'default_service_id': active_id}"/>
             </page>
           </notebook>
         </sheet>
       </form>
     </field>
   </record>
+
+  <record id="action_custodia_service" model="ir.actions.act_window">
+    <field name="name">Servicios de Custodia</field>
+    <field name="res_model">custodia.service</field>
+    <field name="view_mode">tree,form</field>
+  </record>
+
+  <menuitem id="menu_custodia_root" name="Custodia de Valores"/>
+  <menuitem id="menu_custodia_service" name="Servicios" parent="menu_custodia_root" action="action_custodia_service"/>
 </odoo>
