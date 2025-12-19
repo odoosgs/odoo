@@ -1,10 +1,31 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
-  <menuitem id="menu_custodia_root" name="Servicios de Custodia" sequence="10"/>
+  <!-- Menú raíz -->
+  <menuitem id="menu_custodia_root" name="Custodia de Valores" sequence="10"/>
 
-  <menuitem id="menu_custodia_catalogos" name="Catálogos" parent="menu_custodia_root" sequence="20"/>
-  <menuitem id="menu_custodia_carriers" name="Carriers" parent="menu_custodia_catalogos" action="action_custodia_carrier" sequence="10"/>
-  <menuitem id="menu_custodia_rutas" name="Rutas" parent="menu_custodia_catalogos" action="action_custodia_ruta" sequence="20"/>
+  <!-- Acción y menú para Servicios -->
+  <record id="action_custodia_service" model="ir.actions.act_window">
+    <field name="name">Servicios de Custodia</field>
+    <field name="res_model">custodia.service</field>
+    <field name="view_mode">tree,form</field>
+  </record>
 
-  <menuitem id="menu_custodia_servicios" name="Servicios" parent="menu_custodia_root" action="action_custodia_service" sequence="30"/>
+  <menuitem id="menu_custodia_service"
+            name="Servicios"
+            parent="menu_custodia_root"
+            action="action_custodia_service"
+            sequence="20"/>
+
+  <!-- Acción y menú para Asignaciones -->
+  <record id="action_custodia_asignacion" model="ir.actions.act_window">
+    <field name="name">Asignaciones de Custodia</field>
+    <field name="res_model">custodia.asignacion</field>
+    <field name="view_mode">tree,form</field>
+  </record>
+
+  <menuitem id="menu_custodia_asignacion"
+            name="Asignaciones"
+            parent="menu_custodia_root"
+            action="action_custodia_asignacion"
+            sequence="30"/>
 </odoo>
