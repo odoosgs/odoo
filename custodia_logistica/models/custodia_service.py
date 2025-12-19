@@ -9,22 +9,16 @@ class CustodiaService(models.Model):
 
     # Identificación y cliente
     sequence = fields.Char(string='Consecutivo', copy=False, readonly=True, default='Nuevo')
-    partner_id = fields.Many2one(
-        'res.partner', string='Cliente', required=True,
-        domain=[('is_company', '=', True)], tracking=True
-    )
-    contact_id = fields.Many2one(
-        'res.partner', string='Persona solicitante', required=True,
-        domain="[('parent_id','=',partner_id)]", tracking=True
-    )
+    partner_id = fields.Many2one('res.partner', string='Cliente', required=True,
+                                 domain=[('is_company', '=', True)], tracking=True)
+    contact_id = fields.Many2one('res.partner', string='Persona solicitante', required=True,
+                                 domain="[('parent_id','=',partner_id)]", tracking=True)
 
     # Logística
     carrier_id = fields.Many2one('custodia.carrier', string='Carrier', required=True, tracking=True)
     ruta_id = fields.Many2one('custodia.ruta', string='Ruta', required=True, tracking=True)
-    ruta_tipo = fields.Selection(
-        [('local', 'Local'), ('foraneo', 'Foráneo')],
-        string='Tipo de ruta', related='ruta_id.tipo', store=True
-    )
+    ruta_tipo = fields.Selection([('local', 'Local'), ('foraneo', 'Foráneo')],
+                                 string='Tipo de ruta', related='ruta_id.tipo', store=True)
 
     # Servicio
     start_datetime = fields.Datetime(string='Inicio del servicio', required=True, tracking=True)
@@ -66,13 +60,9 @@ class CustodiaService(models.Model):
     planner_id = fields.Many2one('res.users', string='Planeador', tracking=True)
 
     # Relación hijo
-    asignacion_ids = fields.One2many(
-        'custodia.asignacion',
-        'service_id',
-        string='Asignaciones'
-    )
+    asignacion_ids = fields.One2many('custodia.asignacion', 'service_id', string='Asignaciones')
 
-    # Smart buttons (extensiones en otros modelos)
+    # Smart buttons
     purchase_ids = fields.One2many('purchase.order', 'custodia_service_id', string='Órdenes de compra')
     account_move_ids = fields.One2many('account.move', 'custodia_service_id', string='Facturas')
     planning_slot_ids = fields.One2many('planning.slot', 'custodia_service_id', string='Planeación')
@@ -104,7 +94,6 @@ class CustodiaService(models.Model):
     def action_cancelar(self):
         self.write({'state': 'cancelado'})
 
-    # Generación de asignaciones (stub)
     def action_generar_asignaciones_por_nivel(self):
         for rec in self:
             rec.message_post(body=f'Asignaciones generadas automáticamente para nivel {rec.nivel_seguridad}.')
