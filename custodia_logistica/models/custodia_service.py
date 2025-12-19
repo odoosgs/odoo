@@ -83,3 +83,61 @@ class CustodiaService(models.Model):
         for rec in self:
             rec.message_post(body=f'Asignaciones generadas automáticamente para nivel {rec.nivel_seguridad}.')
         return True
+
+
+# ------------------------------------------------------------
+# MODELO HIJO: CustodiaAsignacion
+# ------------------------------------------------------------
+class CustodiaAsignacion(models.Model):
+    _name = 'custodia.asignacion'
+    _description = 'Asignación de Custodia'
+
+    service_id = fields.Many2one(
+        'custodia.service',
+        string='Servicio',
+        ondelete='cascade'
+    )
+
+    notes = fields.Text(string='Notas')
+
+    employee_ids = fields.Many2many(
+        'hr.employee',
+        string='Custodios'
+    )
+
+    vehicle_ids = fields.Many2many(
+        'fleet.vehicle',
+        string='Vehículos'
+    )
+
+    candado_ids = fields.Many2many(
+        'custodia.candado',
+        string='Candados'
+    )
+
+    radio_ids = fields.Many2many(
+        'custodia.radio',
+        string='Radios'
+    )
+
+
+# ------------------------------------------------------------
+# MODELOS BÁSICOS: Candado y Radio
+# ------------------------------------------------------------
+class CustodiaCandado(models.Model):
+    _name = 'custodia.candado'
+    _description = 'Candado de Custodia'
+
+    name = fields.Char(string='Referencia', required=True)
+    serial_number = fields.Char(string='Número de serie')
+    active = fields.Boolean(default=True)
+
+
+class CustodiaRadio(models.Model):
+    _name = 'custodia.radio'
+    _description = 'Radio de Custodia'
+
+    name = fields.Char(string='Referencia', required=True)
+    marca = fields.Char(string='Marca')
+    modelo = fields.Char(string='Modelo')
+    active = fields.Boolean(default=True)
