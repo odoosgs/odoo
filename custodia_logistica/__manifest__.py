@@ -21,8 +21,8 @@
         # Datos primero
         'data/sequence.xml',
 
-        # Seguridad
-        'security/ir_model_access.xml',
+        # Seguridad (accesos y reglas)
+        'security/ir.model.access.csv',
         'security/ir_rule.xml',
 
         # Catálogos
