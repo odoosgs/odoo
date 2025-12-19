@@ -21,7 +21,7 @@
         # Datos primero
         'data/sequence.xml',
 
-        # Seguridad (accesos y reglas)
+        # Seguridad
         'security/ir.model.access.csv',
         'security/ir_rule.xml',
 
@@ -29,8 +29,11 @@
         'views/custodia_carrier_views.xml',
         'views/custodia_ruta_views.xml',
 
-        # Servicio principal y asignaciones
+        # Servicio principal
         'views/custodia_service_views.xml',
+
+        # Asignaciones (modelo hijo)
+        'views/custodia_asignacion_views.xml',
 
         # Menús
         'views/custodia_menus.xml',
