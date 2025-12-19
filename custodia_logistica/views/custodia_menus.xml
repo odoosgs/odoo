@@ -3,31 +3,51 @@
   <!-- Menú raíz -->
   <menuitem id="menu_custodia_root" name="Custodia de Valores" sequence="10"/>
 
-  <!-- Acción y menú para Servicios -->
+  <!-- Servicios -->
   <record id="action_custodia_service" model="ir.actions.act_window">
     <field name="name">Servicios de Custodia</field>
     <field name="res_model">custodia.service</field>
     <field name="view_mode">list,form</field>
-    <!-- Opcional: fija la vista lista si la tienes definida -->
-    <!-- <field name="view_id" ref="view_custodia_service_list"/> -->
   </record>
-
   <menuitem id="menu_custodia_service"
             name="Servicios"
             parent="menu_custodia_root"
             action="action_custodia_service"
             sequence="20"/>
 
-  <!-- Acción y menú para Asignaciones -->
+  <!-- Asignaciones -->
   <record id="action_custodia_asignacion" model="ir.actions.act_window">
     <field name="name">Asignaciones de Custodia</field>
     <field name="res_model">custodia.asignacion</field>
     <field name="view_mode">list,form</field>
   </record>
-
   <menuitem id="menu_custodia_asignacion"
             name="Asignaciones"
             parent="menu_custodia_root"
             action="action_custodia_asignacion"
             sequence="30"/>
+
+  <!-- Carriers -->
+  <record id="action_custodia_carrier" model="ir.actions.act_window">
+    <field name="name">Carriers</field>
+    <field name="res_model">custodia.carrier</field>
+    <field name="view_mode">list,form</field>
+  </record>
+  <menuitem id="menu_custodia_carrier"
+            name="Carriers"
+            parent="menu_custodia_root"
+            action="action_custodia_carrier"
+            sequence="40"/>
+
+  <!-- Rutas -->
+  <record id="action_custodia_ruta" model="ir.actions.act_window">
+    <field name="name">Rutas</field>
+    <field name="res_model">custodia.ruta</field>
+    <field name="view_mode">list,form</field>
+  </record>
+  <menuitem id="menu_custodia_ruta"
+            name="Rutas"
+            parent="menu_custodia_root"
+            action="action_custodia_ruta"
+            sequence="50"/>
 </odoo>
