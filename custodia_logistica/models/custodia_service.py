@@ -22,6 +22,7 @@ class CustodiaService(models.Model):
                                  string='Tipo de ruta', related='ruta_id.tipo', store=True)
 
     start_datetime = fields.Datetime(string='Inicio del servicio', required=True, tracking=True)
+    employee_ids = fields.Many2many('hr.employee',string='Custodios')
     nivel_seguridad = fields.Selection([
         ('1','Nivel 1'),
         ('2','Nivel 2'),
