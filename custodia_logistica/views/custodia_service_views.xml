@@ -22,8 +22,8 @@
           <notebook>
             <!-- Pestaña de asignaciones -->
             <page string="Asignaciones">
+              <!-- Este bloque apunta al modelo hijo custodia.asignacion -->
               <field name="asignacion_ids">
-                <!-- Vista tipo lista (tree) del modelo hijo -->
                 <tree editable="bottom">
                   <field name="notes"/>
                   <field name="employee_ids"/>
@@ -31,8 +31,6 @@
                   <field name="candado_ids"/>
                   <field name="radio_ids"/>
                 </tree>
-
-                <!-- Vista tipo formulario del modelo hijo -->
                 <form>
                   <sheet>
                     <group>
