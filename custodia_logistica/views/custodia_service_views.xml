@@ -21,8 +21,8 @@
 
           <notebook>
             <page string="Asignaciones">
-              <!-- Aquí ya no se listan subcampos, se usan las vistas del hijo -->
-              <field name="asignacion_ids" mode="tree,form" context="{'default_service_id': active_id}"/>
+              <!-- Usar las vistas del hijo, sin context con active_id -->
+              <field name="asignacion_ids" mode="tree,form"/>
             </page>
           </notebook>
         </sheet>
