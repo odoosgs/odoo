@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
-  <!-- Vista tipo lista (tree) -->
+  <!-- Vista lista del hijo -->
   <record id="view_custodia_asignacion_tree" model="ir.ui.view">
     <field name="name">custodia.asignacion.tree</field>
     <field name="model">custodia.asignacion</field>
@@ -16,7 +16,7 @@
     </field>
   </record>
 
-  <!-- Vista tipo formulario (form) -->
+  <!-- Vista formulario del hijo -->
   <record id="view_custodia_asignacion_form" model="ir.ui.view">
     <field name="name">custodia.asignacion.form</field>
     <field name="model">custodia.asignacion</field>
@@ -39,4 +39,16 @@
       </form>
     </field>
   </record>
+
+  <!-- Acción y menú para asignaciones -->
+  <record id="action_custodia_asignacion" model="ir.actions.act_window">
+    <field name="name">Asignaciones de Custodia</field>
+    <field name="res_model">custodia.asignacion</field>
+    <field name="view_mode">tree,form</field>
+  </record>
+
+  <menuitem id="menu_custodia_asignacion"
+            name="Asignaciones"
+            parent="menu_custodia_root"
+            action="action_custodia_asignacion"/>
 </odoo>
