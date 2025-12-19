@@ -16,6 +16,7 @@ class CustodiaService(models.Model):
                                  domain="[('parent_id','=',partner_id)]", tracking=True)
 
     carrier_id = fields.Many2one('custodia.carrier', string='Carrier', required=True, tracking=True)
+    notes = fields.Text(string='Notas')
     ruta_id = fields.Many2one('custodia.ruta', string='Ruta', required=True, tracking=True)
     ruta_tipo = fields.Selection([('local','Local'), ('foraneo','Foráneo')],
                                  string='Tipo de ruta', related='ruta_id.tipo', store=True)
