@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
+  <!-- Vista tipo lista (tree) -->
   <record id="view_custodia_asignacion_tree" model="ir.ui.view">
     <field name="name">custodia.asignacion.tree</field>
     <field name="model">custodia.asignacion</field>
@@ -15,6 +16,7 @@
     </field>
   </record>
 
+  <!-- Vista tipo formulario (form) -->
   <record id="view_custodia_asignacion_form" model="ir.ui.view">
     <field name="name">custodia.asignacion.form</field>
     <field name="model">custodia.asignacion</field>
@@ -24,3 +26,17 @@
           <group>
             <field name="service_id" readonly="1"/>
             <field name="notes"/>
+          </group>
+          <group>
+            <field name="employee_ids"/>
+            <field name="vehicle_ids"/>
+          </group>
+          <group>
+            <field name="candado_ids"/>
+            <field name="radio_ids"/>
+          </group>
+        </sheet>
+      </form>
+    </field>
+  </record>
+</odoo>
