@@ -1,18 +1,18 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
   <!-- Vista lista del hijo -->
-  <record id="view_custodia_asignacion_tree" model="ir.ui.view">
-    <field name="name">custodia.asignacion.tree</field>
+  <record id="view_custodia_asignacion_list" model="ir.ui.view">
+    <field name="name">custodia.asignacion.list</field>
     <field name="model">custodia.asignacion</field>
     <field name="arch" type="xml">
-      <tree editable="bottom">
+      <list editable="bottom">
         <field name="service_id"/>
         <field name="notes"/>
         <field name="employee_ids"/>
         <field name="vehicle_ids"/>
         <field name="candado_ids"/>
         <field name="radio_ids"/>
-      </tree>
+      </list>
     </field>
   </record>
 
@@ -44,7 +44,7 @@
   <record id="action_custodia_asignacion" model="ir.actions.act_window">
     <field name="name">Asignaciones de Custodia</field>
     <field name="res_model">custodia.asignacion</field>
-    <field name="view_mode">tree,form</field>
+    <field name="view_mode">list,form</field>
   </record>
 
   <menuitem id="menu_custodia_asignacion"
