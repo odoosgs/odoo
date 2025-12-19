@@ -6,6 +6,7 @@
     <field name="arch" type="xml">
       <form string="Servicio de Custodia">
         <sheet>
+          <!-- Datos principales del servicio -->
           <group>
             <field name="sequence"/>
             <field name="partner_id"/>
@@ -17,21 +18,26 @@
             <field name="start_datetime"/>
             <field name="load_id"/>
           </group>
+
           <notebook>
+            <!-- Pestaña de asignaciones -->
             <page string="Asignaciones">
               <field name="asignacion_ids">
+                <!-- Vista tipo lista (tree) del modelo hijo -->
                 <tree editable="bottom">
-                  <!-- <field name="notes"/> -->
-                 <!-- <field name="employee_ids"/> -->
+                  <field name="notes"/>
+                  <field name="employee_ids"/>
                   <field name="vehicle_ids"/>
                   <field name="candado_ids"/>
                   <field name="radio_ids"/>
                 </tree>
+
+                <!-- Vista tipo formulario del modelo hijo -->
                 <form>
                   <sheet>
                     <group>
-                      <!-- <field name="notes"/> -->
-                      <!--<field name="employee_ids"/>-->
+                      <field name="notes"/>
+                      <field name="employee_ids"/>
                       <field name="vehicle_ids"/>
                       <field name="candado_ids"/>
                       <field name="radio_ids"/>
