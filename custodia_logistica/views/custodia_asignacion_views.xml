@@ -1,22 +1,24 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
-  <!-- Vista lista del hijo -->
+  <!-- Vista lista (List View) -->
   <record id="view_custodia_asignacion_list" model="ir.ui.view">
     <field name="name">custodia.asignacion.list</field>
     <field name="model">custodia.asignacion</field>
     <field name="arch" type="xml">
-      <list editable="bottom">
+      <!-- Odoo 18/19 standard uses <list> instead of <tree> -->
+      <list editable="bottom" multi_edit="1">
         <field name="service_id"/>
-        <field name="notes"/>
-        <field name="employee_ids"/>
-        <field name="vehicle_ids"/>
-        <field name="candado_ids"/>
-        <field name="radio_ids"/>
+        <field name="notes" optional="show"/>
+        <!-- x2many fields require widgets to be usable in list views -->
+        <field name="employee_ids" widget="many2many_tags_avatar" optional="show"/>
+        <field name="vehicle_ids" widget="many2many_tags" optional="show"/>
+        <field name="candado_ids" widget="many2many_tags" optional="hide"/>
+        <field name="radio_ids" widget="many2many_tags" optional="hide"/>
       </list>
     </field>
   </record>
 
-  <!-- Vista formulario del hijo -->
+  <!-- Vista formulario (Form View) -->
   <record id="view_custodia_asignacion_form" model="ir.ui.view">
     <field name="name">custodia.asignacion.form</field>
     <field name="model">custodia.asignacion</field>
@@ -24,31 +26,44 @@
       <form string="Asignación de Custodia">
         <sheet>
           <group>
-            <field name="service_id" readonly="1"/>
-            <field name="notes"/>
+            <group>
+              <field name="service_id" readonly="1"/>
+              <field name="notes"/>
+            </group>
+            <group>
+              <field name="employee_ids" widget="many2many_tags_avatar"/>
+              <field name="vehicle_ids" widget="many2many_tags"/>
+            </group>
           </group>
-          <group>
-            <field name="employee_ids"/>
-            <field name="vehicle_ids"/>
-          </group>
-          <group>
-            <field name="candado_ids"/>
-            <field name="radio_ids"/>
-          </group>
+          <notebook>
+            <page string="Equipamiento Adicional">
+              <group>
+                <field name="candado_ids" widget="many2many_tags"/>
+                <field name="radio_ids" widget="many2many_tags"/>
+              </group>
+            </page>
+          </notebook>
         </sheet>
       </form>
     </field>
   </record>
 
-  <!-- Acción y menú para asignaciones -->
+  <!-- Acción -->
   <record id="action_custodia_asignacion" model="ir.actions.act_window">
     <field name="name">Asignaciones de Custodia</field>
     <field name="res_model">custodia.asignacion</field>
     <field name="view_mode">list,form</field>
+    <field name="help" type="html">
+      <p class="o_view_nocontent_smiling_face">
+        Crear una nueva asignación de custodia
+      </p>
+    </field>
   </record>
 
+  <!-- Menú -->
   <menuitem id="menu_custodia_asignacion"
             name="Asignaciones"
             parent="menu_custodia_root"
-            action="action_custodia_asignacion"/>
+            action="action_custodia_asignacion"
+            sequence="10"/>
 </odoo>
