@@ -29,8 +29,9 @@
         'views/custodia_carrier_views.xml',
         'views/custodia_ruta_views.xml',
 
-        # Servicio principal
+        # Servicio principal (form + list)
         'views/custodia_service_views.xml',
+        'views/custodia_service_list_view.xml',
 
         # Asignaciones (modelo hijo)
         'views/custodia_asignacion_views.xml',
