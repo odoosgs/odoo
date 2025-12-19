@@ -20,6 +20,8 @@
     'data': [
         # Datos primero
         'data/sequence.xml',
+
+        # Seguridad
         'security/ir_model_access.xml',
         'security/ir_rule.xml',
 
@@ -27,10 +29,10 @@
         'views/custodia_carrier_views.xml',
         'views/custodia_ruta_views.xml',
 
-        # Servicio principal (define la acción antes de usarla en menús)
+        # Servicio principal y asignaciones
         'views/custodia_service_views.xml',
 
-        # Menús (usan las acciones ya definidas)
+        # Menús
         'views/custodia_menus.xml',
 
         # Portal
