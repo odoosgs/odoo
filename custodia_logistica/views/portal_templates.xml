@@ -68,8 +68,7 @@
       <div class="container my-4">
         <h2>Solicitar Servicio de Custodia</h2>
         <form action="/solicitar-servicio/submit" method="post" class="row g-3">
-          <!-- Campos del formulario (contacto, carrier, ruta, etc.) -->
-          <!-- ... ya definidos en tu versión actual ... -->
+          <!-- Aquí van todos los campos del formulario que ya definiste -->
         </form>
       </div>
     </t>
@@ -77,8 +76,8 @@
 
   <!-- Enlace en el portal (Mi cuenta) -->
   <template id="portal_my_home_custodia" inherit_id="portal.portal_my_home" name="Custodia Portal">
-    <xpath expr="//div[@id='apps']/div" position="inside">
-      <a class="btn btn-primary" t-attf-href="/mis-servicios">Servicios de Custodia</a>
+    <xpath expr="//div[contains(@class,'o_portal_apps')]" position="inside">
+      <a class="btn btn-primary my-2" t-attf-href="/mis-servicios">Servicios de Custodia</a>
     </xpath>
   </template>
 </odoo>
