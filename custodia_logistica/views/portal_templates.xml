@@ -70,7 +70,107 @@
       <div class="container my-4">
         <h2>Solicitar Servicio de Custodia</h2>
         <form action="/solicitar-servicio/submit" method="post" class="row g-3">
-          <!-- Aquí van todos los campos del formulario que ya definiste -->
+          <div class="col-12">
+            <label>Persona Solicitante</label>
+            <select name="contact_id" class="form-select" required="1">
+              <t t-foreach="contacts" t-as="c">
+                <option t-att-value="c.id"><t t-esc="c.display_name"/></option>
+              </t>
+            </select>
+          </div>
+
+          <div class="col-md-6">
+            <label>Carrier</label>
+            <select name="carrier_id" class="form-select" required="1">
+              <t t-foreach="carriers" t-as="car">
+                <option t-att-value="car.id"><t t-esc="car.name"/></option>
+              </t>
+            </select>
+          </div>
+
+          <div class="col-md-6">
+            <label>Ruta</label>
+            <select name="ruta_id" class="form-select" required="1">
+              <t t-foreach="rutas" t-as="r">
+                <option t-att-value="r.id"><t t-esc="r.name"/></option>
+              </t>
+            </select>
+          </div>
+
+          <div class="col-md-6">
+            <label>Inicio del servicio</label>
+            <input type="datetime-local" name="start_datetime" class="form-control" required="1"/>
+          </div>
+
+          <div class="col-md-6">
+            <label>Nivel de seguridad</label>
+            <select name="nivel_seguridad" class="form-select" required="1">
+              <option value="1">Nivel 1</option>
+              <option value="2">Nivel 2</option>
+              <option value="3">Nivel 3</option>
+              <option value="4">Nivel 4</option>
+              <option value="4x">Excepción + Nivel 4</option>
+            </select>
+          </div>
+
+          <div class="col-md-6">
+            <label>Load ID</label>
+            <input type="text" name="load_id" class="form-control" required="1"/>
+          </div>
+
+          <div class="col-md-6">
+            <label>Tipo de unidad</label>
+            <input type="text" name="tipo_unidad" class="form-control" required="1"/>
+          </div>
+
+          <div class="col-md-6">
+            <label>Placas</label>
+            <input type="text" name="placas" class="form-control" required="1"/>
+          </div>
+
+          <div class="col-md-6">
+            <label>Transporte</label>
+            <input type="text" name="transporte" class="form-control" required="1"/>
+          </div>
+
+          <div class="col-md-6">
+            <label>Operador 1</label>
+            <input type="text" name="operador1_nombre" class="form-control" required="1"/>
+          </div>
+
+          <div class="col-md-6">
+            <label>Licencia Operador 1</label>
+            <input type="text" name="operador1_licencia" class="form-control" required="1"/>
+          </div>
+
+          <div class="col-md-6">
+            <label>Operador 2</label>
+            <input type="text" name="operador2_nombre" class="form-control"/>
+          </div>
+
+          <div class="col-md-6">
+            <label>Licencia Operador 2</label>
+            <input type="text" name="operador2_licencia" class="form-control"/>
+          </div>
+
+          <div class="col-md-6">
+            <label>Tel. Monitoreo 1</label>
+            <input type="text" name="tel_monitoreo_1" class="form-control" required="1"/>
+          </div>
+
+          <div class="col-md-6">
+            <label>Tel. Monitoreo 2</label>
+            <input type="text" name="tel_monitoreo_2" class="form-control"/>
+          </div>
+
+          <div class="col-12">
+            <label>Comentarios</label>
+            <textarea name="comentarios_cliente" class="form-control"></textarea>
+          </div>
+
+          <div class="col-12">
+            <button type="submit" class="btn btn-success">Registrar</button>
+          </div>
         </form>
       </div>
     </t>
