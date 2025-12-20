@@ -25,7 +25,9 @@
                 <td><t t-esc="s.start_datetime"/></td>
                 <td><t t-esc="s.nivel_seguridad"/></td>
                 <td><t t-esc="s.state"/></td>
-                <td><a t-att-href="'/mis-servicios/%s' % s.id" class="btn btn-sm btn-secondary">Ver</a></td>
+                <td>
+                  <a t-att-href="'/mis-servicios/%s' % s.id" class="btn btn-sm btn-secondary">Ver</a>
+                </td>
               </tr>
             </t>
           </tbody>
@@ -76,8 +78,10 @@
 
   <!-- Enlace en el portal (Mi cuenta) -->
   <template id="portal_my_home_custodia" inherit_id="portal.portal_my_home" name="Custodia Portal">
-    <xpath expr="//div[contains(@class,'o_portal_apps')]" position="inside">
-      <a class="btn btn-primary my-2" t-attf-href="/mis-servicios">Servicios de Custodia</a>
+    <xpath expr="//div[contains(@class,'o_portal')]" position="inside">
+      <div class="my-3">
+        <a class="btn btn-primary" t-attf-href="/mis-servicios">Servicios de Custodia</a>
+      </div>
     </xpath>
   </template>
 </odoo>
