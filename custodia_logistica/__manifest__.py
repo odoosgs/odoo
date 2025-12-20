@@ -18,7 +18,7 @@
         'planning',
     ],
     'data': [
-        # Datos primero
+        # Datos
         'data/sequence.xml',
 
         # Seguridad
@@ -29,11 +29,11 @@
         'views/custodia_carrier_views.xml',
         'views/custodia_ruta_views.xml',
 
-        # Servicio principal (form + list)
+        # Servicio principal
         'views/custodia_service_views.xml',
         'views/custodia_service_list_view.xml',
 
-        # Asignaciones (modelo hijo)
+        # Asignaciones
         'views/custodia_asignacion_views.xml',
 
         # Menús
@@ -44,7 +44,7 @@
     ],
     'assets': {
         'web.assets_frontend': [
-            # Si necesitas CSS/JS para el portal, agrégalo aquí
+            # Aquí puedes agregar CSS/JS para personalizar el portal
         ],
     },
     'application': True,
