@@ -6,6 +6,21 @@
     <field name="model">custodia.service</field>
     <field name="arch" type="xml">
       <form string="Servicio de Custodia">
+        <header>
+          <button name="action_aprobar" type="object" string="Aprobar" class="btn-primary"
+                  attrs="{'invisible': [('state','!=','solicitado')]}"/>
+          <button name="action_asignar" type="object" string="Asignar" class="btn-secondary"
+                  attrs="{'invisible': [('state','!=','aprobado')]}"/>
+          <button name="action_ejecutar" type="object" string="Ejecutar" class="btn-secondary"
+                  attrs="{'invisible': [('state','!=','asignado')]}"/>
+          <button name="action_finalizar" type="object" string="Finalizar" class="btn-success"
+                  attrs="{'invisible': [('state','!=','en_ejecucion')]}"/>
+          <button name="action_cancelar" type="object" string="Cancelar" class="btn-danger"
+                  attrs="{'invisible': [('state','=','finalizado')]}"/>
+          <field name="state" widget="statusbar"
+                 statusbar_visible="solicitado,aprobado,asignado,en_ejecucion,finalizado,cancelado"/>
+        </header>
+
         <sheet>
           <group>
             <field name="sequence"/>
@@ -21,7 +36,6 @@
 
           <notebook>
             <page string="Asignaciones">
-              <!-- Usar las vistas del hijo -->
               <field name="asignacion_ids" mode="list,form"/>
             </page>
           </notebook>
