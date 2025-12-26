@@ -69,9 +69,17 @@
     <t t-call="website.layout">
       <div class="container my-4">
         <h2>Solicitar Servicio de Custodia</h2>
+
+        <!-- Bloque de error -->
+        <t t-if="error">
+          <div class="alert alert-danger" role="alert">
+            <strong>Ocurrió un error:</strong> <t t-esc="error"/>
+          </div>
+        </t>
+
         <form action="/solicitar-servicio/submit" method="post" class="row g-3">
-          <!-- Token CSRF obligatorio -->
-          <t t-call="website.form_input_hidden"/>
+          <!-- Token CSRF manual -->
+          <input type="hidden" name="csrf_token" t-att-value="request.csrf_token()"/>
 
           <div class="col-12">
             <label>Persona Solicitante</label>
