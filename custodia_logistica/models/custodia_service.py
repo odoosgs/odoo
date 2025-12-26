@@ -92,8 +92,8 @@ class CustodiaService(models.Model):
     state = fields.Selection(
         [
             ('solicitado', 'Solicitado'),
-            ('asignado', 'Asignado'),
             ('aprobado', 'Aprobado'),
+            ('asignado', 'Asignado'),
             ('en_ejecucion', 'En ejecución'),
             ('finalizado', 'Finalizado'),
             ('cancelado', 'Cancelado'),
@@ -112,9 +112,31 @@ class CustodiaService(models.Model):
 
     # Autogenerar nombre y secuencia
     @api.model
-    def create(self, vals):
-        if vals.get('sequence', 'Nuevo') == 'Nuevo':
-            vals['sequence'] = self.env['ir.sequence'].next_by_code('custodia.service') or 'Nuevo'
-        if vals.get('name', 'Nuevo') == 'Nuevo':
-            vals['name'] = vals['sequence']
-        return super(CustodiaService, self).create(vals)
+    def create(self, vals_list):
+        # Asegurar que siempre trabajamos con lista de diccionarios
+        if isinstance(vals_list, dict):
+            vals_list = [vals_list]
+
+        for vals in vals_list:
+            if vals.get('sequence', 'Nuevo') == 'Nuevo':
+                vals['sequence'] = self.env['ir.sequence'].next_by_code('custodia.service') or 'Nuevo'
+            if vals.get('name', 'Nuevo') == 'Nuevo':
+                vals['name'] = vals['sequence']
+
+        return super(CustodiaService, self).create(vals_list)
+
+    # Botones de acción para flujo de estados
+    def action_aprobar(self):
+        self.write({'state': 'aprobado'})
+
+    def action_asignar(self):
+        self.write({'state': 'asignado'})
+
+    def action_ejecutar(self):
+        self.write({'state': 'en_ejecucion'})
+
+    def action_finalizar(self):
+        self.write({'state': 'finalizado'})
+
+    def action_cancelar(self):
+        self.write({'state': 'cancelado'})
