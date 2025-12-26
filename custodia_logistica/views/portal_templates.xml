@@ -70,6 +70,9 @@
       <div class="container my-4">
         <h2>Solicitar Servicio de Custodia</h2>
         <form action="/solicitar-servicio/submit" method="post" class="row g-3">
+          <!-- Token CSRF obligatorio -->
+          <t t-call="website.form_input_hidden"/>
+
           <div class="col-12">
             <label>Persona Solicitante</label>
             <select name="contact_id" class="form-select" required="1">
