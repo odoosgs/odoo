@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+
+    <!--
+        Odoo 19 – CFDI México
+        Fix definitivo del nombre fiscal de la empresa en el PDF
+    -->
+    <template id="report_invoice_document_company_name_fix"
+              inherit_id="l10n_mx_edi.report_invoice_document"
+              priority="200">
+
+        <!--
+            Reemplaza cualquier referencia al commercial_partner_id
+            por el nombre fiscal real de la empresa
+        -->
+        <xpath expr="//span[contains(@t-field, 'commercial_partner_id')]" position="replace">
+            <span t-field="company.partner_id.name"/>
+        </xpath>
+
+    </template>
+
+</odoo>
