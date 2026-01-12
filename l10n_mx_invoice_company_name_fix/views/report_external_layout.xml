@@ -5,10 +5,10 @@
               inherit_id="web.external_layout"
               priority="100">
 
-        <!-- Sobrescribimos el nombre legal de la empresa ANTES de render -->
-        <xpath expr="." position="inside">
-            <t t-set="company"
-               t-value="company.with_context(force_company_name=True)"/>
+        <!-- Reemplazar el nombre de la empresa para evitar commercial_partner_id -->
+        <xpath expr="//span[@t-field='company.partner_id.commercial_company_name']"
+               position="replace">
+            <span t-out="company.name"/>
         </xpath>
 
     </template>
