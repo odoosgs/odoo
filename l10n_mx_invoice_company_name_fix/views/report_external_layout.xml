@@ -5,10 +5,11 @@
               inherit_id="web.external_layout"
               priority="100">
 
-        <!-- Reemplazar el nombre de la empresa para evitar commercial_partner_id -->
-        <xpath expr="//span[@t-field='company.partner_id.commercial_company_name']"
-               position="replace">
-            <span t-out="company.name"/>
+        <!-- Reemplazar bloque completo del nombre de la empresa -->
+        <xpath expr="//t[@t-if='company.partner_id']" position="replace">
+            <t t-if="company">
+                <span t-out="company.name"/>
+            </t>
         </xpath>
 
     </template>
