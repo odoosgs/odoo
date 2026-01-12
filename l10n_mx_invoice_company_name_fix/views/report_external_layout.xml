@@ -3,28 +3,14 @@
 
     <template id="external_layout_company_name_fix"
               inherit_id="web.external_layout"
-              priority="200">
+              priority="100">
 
-        <!-- Reemplazamos TODO el encabezado -->
-        <xpath expr="//div[contains(@class, 'header')]" position="replace">
-            <div class="header">
-                <div class="row">
-                    <div class="col-6">
-                        <strong t-out="company.name"/>
-                        <div t-if="company.partner_id">
-                            <t t-out="company.partner_id.street"/>
-                            <t t-if="company.partner_id.street2">
-                                , <t t-out="company.partner_id.street2"/>
-                            </t>
-                            <br/>
-                            <t t-out="company.partner_id.zip"/>
-                            <t t-if="company.partner_id.city">
-                                , <t t-out="company.partner_id.city"/>
-                            </t>
-                        </div>
-                    </div>
-                </div>
-            </div>
+        <!-- Forzamos el company antes de que el layout renderice -->
+        <xpath expr="." position="inside">
+            <t t-set="company"
+               t-value="company.with_context(
+                   force_report_company_name=company.name
+               )"/>
         </xpath>
 
     </template>
