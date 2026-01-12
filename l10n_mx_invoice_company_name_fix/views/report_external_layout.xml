@@ -1,1 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+
+    <!--
+        Odoo 19 - Fix nombre fiscal de la empresa en CFDI MX
+        Ataca directamente el external_layout
+    -->
+    <template id="external_layout_company_name_fix"
+              inherit_id="web.external_layout"
+              priority="300">
+
+        <!-- Reemplaza el nombre del emisor en el encabezado -->
+        <xpath expr="//div[contains(@class, 'company_name')]/span"
+               position="replace">
+            <span t-field="company.partner_id.name"/>
+        </xpath>
+
+    </template>
+
+</odoo>
 
