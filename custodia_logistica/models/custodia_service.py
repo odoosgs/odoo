@@ -82,6 +82,47 @@ class CustodiaService(models.Model):
         tracking=True
     )
 
+    tipo_unidad = fields.Char(
+        string='Tipo de unidad',
+        tracking=True
+    )
+    placas = fields.Char(
+        string='Placas',
+        tracking=True
+    )
+    transporte = fields.Char(
+        string='Transporte',
+        tracking=True
+    )
+    operador1_nombre = fields.Char(
+        string='Operador 1',
+        tracking=True
+    )
+    operador1_licencia = fields.Char(
+        string='Licencia Operador 1',
+        tracking=True
+    )
+    operador2_nombre = fields.Char(
+        string='Operador 2',
+        tracking=True
+    )
+    operador2_licencia = fields.Char(
+        string='Licencia Operador 2',
+        tracking=True
+    )
+    tel_monitoreo_1 = fields.Char(
+        string='Teléfono Monitoreo 1',
+        tracking=True
+    )
+    tel_monitoreo_2 = fields.Char(
+        string='Teléfono Monitoreo 2',
+        tracking=True
+    )
+    comentarios_cliente = fields.Text(
+        string='Comentarios del Cliente',
+        tracking=True
+    )
+
     # Relación hijo
     asignacion_ids = fields.One2many(
         'custodia.asignacion',
