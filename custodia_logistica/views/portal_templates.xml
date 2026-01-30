@@ -47,6 +47,17 @@
         <p><b>Nivel:</b> <t t-esc="service.nivel_seguridad"/></p>
         <p><b>Load ID:</b> <t t-esc="service.load_id"/></p>
 
+        <p>
+          <b>Coordenadas:</b>
+          <t t-if="service.start_coords">
+            <a t-att-href="'https://www.google.com/maps?q=' + service.start_coords" target="_blank">Inicio</a>
+          </t>
+          <t t-if="service.end_coords">
+            | <a t-att-href="'https://www.google.com/maps?q=' + service.end_coords" target="_blank">Llegada</a>
+          </t>
+        </p>
+
+
         <h4 class="mt-3">Datos del Carrier</h4>
         <ul>
           <li>Tipo de unidad: <t t-esc="service.tipo_unidad"/></li>
