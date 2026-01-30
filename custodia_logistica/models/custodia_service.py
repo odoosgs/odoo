@@ -118,6 +118,14 @@ class CustodiaService(models.Model):
         string='Teléfono Monitoreo 2',
         tracking=True
     )
+    start_coords = fields.Char(
+    string='Coordenadas de inicio',
+    tracking=True
+    )
+    end_coords = fields.Char(
+    string='Coordenadas de llegada',
+    tracking=True
+    )
     comentarios_cliente = fields.Text(
         string='Comentarios del Cliente',
         tracking=True
