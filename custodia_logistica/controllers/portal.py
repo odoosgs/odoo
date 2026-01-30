@@ -71,6 +71,8 @@ class CustodiaPortal(http.Controller):
                 'tel_monitoreo_1': post.get('tel_monitoreo_1'),
                 'tel_monitoreo_2': post.get('tel_monitoreo_2') or False,
                 'comentarios_cliente': post.get('comentarios_cliente') or False,
+                'start_coords': post.get('start_coords'),
+                'end_coords': post.get('end_coords'),
                 'state': 'solicitado',
             }
 
