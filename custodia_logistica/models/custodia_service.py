@@ -119,12 +119,12 @@ class CustodiaService(models.Model):
         tracking=True
     )
     start_coords = fields.Char(
-    string='Coordenadas de inicio',
-    tracking=True
+        string='Coordenadas de inicio',
+        tracking=True
     )
     end_coords = fields.Char(
-    string='Coordenadas de llegada',
-    tracking=True
+        string='Coordenadas de llegada',
+        tracking=True
     )
     comentarios_cliente = fields.Text(
         string='Comentarios del Cliente',
@@ -162,7 +162,6 @@ class CustodiaService(models.Model):
     # Autogenerar nombre y secuencia
     @api.model
     def create(self, vals_list):
-        # Asegurar que siempre trabajamos con lista de diccionarios
         if isinstance(vals_list, dict):
             vals_list = [vals_list]
 
@@ -189,3 +188,16 @@ class CustodiaService(models.Model):
 
     def action_cancelar(self):
         self.write({'state': 'cancelado'})
+
+    # --- MÉTODO PARA TIEMPO REAL ---
+    def message_post(self, **kwargs):
+        """ Sobrescribe la publicación de mensajes para notificar al Bus de Odoo """
+        message = super(CustodiaService, self).message_post(**kwargs)
+        
+        # Notificamos al canal del bus para que el JavaScript en el portal reaccione
+        self.env['bus.bus']._sendone(
+            'custodia_service_%s' % self.id,
+            'mail.record/insert',
+            {'res_id': self.id, 'model': self._name}
+        )
+        return message
