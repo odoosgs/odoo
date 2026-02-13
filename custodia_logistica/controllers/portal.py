@@ -2,22 +2,41 @@
 from odoo import http, fields
 from odoo.http import request
 from datetime import datetime
+from odoo.addons.portal.controllers.portal import CustomerPortal # Importación necesaria
 
-class CustodiaPortal(http.Controller):
+class CustodiaPortal(CustomerPortal): # Cambiamos la herencia aquí
 
+    # --- INTEGRACIÓN CON EL HOME DEL PORTAL ---
+    def _prepare_home_portal_values(self, counters):
+        """ Este método hace que aparezca el botón con el contador en 'Mi Cuenta' """
+        values = super()._prepare_home_portal_values(counters)
+        if 'services_count' in counters:
+            user = request.env.user
+            company = user.partner_id.commercial_partner_id
+            # Contamos los servicios que pertenecen a la empresa del usuario
+            values['services_count'] = request.env['custodia.service'].sudo().search_count([
+                ('partner_id', '=', company.id)
+            ])
+        return values
+
+    # --- RUTAS EXISTENTES ---
     @http.route(['/mis-servicios', '/mis-servicios/<int:service_id>'], type='http', auth='user', website=True)
     def portal_services(self, service_id=None, **kwargs):
         user = request.env.user
         company = user.partner_id.commercial_partner_id
-        services = request.env['custodia.service'].sudo().search(
-            [('partner_id', '=', company.id)], order='create_date desc'
-        )
+        
         if service_id:
+            # Detalle de un servicio específico
             service = request.env['custodia.service'].sudo().browse(service_id)
             return request.render(
                 'custodia_logistica.portal_service_detail',
                 {'service': service, 'cliente': company}
             )
+        
+        # Listado general de servicios
+        services = request.env['custodia.service'].sudo().search(
+            [('partner_id', '=', company.id)], order='create_date desc'
+        )
         return request.render(
             'custodia_logistica.portal_service_list',
             {'services': services, 'cliente': company}
@@ -44,13 +63,12 @@ class CustodiaPortal(http.Controller):
     def solicitar_submit(self, **post):
         company = request.env.user.partner_id.commercial_partner_id
         try:
-            # Convertir fecha/hora del input HTML5 (ejemplo: 2026-01-29T14:51)
+            # Convertir fecha/hora del input HTML5
             start_dt = False
             if post.get('start_datetime'):
                 try:
                     start_dt = datetime.strptime(post['start_datetime'], "%Y-%m-%dT%H:%M")
                 except Exception:
-                    # fallback: usar el parser de Odoo
                     start_dt = fields.Datetime.from_string(post['start_datetime'])
 
             vals = {
@@ -80,7 +98,6 @@ class CustodiaPortal(http.Controller):
             return request.redirect('/mis-servicios/%s' % service.id)
 
         except Exception as e:
-            # Si hay error, re-renderizamos el formulario con mensaje
             carriers = request.env['custodia.carrier'].sudo().search([])
             rutas = request.env['custodia.ruta'].sudo().search([])
             contacts = request.env['res.partner'].sudo().search([('parent_id', '=', company.id)])
