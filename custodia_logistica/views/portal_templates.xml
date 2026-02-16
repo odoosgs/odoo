@@ -88,8 +88,7 @@
                         
                         <t t-call="portal.message_thread">
                             <t t-set="object" t-value="service"/>
-                            <t t-set="token" t-value="service.get_portal_url(query_string='?access_token=' + service.access_token) if hasattr(service, 'access_token') else ''"/>
-                            <t t-set="hash" t-value="service._sign_token(service.access_token) if hasattr(service, 'access_token') else ''"/>
+                            <t t-set="token" t-value="service.access_token if 'access_token' in service._fields else ''"/>
                         </t>
                     </div>
                 </div>
