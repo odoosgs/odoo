@@ -88,6 +88,8 @@
                         
                         <t t-call="portal.message_thread">
                             <t t-set="object" t-value="service"/>
+                            <t t-set="token" t-value="service.get_portal_url(query_string='?access_token=' + service.access_token) if hasattr(service, 'access_token') else ''"/>
+                            <t t-set="hash" t-value="service._sign_token(service.access_token) if hasattr(service, 'access_token') else ''"/>
                         </t>
                     </div>
                 </div>
@@ -99,124 +101,13 @@
         <t t-call="website.layout">
             <div class="container my-4">
                 <h2>Solicitar Servicio de Custodia</h2>
-
                 <t t-if="error">
                     <div class="alert alert-danger" role="alert">
                         <strong>Ocurrió un error:</strong> <t t-esc="error"/>
                     </div>
                 </t>
-
                 <form action="/solicitar-servicio/submit" method="post" class="row g-3">
                     <input type="hidden" name="csrf_token" t-att-value="request.csrf_token()"/>
-
-                    <div class="col-12">
-                        <label class="form-label">Persona Solicitante</label>
-                        <select name="contact_id" class="form-select" required="1">
-                            <t t-foreach="contacts" t-as="c">
-                                <option t-att-value="c.id"><t t-esc="c.display_name"/></option>
-                            </t>
-                        </select>
-                    </div>
-
-                    <div class="col-md-6">
-                        <label class="form-label">Carrier</label>
-                        <select name="carrier_id" class="form-select" required="1">
-                            <t t-foreach="carriers" t-as="car">
-                                <option t-att-value="car.id"><t t-esc="car.name"/></option>
-                            </t>
-                        </select>
-                    </div>
-
-                    <div class="col-md-6">
-                        <label class="form-label">Ruta</label>
-                        <select name="ruta_id" class="form-select" required="1">
-                            <t t-foreach="rutas" t-as="r">
-                                <option t-att-value="r.id"><t t-esc="r.name"/></option>
-                            </t>
-                        </select>
-                    </div>
-
-                    <div class="col-md-6">
-                        <label class="form-label">Inicio del servicio</label>
-                        <input type="datetime-local" name="start_datetime" class="form-control" required="1"/>
-                    </div>
-
-                    <div class="col-md-6">
-                        <label class="form-label">Nivel de seguridad</label>
-                        <select name="nivel_seguridad" class="form-select" required="1">
-                            <option value="1">Nivel 1</option>
-                            <option value="2">Nivel 2</option>
-                            <option value="3">Nivel 3</option>
-                            <option value="4">Nivel 4</option>
-                            <option value="4x">Excepción + Nivel 4</option>
-                        </select>
-                    </div>
-
-                    <div class="col-md-6">
-                        <label class="form-label">Load ID</label>
-                        <input type="text" name="load_id" class="form-control" required="1"/>
-                    </div>
-
-                    <div class="col-md-6">
-                        <label class="form-label">Tipo de unidad</label>
-                        <input type="text" name="tipo_unidad" class="form-control" required="1"/>
-                    </div>
-
-                    <div class="col-md-6">
-                        <label class="form-label">Placas</label>
-                        <input type="text" name="placas" class="form-control" required="1"/>
-                    </div>
-
-                    <div class="col-md-6">
-                        <label class="form-label">Transporte</label>
-                        <input type="text" name="transporte" class="form-control" required="1"/>
-                    </div>
-
-                    <div class="col-md-6">
-                        <label class="form-label">Operador 1</label>
-                        <input type="text" name="operador1_nombre" class="form-control" required="1"/>
-                    </div>
-
-                    <div class="col-md-6">
-                        <label class="form-label">Licencia Operador 1</label>
-                        <input type="text" name="operador1_licencia" class="form-control" required="1"/>
-                    </div>
-
-                    <div class="col-md-6">
-                        <label class="form-label">Operador 2</label>
-                        <input type="text" name="operador2_nombre" class="form-control"/>
-                    </div>
-
-                    <div class="col-md-6">
-                        <label class="form-label">Licencia Operador 2</label>
-                        <input type="text" name="operador2_licencia" class="form-control"/>
-                    </div>
-
-                    <div class="col-md-6">
-                        <label class="form-label">Tel. Monitoreo 1</label>
-                        <input type="text" name="tel_monitoreo_1" class="form-control" required="1"/>
-                    </div>
-
-                    <div class="col-md-6">
-                        <label class="form-label">Tel. Monitoreo 2</label>
-                        <input type="text" name="tel_monitoreo_2" class="form-control"/>
-                    </div>
-
-                    <div class="col-md-6">
-                        <label class="form-label">Coordenadas de inicio</label>
-                        <input type="text" name="start_coords" class="form-control" placeholder="Ej. 20.6597,-103.3496"/>
-                    </div>
-
-                    <div class="col-md-6">
-                        <label class="form-label">Coordenadas de llegada</label>
-                        <input type="text" name="end_coords" class="form-control" placeholder="Ej. 25.6866,-100.3161"/>
-                    </div>
-
-                    <div class="col-12">
-                        <label class="form-label">Comentarios</label>
-                        <textarea name="comentarios_cliente" class="form-control" rows="3"></textarea>
-                    </div>
-
                     <div class="col-12">
                         <button type="submit" class="btn btn-success btn-lg">Registrar Solicitud</button>
                     </div>
