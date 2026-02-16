@@ -3,12 +3,11 @@
 import { publicWidget } from "@web/legacy/js/public/public_widget";
 
 publicWidget.registry.CustodiaChatterLive = publicWidget.Widget.extend({
-    selector: '#service_chatter', // Usamos el ID que pusimos en el XML
+    selector: '.o_portal_chatter_container', // Selector nativo más seguro
     
     start: function () {
-        this.resId = parseInt(this.$el.data('res-id'));
-        if (this.resId) {
-            // Usamos el servicio de bus de Odoo de forma segura
+        this.resId = parseInt(this.$el.attr('data-res-id'));
+        if (this.resId && this.call) {
             this.call('bus_service', 'addChannel', `custodia_service_${this.resId}`);
             this.call('bus_service', 'subscribe', `custodia_service_${this.resId}`, this._onNotification.bind(this));
         }
@@ -16,9 +15,10 @@ publicWidget.registry.CustodiaChatterLive = publicWidget.Widget.extend({
     },
 
     _onNotification: function (payload) {
-        if (payload.type === 'mail.record/insert' && payload.res_id === this.resId) {
-            // Solo refrescamos si el usuario no está escribiendo
-            if (!this.$('.o_portal_chatter_composer_body').is(':focus')) {
+        // Verificamos que el payload tenga la estructura esperada
+        if (payload && payload.type === 'mail.record/insert' && payload.res_id === this.resId) {
+            const $composer = this.$('.o_portal_chatter_composer_body');
+            if ($composer.length && !$composer.is(':focus')) {
                 this._refreshChatter();
             }
         }
