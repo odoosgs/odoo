@@ -9,6 +9,7 @@
     'depends': [
         'base',
         'mail',
+        'bus',
         'website',
         'portal',
         'hr',
@@ -51,6 +52,7 @@
     'application': True,
     'installable': True,
 }
+
 
 
 
