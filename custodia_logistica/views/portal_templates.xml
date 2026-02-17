@@ -59,10 +59,10 @@
                         <p>
                             <b>Coordenadas:</b>
                             <t t-if="service.start_coords">
-                                <a t-att-href="'https://www.google.com/maps/search/?api=1&query=' + service.start_coords" target="_blank" class="btn btn-sm btn-outline-primary">Ver Inicio</a>
+                                <a t-att-href="'https://www.google.com/maps/search/?api=1&amp;query=' + service.start_coords" target="_blank" class="btn btn-sm btn-outline-primary">Ver Inicio</a>
                             </t>
                             <t t-if="service.end_coords">
-                                | <a t-att-href="'https://www.google.com/maps/search/?api=1&query=' + service.end_coords" target="_blank" class="btn btn-sm btn-outline-primary">Ver Llegada</a>
+                                | <a t-att-href="'https://www.google.com/maps/search/?api=1&amp;query=' + service.end_coords" target="_blank" class="btn btn-sm btn-outline-primary">Ver Llegada</a>
                             </t>
                         </p>
                     </div>
