@@ -1,100 +1,99 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
     <template id="portal_service_list" name="Mis Servicios">
-        <t t-call="website.layout">
+        <t t-call="portal.portal_layout">
+            <t t-set="breadcrumbs_searchbar" t-value="True"/>
             <div class="container my-4">
-                <h2>Mis Servicios de Custodia</h2>
-                <a href="/solicitar-servicio" class="btn btn-primary my-3">Solicitar Servicio</a>
-                <table class="table table-striped">
-                    <thead>
-                        <tr>
-                            <th>Consecutivo</th>
-                            <th>Ruta</th>
-                            <th>Inicio</th>
-                            <th>Nivel</th>
-                            <th>Estado</th>
-                            <th></th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <t t-foreach="services" t-as="s">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h2>Mis Servicios de Custodia</h2>
+                    <a href="/solicitar-servicio" class="btn btn-primary">Solicitar Servicio</a>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-striped">
+                        <thead>
                             <tr>
-                                <td><t t-esc="s.sequence"/></td>
-                                <td><t t-esc="s.ruta_id.name"/></td>
-                                <td><t t-esc="s.start_datetime"/></td>
-                                <td><t t-esc="s.nivel_seguridad"/></td>
-                                <td><t t-esc="s.state"/></td>
-                                <td>
-                                    <a t-att-href="'/mis-servicios/%s' % s.id" class="btn btn-sm btn-secondary">Ver</a>
-                                </td>
+                                <th>Consecutivo</th>
+                                <th>Ruta</th>
+                                <th>Inicio</th>
+                                <th>Nivel</th>
+                                <th>Estado</th>
+                                <th></th>
                             </tr>
-                        </t>
-                    </tbody>
-                </table>
+                        </thead>
+                        <tbody>
+                            <t t-foreach="services" t-as="s">
+                                <tr>
+                                    <td><t t-esc="s.sequence"/></td>
+                                    <td><t t-esc="s.ruta_id.name"/></td>
+                                    <td><t t-esc="s.start_datetime"/></td>
+                                    <td><t t-esc="s.nivel_seguridad"/></td>
+                                    <td>
+                                        <span t-field="s.state" class="badge rounded-pill bg-info"/>
+                                    </td>
+                                    <td>
+                                        <a t-att-href="'/mis-servicios/%s' % s.id" class="btn btn-sm btn-secondary">Ver Detalle</a>
+                                    </td>
+                                </tr>
+                            </t>
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </t>
     </template>
 
     <template id="portal_service_detail" name="Detalle del Servicio">
-        <t t-call="website.layout">
-            <div class="container my-4">
-                <div class="d-flex justify-content-between align-items-center">
+        <t t-call="portal.portal_layout">
+            <div class="container my-4 bg-white pb-5">
+                <div class="d-flex justify-content-between align-items-center pt-3">
                     <h2>Servicio <t t-esc="service.sequence"/></h2>
-                    <span t-field="service.state" class="badge rounded-pill bg-info"/>
+                    <span t-field="service.state" class="badge rounded-pill bg-info" style="font-size: 1rem;"/>
                 </div>
                 <hr/>
-                <div class="row">
+                
+                <div class="row mt-4">
                     <div class="col-md-6">
                         <p><b>Cliente:</b> <t t-esc="cliente.display_name"/></p>
                         <p><b>Ruta:</b> <t t-esc="service.ruta_id.name"/> (<t t-esc="service.ruta_tipo"/>)</p>
                         <p><b>Inicio:</b> <t t-esc="service.start_datetime"/></p>
-                        <p><b>Nivel:</b> <t t-esc="service.nivel_seguridad"/></p>
+                        <p><b>Nivel de Seguridad:</b> <t t-esc="service.nivel_seguridad"/></p>
                         <p><b>Load ID:</b> <t t-esc="service.load_id"/></p>
                         <p>
                             <b>Coordenadas:</b>
                             <t t-if="service.start_coords">
-                                <a t-att-href="'https://www.google.com/maps?q=' + service.start_coords" target="_blank" class="btn btn-sm btn-outline-primary">Ver Inicio</a>
+                                <a t-att-href="'https://www.google.com/maps/search/?api=1&amp;query=' + service.start_coords" target="_blank" class="btn btn-sm btn-outline-primary">Ver Inicio</a>
                             </t>
                             <t t-if="service.end_coords">
-                                | <a t-att-href="'https://www.google.com/maps?q=' + service.end_coords" target="_blank" class="btn btn-sm btn-outline-primary">Ver Llegada</a>
+                                <a t-att-href="'https://www.google.com/maps/search/?api=1&amp;query=' + service.end_coords" target="_blank" class="btn btn-sm btn-outline-primary ms-2">Ver Llegada</a>
                             </t>
                         </p>
                     </div>
+                    
                     <div class="col-md-6 border-start">
-                        <h4 class="mt-3">Datos del Carrier</h4>
+                        <h4 class="text-muted">Datos del Carrier</h4>
                         <ul class="list-unstyled">
-                            <li><b>Unidad:</b> <t t-esc="service.tipo_unidad"/></li>
-                            <li><b>Placas:</b> <t t-esc="service.placas"/></li>
-                            <li><b>Transporte:</b> <t t-esc="service.transporte"/></li>
-                            <li><b>Operador 1:</b> <t t-esc="service.operador1_nombre"/></li>
-                            <li><b>Monitoreo:</b> <t t-esc="service.tel_monitoreo_1"/></li>
+                            <li class="mb-2"><b>Unidad:</b> <span t-field="service.tipo_unidad"/></li>
+                            <li class="mb-2"><b>Placas:</b> <span t-field="service.placas"/></li>
+                            <li class="mb-2"><b>Transporte:</b> <span t-field="service.transporte"/></li>
+                            <li class="mb-2"><b>Operador:</b> <span t-field="service.operador1_nombre"/></li>
+                            <li class="mb-2"><b>Tel. Monitoreo:</b> <span t-field="service.tel_monitoreo_1"/></li>
                         </ul>
                     </div>
                 </div>
 
-                <div class="card mt-4">
-                    <div class="card-header"><b>Comentarios de Solicitud</b></div>
+                <div class="card mt-4 border-0 bg-light">
                     <div class="card-body">
-                        <t t-esc="service.comentarios_cliente or 'Sin comentarios.'"/>
+                        <h5 class="card-title text-muted">Comentarios de Solicitud</h5>
+                        <p class="card-text"><t t-esc="service.comentarios_cliente or 'Sin comentarios registrados.'" inner_id="comentarios"/></p>
                     </div>
                 </div>
 
-                <div id="service_communication" class="mt-5 border-top pt-4">
-                    <h3>Chat de Seguimiento e Incidencias</h3>
-                    <div id="service_chatter" 
-                         t-att-data-res-id="service.id" 
-                         t-att-data-res-model="'custodia.service'"
-                         class="o_portal_chatter_container">
-                        
-                        <t t-call="portal.message_thread">
-                            <t t-set="object" t-value="service"/>
-                            <t t-set="token" t-value="service.access_token"/>
-                            <t t-set="pid" t-value="request.env.user.partner_id.id"/>
-                            <t t-if="'access_token' in service._fields">
-                                <t t-set="hash" t-value="service._sign_token(service.access_token)"/>
-                            </t>
-                        </t>
-                    </div>
+                <div id="service_communication" class="mt-5 pt-4 border-top">
+                    <h3 class="mb-4">Seguimiento y Eventualidades en Ruta</h3>
+                    
+                    <t t-call="portal.portal_chatter">
+                        <t t-set="object" t-value="service"/>
+                    </t>
                 </div>
             </div>
         </t>
