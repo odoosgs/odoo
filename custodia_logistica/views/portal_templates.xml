@@ -1,14 +1,22 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
+
+    <!-- ===================================================== -->
+    <!-- LISTADO DE SERVICIOS                                  -->
+    <!-- ===================================================== -->
     <template id="portal_service_list" name="Mis Servicios">
         <t t-call="portal.portal_layout">
             <div class="container my-4">
+
                 <div class="d-flex justify-content-between align-items-center mb-3">
                     <h2>Mis Servicios de Custodia</h2>
-                    <a href="/solicitar-servicio" class="btn btn-primary">Solicitar Servicio</a>
+                    <a href="/solicitar-servicio" class="btn btn-primary">
+                        Solicitar Servicio
+                    </a>
                 </div>
+
                 <div class="table-responsive">
-                    <table class="table table-striped">
+                    <table class="table table-striped table-hover">
                         <thead>
                             <tr>
                                 <th>Consecutivo</th>
@@ -16,56 +24,104 @@
                                 <th>Inicio</th>
                                 <th>Nivel</th>
                                 <th>Estado</th>
-                                <th></th>
+                                <th class="text-end"></th>
                             </tr>
                         </thead>
                         <tbody>
-                            <t t-foreach="services" t-as="s">
+                            <t t-if="services">
+                                <t t-foreach="services" t-as="s">
+                                    <tr>
+                                        <td>
+                                            <t t-esc="s.sequence"/>
+                                        </td>
+                                        <td>
+                                            <t t-esc="s.ruta_id.name"/>
+                                        </td>
+                                        <td>
+                                            <t t-esc="s.start_datetime"/>
+                                        </td>
+                                        <td>
+                                            <t t-esc="s.nivel_seguridad"/>
+                                        </td>
+                                        <td>
+                                            <span t-field="s.state"
+                                                  class="badge rounded-pill bg-info"/>
+                                        </td>
+                                        <td class="text-end">
+                                            <a t-att-href="'/mis-servicios/%s?access_token=%s' % (s.id, s.access_token)"
+                                               class="btn btn-sm btn-secondary">
+                                                Ver
+                                            </a>
+                                        </td>
+                                    </tr>
+                                </t>
+                            </t>
+                            <t t-else="">
                                 <tr>
-                                    <td><t t-esc="s.sequence"/></td>
-                                    <td><t t-esc="s.ruta_id.name"/></td>
-                                    <td><t t-esc="s.start_datetime"/></td>
-                                    <td><t t-esc="s.nivel_seguridad"/></td>
-                                    <td>
-                                        <span t-field="s.state" class="badge rounded-pill bg-info"/>
-                                    </td>
-                                    <td>
-                                        <a t-att-href="'/mis-servicios/%s' % s.id" class="btn btn-sm btn-secondary">Ver</a>
+                                    <td colspan="6" class="text-center text-muted py-4">
+                                        No existen servicios registrados.
                                     </td>
                                 </tr>
                             </t>
                         </tbody>
                     </table>
                 </div>
+
             </div>
         </t>
     </template>
 
+
+    <!-- ===================================================== -->
+    <!-- DETALLE DEL SERVICIO                                  -->
+    <!-- ===================================================== -->
     <template id="portal_service_detail" name="Detalle del Servicio">
         <t t-call="portal.portal_layout">
             <div class="container my-4 bg-white pb-5">
+
                 <div class="d-flex justify-content-between align-items-center pt-3">
-                    <h2>Servicio <t t-esc="service.sequence"/></h2>
-                    <span t-field="service.state" class="badge rounded-pill bg-info" style="font-size: 1rem;"/>
+                    <h2>
+                        Servicio <t t-esc="service.sequence"/>
+                    </h2>
+                    <span t-field="service.state"
+                          class="badge rounded-pill bg-info"
+                          style="font-size: 1rem;"/>
                 </div>
+
                 <hr/>
+
                 <div class="row mt-4">
                     <div class="col-md-6">
                         <p><b>Cliente:</b> <t t-esc="cliente.display_name"/></p>
-                        <p><b>Ruta:</b> <t t-esc="service.ruta_id.name"/> (<t t-esc="service.ruta_tipo"/>)</p>
+                        <p>
+                            <b>Ruta:</b>
+                            <t t-esc="service.ruta_id.name"/>
+                            (<t t-esc="service.ruta_tipo"/>)
+                        </p>
                         <p><b>Inicio:</b> <t t-esc="service.start_datetime"/></p>
                         <p><b>Nivel:</b> <t t-esc="service.nivel_seguridad"/></p>
                         <p><b>Load ID:</b> <t t-esc="service.load_id"/></p>
+
                         <p>
                             <b>Coordenadas:</b>
                             <t t-if="service.start_coords">
-                                <a t-att-href="'https://www.google.com/maps/search/?api=1&amp;query=' + service.start_coords" target="_blank" class="btn btn-sm btn-outline-primary">Ver Inicio</a>
+                                <a t-att-href="'https://www.google.com/maps/search/?api=1&amp;query=' + service.start_coords"
+                                   target="_blank"
+                                   class="btn btn-sm btn-outline-primary">
+                                    Ver Inicio
+                                </a>
                             </t>
                             <t t-if="service.end_coords">
-                                | <a t-att-href="'https://www.google.com/maps/search/?api=1&amp;query=' + service.end_coords" target="_blank" class="btn btn-sm btn-outline-primary">Ver Llegada</a>
+                                |
+                                <a t-att-href="'https://www.google.com/maps/search/?api=1&amp;query=' + service.end_coords"
+                                   target="_blank"
+                                   class="btn btn-sm btn-outline-primary">
+                                    Ver Llegada
+                                </a>
                             </t>
                         </p>
                     </div>
+
                     <div class="col-md-6 border-start">
                         <h4 class="text-muted">Datos del Carrier</h4>
                         <ul class="list-unstyled">
@@ -80,37 +136,55 @@
 
                 <div class="card mt-4 border-0 bg-light">
                     <div class="card-body">
-                        <h5 class="card-title text-muted">Comentarios de Solicitud</h5>
-                        <p class="card-text"><t t-esc="service.comentarios_cliente or 'Sin comentarios registrados.'" /></p>
+                        <h5 class="card-title text-muted">
+                            Comentarios de Solicitud
+                        </h5>
+                        <p class="card-text">
+                            <t t-esc="service.comentarios_cliente or 'Sin comentarios registrados.'"/>
+                        </p>
                     </div>
                 </div>
 
-                <div id="service_communication" class="mt-5 pt-4 border-top">
-                    <h3 class="mb-4">Seguimiento y Eventualidades en Ruta</h3>
-                    
-                    <div id="portal_chatter" 
-                         t-att-data-res-id="service.id" 
-                         t-att-data-res-model="'custodia.service'" 
-                         class="o_portal_chatter_container">
-                        
-                        <t t-call="portal.message_thread">
-                            <t t-set="object" t-value="service"/>
-                            <t t-set="token" t-value="service.access_token"/>
-                            <t t-set="disable_composer" t-value="False"/>
-                        </t>
-                    </div>
+                <!-- ========================= -->
+                <!-- CHATTER PORTAL            -->
+                <!-- ========================= -->
+                <div id="service_communication"
+                     class="mt-5 pt-4 border-top">
+
+                    <h3 class="mb-4">
+                        Seguimiento y Eventualidades en Ruta
+                    </h3>
+
+                    <t t-call="portal.message_thread">
+                        <t t-set="object" t-value="service"/>
+                        <t t-set="token" t-value="token"/>
+                        <t t-set="disable_composer" t-value="False"/>
+                    </t>
+
                 </div>
+
             </div>
         </t>
     </template>
 
-    <template id="portal_my_home_custodia" inherit_id="portal.portal_my_home" name="Custodia Portal">
-        <xpath expr="//div[contains(@class,'o_portal_docs')]" position="inside">
+
+    <!-- ===================================================== -->
+    <!-- ENTRADA EN HOME DEL PORTAL                            -->
+    <!-- ===================================================== -->
+    <template id="portal_my_home_custodia"
+              inherit_id="portal.portal_my_home"
+              name="Custodia Portal">
+
+        <xpath expr="//div[contains(@class,'o_portal_docs')]"
+               position="inside">
+
             <t t-call="portal.portal_docs_entry">
                 <t t-set="title">Servicios de Custodia</t>
                 <t t-set="url" t-value="'/mis-servicios'"/>
                 <t t-set="placeholder_count" t-value="'services_count'"/>
             </t>
+
         </xpath>
     </template>
+
 </odoo>
