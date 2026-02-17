@@ -41,6 +41,7 @@ class CustodiaPortal(CustomerPortal):
         values = {
             'services': services,
             'cliente': company,
+            'page_name': 'services',
         }
 
         return request.render(
@@ -51,23 +52,33 @@ class CustodiaPortal(CustomerPortal):
     # ---------------------------------------------------------
     # DETALLE DEL SERVICIO (auth=public + token)
     # ---------------------------------------------------------
-    @http.route(['/mis-servicios/<int:service_id>'], 
+    @http.route(['/mis-servicios/<int:service_id>'],
                 type='http', auth='public', website=True)
     def portal_service_detail(self, service_id=None, access_token=None, **kwargs):
 
         service = request.env['custodia.service'].sudo().browse(service_id)
 
-        # 🔐 Validación obligatoria para que funcione el chatter
-        self._document_check_access(
-            'custodia.service',
-            service_id,
-            access_token
-        )
+        if not service.exists():
+            return request.redirect('/mis-servicios')
+
+        # 🔐 Asegurar que el registro tenga token
+        service._portal_ensure_token()
+
+        # 🔐 Validación correcta para portal + chatter
+        try:
+            service_sudo = self._document_check_access(
+                'custodia.service',
+                service_id,
+                access_token
+            )
+        except Exception:
+            return request.redirect('/mis-servicios')
 
         values = {
-            'service': service,
-            'cliente': service.partner_id,
-            'token': access_token,
+            'service': service_sudo,
+            'cliente': service_sudo.partner_id,
+            'token': service_sudo.access_token,
+            'page_name': 'service_detail',
         }
 
         return request.render(
@@ -105,7 +116,7 @@ class CustodiaPortal(CustomerPortal):
     # ---------------------------------------------------------
     # SUBMIT NUEVA SOLICITUD
     # ---------------------------------------------------------
-    @http.route(['/solicitar-servicio/submit'], 
+    @http.route(['/solicitar-servicio/submit'],
                 type='http', auth='user', website=True, csrf=True)
     def solicitar_submit(self, **post):
 
@@ -150,7 +161,9 @@ class CustodiaPortal(CustomerPortal):
 
             service = request.env['custodia.service'].sudo().create(vals)
 
-            # 🔁 Redirigimos con token para que el chatter funcione
+            # 🔐 Garantizar token antes de redirigir
+            service._portal_ensure_token()
+
             return request.redirect(
                 '/mis-servicios/%s?access_token=%s' % (
                     service.id,
