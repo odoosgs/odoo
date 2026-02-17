@@ -2,74 +2,128 @@
 from odoo import http, fields
 from odoo.http import request
 from datetime import datetime
-from odoo.addons.portal.controllers.portal import CustomerPortal # Importación necesaria
+from odoo.addons.portal.controllers.portal import CustomerPortal
 
-class CustodiaPortal(CustomerPortal): # Cambiamos la herencia aquí
 
-    # --- INTEGRACIÓN CON EL HOME DEL PORTAL ---
+class CustodiaPortal(CustomerPortal):
+
+    # ---------------------------------------------------------
+    # CONTADOR EN HOME DEL PORTAL
+    # ---------------------------------------------------------
     def _prepare_home_portal_values(self, counters):
-        """ Este método hace que aparezca el botón con el contador en 'Mi Cuenta' """
         values = super()._prepare_home_portal_values(counters)
+
         if 'services_count' in counters:
             user = request.env.user
             company = user.partner_id.commercial_partner_id
-            # Contamos los servicios que pertenecen a la empresa del usuario
-            values['services_count'] = request.env['custodia.service'].sudo().search_count([
+
+            values['services_count'] = request.env[
+                'custodia.service'
+            ].sudo().search_count([
                 ('partner_id', '=', company.id)
             ])
+
         return values
 
-    # --- RUTAS EXISTENTES ---
-    @http.route(['/mis-servicios', '/mis-servicios/<int:service_id>'], type='http', auth='user', website=True)
-    def portal_services(self, service_id=None, **kwargs):
+    # ---------------------------------------------------------
+    # LISTADO DE SERVICIOS (auth=user)
+    # ---------------------------------------------------------
+    @http.route(['/mis-servicios'], type='http', auth='user', website=True)
+    def portal_services(self, **kwargs):
         user = request.env.user
         company = user.partner_id.commercial_partner_id
-        
-        if service_id:
-            # Detalle de un servicio específico
-            service = request.env['custodia.service'].sudo().browse(service_id)
-            return request.render(
-                'custodia_logistica.portal_service_detail',
-                {'service': service, 'cliente': company}
-            )
-        
-        # Listado general de servicios
+
         services = request.env['custodia.service'].sudo().search(
-            [('partner_id', '=', company.id)], order='create_date desc'
+            [('partner_id', '=', company.id)],
+            order='create_date desc'
         )
+
+        values = {
+            'services': services,
+            'cliente': company,
+        }
+
         return request.render(
             'custodia_logistica.portal_service_list',
-            {'services': services, 'cliente': company}
+            values
         )
 
+    # ---------------------------------------------------------
+    # DETALLE DEL SERVICIO (auth=public + token)
+    # ---------------------------------------------------------
+    @http.route(['/mis-servicios/<int:service_id>'], 
+                type='http', auth='public', website=True)
+    def portal_service_detail(self, service_id=None, access_token=None, **kwargs):
+
+        service = request.env['custodia.service'].sudo().browse(service_id)
+
+        # 🔐 Validación obligatoria para que funcione el chatter
+        self._document_check_access(
+            'custodia.service',
+            service_id,
+            access_token
+        )
+
+        values = {
+            'service': service,
+            'cliente': service.partner_id,
+            'token': access_token,
+        }
+
+        return request.render(
+            'custodia_logistica.portal_service_detail',
+            values
+        )
+
+    # ---------------------------------------------------------
+    # FORMULARIO NUEVA SOLICITUD
+    # ---------------------------------------------------------
     @http.route(['/solicitar-servicio'], type='http', auth='user', website=True)
     def solicitar_form(self, **kwargs):
+
         user = request.env.user
         company = user.partner_id.commercial_partner_id
+
         carriers = request.env['custodia.carrier'].sudo().search([])
         rutas = request.env['custodia.ruta'].sudo().search([])
-        contacts = request.env['res.partner'].sudo().search([('parent_id', '=', company.id)])
+        contacts = request.env['res.partner'].sudo().search([
+            ('parent_id', '=', company.id)
+        ])
+
+        values = {
+            'carriers': carriers,
+            'rutas': rutas,
+            'contacts': contacts,
+            'cliente': company,
+        }
+
         return request.render(
             'custodia_logistica.portal_service_form',
-            {
-                'carriers': carriers,
-                'rutas': rutas,
-                'contacts': contacts,
-                'cliente': company,
-            }
+            values
         )
 
-    @http.route(['/solicitar-servicio/submit'], type='http', auth='user', website=True, csrf=True)
+    # ---------------------------------------------------------
+    # SUBMIT NUEVA SOLICITUD
+    # ---------------------------------------------------------
+    @http.route(['/solicitar-servicio/submit'], 
+                type='http', auth='user', website=True, csrf=True)
     def solicitar_submit(self, **post):
+
         company = request.env.user.partner_id.commercial_partner_id
+
         try:
-            # Convertir fecha/hora del input HTML5
+            # Conversión fecha/hora HTML5
             start_dt = False
             if post.get('start_datetime'):
                 try:
-                    start_dt = datetime.strptime(post['start_datetime'], "%Y-%m-%dT%H:%M")
+                    start_dt = datetime.strptime(
+                        post['start_datetime'],
+                        "%Y-%m-%dT%H:%M"
+                    )
                 except Exception:
-                    start_dt = fields.Datetime.from_string(post['start_datetime'])
+                    start_dt = fields.Datetime.from_string(
+                        post['start_datetime']
+                    )
 
             vals = {
                 'partner_id': company.id,
@@ -95,12 +149,23 @@ class CustodiaPortal(CustomerPortal): # Cambiamos la herencia aquí
             }
 
             service = request.env['custodia.service'].sudo().create(vals)
-            return request.redirect('/mis-servicios/%s' % service.id)
+
+            # 🔁 Redirigimos con token para que el chatter funcione
+            return request.redirect(
+                '/mis-servicios/%s?access_token=%s' % (
+                    service.id,
+                    service.access_token
+                )
+            )
 
         except Exception as e:
+
             carriers = request.env['custodia.carrier'].sudo().search([])
             rutas = request.env['custodia.ruta'].sudo().search([])
-            contacts = request.env['res.partner'].sudo().search([('parent_id', '=', company.id)])
+            contacts = request.env['res.partner'].sudo().search([
+                ('parent_id', '=', company.id)
+            ])
+
             return request.render(
                 'custodia_logistica.portal_service_form',
                 {
