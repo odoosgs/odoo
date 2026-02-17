@@ -89,7 +89,10 @@
                         <t t-call="portal.message_thread">
                             <t t-set="object" t-value="service"/>
                             <t t-set="token" t-value="service.access_token"/>
-                            <t t-set="hash" t-value="service._sign_token(service.access_token) if 'access_token' in service._fields else ''"/>
+                            <t t-set="pid" t-value="request.env.user.partner_id.id"/>
+                            <t t-if="'access_token' in service._fields">
+                                <t t-set="hash" t-value="service._sign_token(service.access_token)"/>
+                            </t>
                         </t>
                     </div>
                 </div>
