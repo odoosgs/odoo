@@ -88,7 +88,9 @@
                         
                         <t t-call="portal.message_thread">
                             <t t-set="object" t-value="service"/>
-                            <t t-set="token" t-value="service.access_token if 'access_token' in service._fields else ''"/>
+                            <t t-set="token" t-value="service.access_token"/>
+                            <t t-set="pid" t-value="request.env.user.partner_id.id"/>
+                            <t t-set="hash" t-value="service._sign_token(service.access_token) if hasattr(service, '_sign_token') else ''"/>
                         </t>
                     </div>
                 </div>
@@ -107,6 +109,7 @@
                 </t>
                 <form action="/solicitar-servicio/submit" method="post" class="row g-3">
                     <input type="hidden" name="csrf_token" t-att-value="request.csrf_token()"/>
+                    
                     <div class="col-12">
                         <button type="submit" class="btn btn-success btn-lg">Registrar Solicitud</button>
                     </div>
