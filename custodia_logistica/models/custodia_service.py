@@ -190,14 +190,3 @@ class CustodiaService(models.Model):
         self.write({'state': 'cancelado'})
 
     # --- MÉTODO PARA TIEMPO REAL ---
-    def message_post(self, **kwargs):
-        """ Sobrescribe la publicación de mensajes para notificar al Bus de Odoo """
-        message = super(CustodiaService, self).message_post(**kwargs)
-        
-        # Notificamos al canal del bus para que el JavaScript en el portal reaccione
-        self.env['bus.bus']._sendone(
-            'custodia_service_%s' % self.id,
-            'mail.record/insert',
-            {'res_id': self.id, 'model': self._name}
-        )
-        return message
