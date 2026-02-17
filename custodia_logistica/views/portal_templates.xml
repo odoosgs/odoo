@@ -38,49 +38,49 @@
     <template id="portal_service_detail" name="Detalle del Servicio">
         <t t-call="website.layout">
             <div class="container my-4">
-                <h2>Servicio <t t-esc="service.sequence"/></h2>
-                <p><b>Cliente:</b> <t t-esc="cliente.display_name"/></p>
-                <p><b>Ruta:</b> <t t-esc="service.ruta_id.name"/> (<t t-esc="service.ruta_tipo"/>)</p>
-                <p><b>Inicio:</b> <t t-esc="service.start_datetime"/></p>
-                <p><b>Nivel:</b> <t t-esc="service.nivel_seguridad"/></p>
-                <p><b>Load ID:</b> <t t-esc="service.load_id"/></p>
-
-                <p>
-                    <b>Coordenadas:</b>
-                    <t t-if="service.start_coords">
-                        <a t-att-href="'https://www.google.com/maps?q=' + service.start_coords" target="_blank" class="btn btn-sm btn-outline-primary">Ver Inicio</a>
-                    </t>
-                    <t t-if="service.end_coords">
-                        | <a t-att-href="'https://www.google.com/maps?q=' + service.end_coords" target="_blank" class="btn btn-sm btn-outline-primary">Ver Llegada</a>
-                    </t>
-                </p>
-
-                <div class="row mt-4">
+                <div class="d-flex justify-content-between align-items-center">
+                    <h2>Servicio <t t-esc="service.sequence"/></h2>
+                    <span t-field="service.state" class="badge rounded-pill bg-info"/>
+                </div>
+                <hr/>
+                <div class="row">
                     <div class="col-md-6">
-                        <h4 class="mt-3">Datos del Carrier</h4>
-                        <ul>
-                            <li>Tipo de unidad: <t t-esc="service.tipo_unidad"/></li>
-                            <li>Placas: <t t-esc="service.placas"/></li>
-                            <li>Transporte: <t t-esc="service.transporte"/></li>
-                            <li>Operador 1: <t t-esc="service.operador1_nombre"/> — Licencia: <t t-esc="service.operador1_licencia"/></li>
-                            <li>Operador 2: <t t-esc="service.operador2_nombre or 'N/A'"/> — Licencia: <t t-esc="service.operador2_licencia or 'N/A'"/></li>
-                            <li>Monitoreo 1: <t t-esc="service.tel_monitoreo_1"/></li>
-                            <li>Monitoreo 2: <t t-esc="service.tel_monitoreo_2 or 'N/A'"/></li>
-                        </ul>
+                        <p><b>Cliente:</b> <t t-esc="cliente.display_name"/></p>
+                        <p><b>Ruta:</b> <t t-esc="service.ruta_id.name"/> (<t t-esc="service.ruta_tipo"/>)</p>
+                        <p><b>Inicio:</b> <t t-esc="service.start_datetime"/></p>
+                        <p><b>Nivel:</b> <t t-esc="service.nivel_seguridad"/></p>
+                        <p><b>Load ID:</b> <t t-esc="service.load_id"/></p>
+                        <p>
+                            <b>Coordenadas:</b>
+                            <t t-if="service.start_coords">
+                                <a t-att-href="'https://www.google.com/maps?q=' + service.start_coords" target="_blank" class="btn btn-sm btn-outline-primary">Ver Inicio</a>
+                            </t>
+                            <t t-if="service.end_coords">
+                                | <a t-att-href="'https://www.google.com/maps?q=' + service.end_coords" target="_blank" class="btn btn-sm btn-outline-primary">Ver Llegada</a>
+                            </t>
+                        </p>
                     </div>
-                    <div class="col-md-6">
-                        <h4 class="mt-3">Comentarios de Solicitud</h4>
-                        <div class="alert alert-light border">
-                            <t t-esc="service.comentarios_cliente or 'Sin comentarios adicionales.'"/>
-                        </div>
+                    <div class="col-md-6 border-start">
+                        <h4 class="mt-3">Datos del Carrier</h4>
+                        <ul class="list-unstyled">
+                            <li><b>Unidad:</b> <t t-esc="service.tipo_unidad"/></li>
+                            <li><b>Placas:</b> <t t-esc="service.placas"/></li>
+                            <li><b>Transporte:</b> <t t-esc="service.transporte"/></li>
+                            <li><b>Operador 1:</b> <t t-esc="service.operador1_nombre"/></li>
+                            <li><b>Monitoreo:</b> <t t-esc="service.tel_monitoreo_1"/></li>
+                        </ul>
                     </div>
                 </div>
 
-                <hr class="my-5"/>
+                <div class="card mt-4">
+                    <div class="card-header"><b>Comentarios de Solicitud</b></div>
+                    <div class="card-body">
+                        <t t-esc="service.comentarios_cliente or 'Sin comentarios.'"/>
+                    </div>
+                </div>
 
-                <div id="service_communication" class="mt-4">
-                    <h3 class="mb-4">Chat de Seguimiento e Incidencias</h3>
-                    
+                <div id="service_communication" class="mt-5 border-top pt-4">
+                    <h3>Chat de Seguimiento e Incidencias</h3>
                     <div id="service_chatter" 
                          t-att-data-res-id="service.id" 
                          t-att-data-res-model="'custodia.service'"
@@ -89,31 +89,10 @@
                         <t t-call="portal.message_thread">
                             <t t-set="object" t-value="service"/>
                             <t t-set="token" t-value="service.access_token"/>
-                            <t t-set="pid" t-value="request.env.user.partner_id.id"/>
-                            <t t-set="hash" t-value="service._sign_token(service.access_token) if hasattr(service, '_sign_token') else ''"/>
+                            <t t-set="hash" t-value="service._sign_token(service.access_token) if 'access_token' in service._fields else ''"/>
                         </t>
                     </div>
                 </div>
-            </div>
-        </t>
-    </template>
-
-    <template id="portal_service_form" name="Solicitud de Servicio">
-        <t t-call="website.layout">
-            <div class="container my-4">
-                <h2>Solicitar Servicio de Custodia</h2>
-                <t t-if="error">
-                    <div class="alert alert-danger" role="alert">
-                        <strong>Ocurrió un error:</strong> <t t-esc="error"/>
-                    </div>
-                </t>
-                <form action="/solicitar-servicio/submit" method="post" class="row g-3">
-                    <input type="hidden" name="csrf_token" t-att-value="request.csrf_token()"/>
-                    
-                    <div class="col-12">
-                        <button type="submit" class="btn btn-success btn-lg">Registrar Solicitud</button>
-                    </div>
-                </form>
             </div>
         </t>
     </template>
