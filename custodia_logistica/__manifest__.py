@@ -46,12 +46,13 @@
     'assets': {
         'web.assets_frontend': [
             # Aquí puedes agregar CSS/JS para personalizar el portal
-            'custodia_logistica/static/src/js/portal_chatter_live.js',
+            #'custodia_logistica/static/src/js/portal_chatter_live.js',
         ],
     },
     'application': True,
     'installable': True,
 }
+
 
 
 
