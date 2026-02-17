@@ -4,7 +4,7 @@ from odoo import models, fields, api
 class CustodiaService(models.Model):
     _name = 'custodia.service'
     _description = 'Servicio de Custodia'
-    _inherit = ['mail.thread', 'mail.activity.mixin']
+    _inherit = ['mail.thread', 'mail.activity.mixin', 'portal.mixin']
     _order = 'sequence desc, create_date desc'
 
     # Identificador legible
