@@ -47,8 +47,9 @@ class CustodiaRuta(models.Model):
         default=True
     )
 
-    variante_ids = fields.One2many(
-        'custodia.ruta.variante',
-        'ruta_id',
-        string='Variantes de Ruta'
-    )
+ #   variante_ids = fields.One2many(
+  #      'custodia.ruta.variante',
+   #     'ruta_id',
+    #    string='Variantes de Ruta'
+    #)
+
