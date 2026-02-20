@@ -1,9 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
 
-    <!-- ===================================================== -->
-    <!-- LISTADO DE SERVICIOS                                  -->
-    <!-- ===================================================== -->
     <template id="portal_service_list" name="Mis Servicios">
         <t t-call="portal.portal_layout">
             <div class="container my-4">
@@ -64,13 +61,9 @@
     </template>
 
 
-    <!-- ===================================================== -->
-    <!-- DETALLE DEL SERVICIO                                  -->
-    <!-- ===================================================== -->
     <template id="portal_service_detail" name="Detalle del Servicio">
         <t t-call="portal.portal_layout">
 
-            <!-- Leaflet Assets -->
             <t t-call-assets="web.assets_frontend">
                 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
                 <link rel="stylesheet"
@@ -102,50 +95,21 @@
                         <p><b>Nivel:</b> <t t-esc="service.nivel_seguridad"/></p>
                         <p><b>Load ID:</b> <t t-esc="service.load_id"/></p>
                     </div>
-
-                    <div class="col-md-6 border-start">
-                        <h4 class="text-muted">Datos del Carrier</h4>
-                        <ul class="list-unstyled">
-                            <li><b>Unidad:</b> <t t-esc="service.tipo_unidad"/></li>
-                            <li><b>Placas:</b> <t t-esc="service.placas"/></li>
-                            <li><b>Transporte:</b> <t t-esc="service.transporte"/></li>
-                            <li><b>Operador:</b> <t t-esc="service.operador1_nombre"/></li>
-                            <li><b>Monitoreo:</b> <t t-esc="service.tel_monitoreo_1"/></li>
-                        </ul>
-                    </div>
                 </div>
 
-                <!-- MAPA TRACKING EN VIVO -->
                 <div class="mt-5">
-                    <h3 class="mb-3">Monitoreo en Vivo</h3>
-                    <div id="live-map"
-                         style="height:450px; border-radius:10px;"></div>
-                </div>
-
-                <!-- CHATTER PORTAL -->
-                <div id="service_communication"
-                     class="mt-5 pt-4 border-top">
-
-                    <h3 class="mb-4">
-                        Seguimiento y Eventualidades en Ruta
-                    </h3>
-
-                    <t t-call="portal.message_thread">
-                        <t t-set="object" t-value="service"/>
-                        <t t-set="token" t-value="token"/>
-                        <t t-set="disable_composer" t-value="False"/>
-                    </t>
-
+                    <h3>Monitoreo en Vivo</h3>
+                    <div id="live-map" style="height:450px;"></div>
                 </div>
 
             </div>
 
-            <!-- SCRIPT TRACKING -->
             <script type="text/javascript">
+            <![CDATA[
             document.addEventListener("DOMContentLoaded", function () {
 
-                var serviceId = "<t t-out='service.id'/>";
-                var token = "<t t-out='token'/>";
+                var serviceId = "]]><t t-out='service.id'/><![CDATA[";
+                var token = "]]><t t-out='token'/><![CDATA[";
 
                 var map = L.map('live-map').setView([19.0, -99.0], 6);
 
@@ -192,15 +156,13 @@
                 setInterval(updateLocation, 15000);
 
             });
+            ]]>
             </script>
 
         </t>
     </template>
 
 
-    <!-- ===================================================== -->
-    <!-- ENTRADA EN HOME DEL PORTAL                            -->
-    <!-- ===================================================== -->
     <template id="portal_my_home_custodia"
               inherit_id="portal.portal_my_home"
               name="Custodia Portal">
