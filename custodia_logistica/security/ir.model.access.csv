@@ -3,9 +3,5 @@ access_custodia_service_user,custodia.service,model_custodia_service,base.group_
 access_custodia_service_portal,custodia.service.portal,model_custodia_service,base.group_portal,1,0,0,0
 access_mail_message_portal,mail.message.portal,mail.model_mail_message,base.group_portal,1,0,0,0
 access_mail_followers_portal,mail.followers.portal,mail.model_mail_followers,base.group_portal,1,0,0,0
-
-
-
-
-
+access_custodia_asignacion_user,custodia.asignacion,model_custodia_asignacion,base.group_user,1,1,1,1
 
