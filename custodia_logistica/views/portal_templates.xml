@@ -31,18 +31,10 @@
                             <t t-if="services">
                                 <t t-foreach="services" t-as="s">
                                     <tr>
-                                        <td>
-                                            <t t-esc="s.sequence"/>
-                                        </td>
-                                        <td>
-                                            <t t-esc="s.ruta_id.name"/>
-                                        </td>
-                                        <td>
-                                            <t t-esc="s.start_datetime"/>
-                                        </td>
-                                        <td>
-                                            <t t-esc="s.nivel_seguridad"/>
-                                        </td>
+                                        <td><t t-esc="s.sequence"/></td>
+                                        <td><t t-esc="s.ruta_id.name"/></td>
+                                        <td><t t-esc="s.start_datetime"/></td>
+                                        <td><t t-esc="s.nivel_seguridad"/></td>
                                         <td>
                                             <span t-field="s.state"
                                                   class="badge rounded-pill bg-info"/>
@@ -77,6 +69,14 @@
     <!-- ===================================================== -->
     <template id="portal_service_detail" name="Detalle del Servicio">
         <t t-call="portal.portal_layout">
+
+            <!-- 🔹 Leaflet Assets -->
+            <t t-call-assets="web.assets_frontend">
+                <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"/>
+                <link rel="stylesheet"
+                      href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+            </t>
+
             <div class="container my-4 bg-white pb-5">
 
                 <div class="d-flex justify-content-between align-items-center pt-3">
@@ -101,25 +101,6 @@
                         <p><b>Inicio:</b> <t t-esc="service.start_datetime"/></p>
                         <p><b>Nivel:</b> <t t-esc="service.nivel_seguridad"/></p>
                         <p><b>Load ID:</b> <t t-esc="service.load_id"/></p>
-
-                        <p>
-                            <b>Coordenadas:</b>
-                            <t t-if="service.start_coords">
-                                <a t-att-href="'https://www.google.com/maps/search/?api=1&amp;query=' + service.start_coords"
-                                   target="_blank"
-                                   class="btn btn-sm btn-outline-primary">
-                                    Ver Inicio
-                                </a>
-                            </t>
-                            <t t-if="service.end_coords">
-                                |
-                                <a t-att-href="'https://www.google.com/maps/search/?api=1&amp;query=' + service.end_coords"
-                                   target="_blank"
-                                   class="btn btn-sm btn-outline-primary">
-                                    Ver Llegada
-                                </a>
-                            </t>
-                        </p>
                     </div>
 
                     <div class="col-md-6 border-start">
@@ -134,20 +115,18 @@
                     </div>
                 </div>
 
-                <div class="card mt-4 border-0 bg-light">
-                    <div class="card-body">
-                        <h5 class="card-title text-muted">
-                            Comentarios de Solicitud
-                        </h5>
-                        <p class="card-text">
-                            <t t-esc="service.comentarios_cliente or 'Sin comentarios registrados.'"/>
-                        </p>
-                    </div>
+                <!-- ================================================= -->
+                <!-- 🔴 MAPA TRACKING EN VIVO                          -->
+                <!-- ================================================= -->
+                <div class="mt-5">
+                    <h3 class="mb-3">📍 Monitoreo en Vivo</h3>
+                    <div id="live-map"
+                         style="height:450px; border-radius:10px;"></div>
                 </div>
 
-                <!-- ========================= -->
-                <!-- CHATTER PORTAL            -->
-                <!-- ========================= -->
+                <!-- ================================================= -->
+                <!-- CHATTER PORTAL                                    -->
+                <!-- ================================================= -->
                 <div id="service_communication"
                      class="mt-5 pt-4 border-top">
 
@@ -164,6 +143,59 @@
                 </div>
 
             </div>
+
+            <!-- ================================================= -->
+            <!-- 🔴 SCRIPT TRACKING LIVE                            -->
+            <!-- ================================================= -->
+            <script>
+            document.addEventListener("DOMContentLoaded", function () {
+
+                var serviceId = "<t t-esc='service.id'/>";
+                var token = "<t t-esc='token'/>";
+
+                var map = L.map('live-map').setView([19.0, -99.0], 6);
+
+                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                    attribution: '© OpenStreetMap'
+                }).addTo(map);
+
+                var marker = L.marker([19.0, -99.0]).addTo(map);
+
+                function updateLocation() {
+
+                    fetch(`/mis-servicios/${serviceId}/tracking`, {
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "application/json"
+                        },
+                        body: JSON.stringify({
+                            access_token: token
+                        })
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+
+                        if (data.result && data.result.lat && data.result.lng) {
+
+                            var newLatLng = [
+                                data.result.lat,
+                                data.result.lng
+                            ];
+
+                            marker.setLatLng(newLatLng);
+                            map.panTo(newLatLng);
+                        }
+
+                    })
+                    .catch(error => console.error("Tracking error:", error));
+                }
+
+                updateLocation();
+                setInterval(updateLocation, 15000);
+
+            });
+            </script>
+
         </t>
     </template>
 
