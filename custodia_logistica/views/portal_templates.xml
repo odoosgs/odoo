@@ -70,9 +70,9 @@
     <template id="portal_service_detail" name="Detalle del Servicio">
         <t t-call="portal.portal_layout">
 
-            <!-- 🔹 Leaflet Assets -->
+            <!-- Leaflet Assets -->
             <t t-call-assets="web.assets_frontend">
-                <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"/>
+                <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
                 <link rel="stylesheet"
                       href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
             </t>
@@ -115,18 +115,14 @@
                     </div>
                 </div>
 
-                <!-- ================================================= -->
-                <!-- 🔴 MAPA TRACKING EN VIVO                          -->
-                <!-- ================================================= -->
+                <!-- MAPA TRACKING EN VIVO -->
                 <div class="mt-5">
-                    <h3 class="mb-3">📍 Monitoreo en Vivo</h3>
+                    <h3 class="mb-3">Monitoreo en Vivo</h3>
                     <div id="live-map"
                          style="height:450px; border-radius:10px;"></div>
                 </div>
 
-                <!-- ================================================= -->
-                <!-- CHATTER PORTAL                                    -->
-                <!-- ================================================= -->
+                <!-- CHATTER PORTAL -->
                 <div id="service_communication"
                      class="mt-5 pt-4 border-top">
 
@@ -144,26 +140,24 @@
 
             </div>
 
-            <!-- ================================================= -->
-            <!-- 🔴 SCRIPT TRACKING LIVE                            -->
-            <!-- ================================================= -->
-            <script>
+            <!-- SCRIPT TRACKING -->
+            <script type="text/javascript">
             document.addEventListener("DOMContentLoaded", function () {
 
-                var serviceId = "<t t-esc='service.id'/>";
-                var token = "<t t-esc='token'/>";
+                var serviceId = "<t t-out='service.id'/>";
+                var token = "<t t-out='token'/>";
 
                 var map = L.map('live-map').setView([19.0, -99.0], 6);
 
-                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                    attribution: '© OpenStreetMap'
+                L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+                    attribution: "OpenStreetMap"
                 }).addTo(map);
 
                 var marker = L.marker([19.0, -99.0]).addTo(map);
 
                 function updateLocation() {
 
-                    fetch(`/mis-servicios/${serviceId}/tracking`, {
+                    fetch("/mis-servicios/" + serviceId + "/tracking", {
                         method: "POST",
                         headers: {
                             "Content-Type": "application/json"
@@ -172,8 +166,10 @@
                             access_token: token
                         })
                     })
-                    .then(response => response.json())
-                    .then(data => {
+                    .then(function(response){
+                        return response.json();
+                    })
+                    .then(function(data){
 
                         if (data.result && data.result.lat && data.result.lng) {
 
@@ -187,7 +183,9 @@
                         }
 
                     })
-                    .catch(error => console.error("Tracking error:", error));
+                    .catch(function(error){
+                        console.log("Tracking error:", error);
+                    });
                 }
 
                 updateLocation();
