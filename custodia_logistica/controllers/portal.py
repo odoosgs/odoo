@@ -3,7 +3,6 @@ from odoo import http, fields
 from odoo.http import request
 from datetime import datetime
 from odoo.addons.portal.controllers.portal import CustomerPortal
-from odoo.exceptions import AccessError, MissingError
 
 
 class CustodiaPortal(CustomerPortal):
@@ -50,7 +49,7 @@ class CustodiaPortal(CustomerPortal):
         )
 
     # =========================================================
-    # DETALLE DEL SERVICIO (CON TOKEN)
+    # DETALLE DEL SERVICIO (ESTABLE PARA ODOO 19)
     # =========================================================
     @http.route(
         ['/mis-servicios/<int:service_id>'],
@@ -58,23 +57,28 @@ class CustodiaPortal(CustomerPortal):
         auth='public',
         website=True
     )
-    def portal_service_detail(self, service_id, access_token=None, **kwargs):
+    def portal_service_detail(self, service_id=None, access_token=None, **kwargs):
 
-        try:
-            service = self._document_check_access(
-                'custodia.service',
-                service_id,
-                access_token
-            )
-        except (AccessError, MissingError):
+        service = request.env['custodia.service'].sudo().browse(service_id)
+
+        if not service.exists():
             return request.redirect('/mis-servicios')
 
         service._portal_ensure_token()
 
+        try:
+            service_sudo = self._document_check_access(
+                'custodia.service',
+                service_id,
+                access_token
+            )
+        except Exception:
+            return request.redirect('/mis-servicios')
+
         values = {
-            'service': service,
-            'cliente': service.partner_id,
-            'token': service.access_token,
+            'service': service_sudo,
+            'cliente': service_sudo.partner_id,
+            'token': service_sudo.access_token,
             'page_name': 'service_detail',
         }
 
@@ -92,36 +96,41 @@ class CustodiaPortal(CustomerPortal):
         auth='public',
         website=True
     )
-    def portal_service_tracking_view(self, service_id, access_token=None, **kwargs):
+    def portal_service_tracking_view(self, service_id=None, access_token=None, **kwargs):
 
-        try:
-            service = self._document_check_access(
-                'custodia.service',
-                service_id,
-                access_token
-            )
-        except (AccessError, MissingError):
+        service = request.env['custodia.service'].sudo().browse(service_id)
+
+        if not service.exists():
             return request.redirect('/mis-servicios')
 
         service._portal_ensure_token()
 
+        try:
+            service_sudo = self._document_check_access(
+                'custodia.service',
+                service_id,
+                access_token
+            )
+        except Exception:
+            return request.redirect('/mis-servicios')
+
         return request.render(
             'custodia_logistica.portal_service_tracking',
             {
-                'service': service,
-                'token': service.access_token,
+                'service': service_sudo,
+                'token': service_sudo.access_token,
             }
         )
 
     # =========================================================
-    # 🔴 ENDPOINT JSON TRACKING EN VIVO
+    # ENDPOINT JSON TRACKING EN VIVO
     # =========================================================
     @http.route(
         ['/mis-servicios/<int:service_id>/tracking'],
         type='json',
         auth='public'
     )
-    def portal_service_tracking(self, service_id, access_token=None, **kwargs):
+    def portal_service_tracking(self, service_id=None, access_token=None, **kwargs):
 
         try:
             service = self._document_check_access(
