@@ -6,6 +6,9 @@ class CustodiaService(models.Model):
     _description = 'Servicio de Custodia'
     _inherit = ['mail.thread', 'mail.activity.mixin', 'portal.mixin']
     _order = 'sequence desc, create_date desc'
+    current_lat = fields.Float(tracking=True)
+    current_lng = fields.Float(tracking=True)
+    last_update = fields.Datetime(tracking=True)
 
     # Identificador legible
     name = fields.Char(
@@ -157,6 +160,11 @@ class CustodiaService(models.Model):
         'res.users',
         string='Planeador',
         tracking=True
+    )
+
+    tracking_ids = fields.One2many(
+        'custodia.service.tracking',
+        'service_id'
     )
 
     # Autogenerar nombre y secuencia
