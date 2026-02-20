@@ -61,10 +61,8 @@ class CustodiaPortal(CustomerPortal):
         if not service.exists():
             return request.redirect('/mis-servicios')
 
-        # 🔐 Asegurar que el registro tenga token
         service._portal_ensure_token()
 
-        # 🔐 Validación correcta para portal + chatter
         try:
             service_sudo = self._document_check_access(
                 'custodia.service',
@@ -85,6 +83,41 @@ class CustodiaPortal(CustomerPortal):
             'custodia_logistica.portal_service_detail',
             values
         )
+
+    # ---------------------------------------------------------
+    # 🔴 ENDPOINT JSON TRACKING EN VIVO
+    # ---------------------------------------------------------
+    @http.route(
+        ['/mis-servicios/<int:service_id>/tracking'],
+        type='json',
+        auth='public',
+        website=True
+    )
+    def portal_service_tracking(self, service_id, access_token=None, **kwargs):
+
+        service = request.env['custodia.service'].sudo().browse(service_id)
+
+        if not service.exists():
+            return {'error': 'Servicio no encontrado'}
+
+        # 🔐 Asegurar token
+        service._portal_ensure_token()
+
+        # 🔐 Validar acceso
+        try:
+            self._document_check_access(
+                'custodia.service',
+                service_id,
+                access_token
+            )
+        except Exception:
+            return {'error': 'Acceso no autorizado'}
+
+        return {
+            'lat': service.current_lat or 0.0,
+            'lng': service.current_lng or 0.0,
+            'last_update': service.last_update,
+        }
 
     # ---------------------------------------------------------
     # FORMULARIO NUEVA SOLICITUD
@@ -123,7 +156,6 @@ class CustodiaPortal(CustomerPortal):
         company = request.env.user.partner_id.commercial_partner_id
 
         try:
-            # Conversión fecha/hora HTML5
             start_dt = False
             if post.get('start_datetime'):
                 try:
@@ -161,7 +193,6 @@ class CustodiaPortal(CustomerPortal):
 
             service = request.env['custodia.service'].sudo().create(vals)
 
-            # 🔐 Garantizar token antes de redirigir
             service._portal_ensure_token()
 
             return request.redirect(
