@@ -3,44 +3,44 @@ from odoo import http, fields
 from odoo.http import request
 from datetime import datetime
 from odoo.addons.portal.controllers.portal import CustomerPortal
+from odoo.exceptions import AccessError, MissingError
 
 
 class CustodiaPortal(CustomerPortal):
 
-    # ---------------------------------------------------------
+    # =========================================================
     # CONTADOR EN HOME DEL PORTAL
-    # ---------------------------------------------------------
+    # =========================================================
     def _prepare_home_portal_values(self, counters):
         values = super()._prepare_home_portal_values(counters)
 
         if 'services_count' in counters:
-            user = request.env.user
-            company = user.partner_id.commercial_partner_id
+            partner = request.env.user.partner_id.commercial_partner_id
 
             values['services_count'] = request.env[
                 'custodia.service'
             ].sudo().search_count([
-                ('partner_id', '=', company.id)
+                ('partner_id', '=', partner.id)
             ])
 
         return values
 
-    # ---------------------------------------------------------
-    # LISTADO DE SERVICIOS (auth=user)
-    # ---------------------------------------------------------
+    # =========================================================
+    # LISTADO DE SERVICIOS
+    # =========================================================
     @http.route(['/mis-servicios'], type='http', auth='user', website=True)
     def portal_services(self, **kwargs):
-        user = request.env.user
-        company = user.partner_id.commercial_partner_id
+
+        partner = request.env.user.partner_id.commercial_partner_id
 
         services = request.env['custodia.service'].sudo().search(
-            [('partner_id', '=', company.id)],
+            [('partner_id', '=', partner.id)],
             order='create_date desc'
         )
 
         values = {
             'services': services,
-            'cliente': company,
+            'cliente': partner,
             'page_name': 'services',
         }
 
@@ -49,33 +49,32 @@ class CustodiaPortal(CustomerPortal):
             values
         )
 
-    # ---------------------------------------------------------
-    # DETALLE DEL SERVICIO (auth=public + token)
-    # ---------------------------------------------------------
-    @http.route(['/mis-servicios/<int:service_id>'],
-                type='http', auth='public', website=True)
-    def portal_service_detail(self, service_id=None, access_token=None, **kwargs):
-
-        service = request.env['custodia.service'].sudo().browse(service_id)
-
-        if not service.exists():
-            return request.redirect('/mis-servicios')
-
-        service._portal_ensure_token()
+    # =========================================================
+    # DETALLE DEL SERVICIO (CON TOKEN)
+    # =========================================================
+    @http.route(
+        ['/mis-servicios/<int:service_id>'],
+        type='http',
+        auth='public',
+        website=True
+    )
+    def portal_service_detail(self, service_id, access_token=None, **kwargs):
 
         try:
-            service_sudo = self._document_check_access(
+            service = self._document_check_access(
                 'custodia.service',
                 service_id,
                 access_token
             )
-        except Exception:
+        except (AccessError, MissingError):
             return request.redirect('/mis-servicios')
 
+        service._portal_ensure_token()
+
         values = {
-            'service': service_sudo,
-            'cliente': service_sudo.partner_id,
-            'token': service_sudo.access_token,
+            'service': service,
+            'cliente': service.partner_id,
+            'token': service.access_token,
             'page_name': 'service_detail',
         }
 
@@ -84,28 +83,48 @@ class CustodiaPortal(CustomerPortal):
             values
         )
 
-    # ---------------------------------------------------------
-    # 🔴 ENDPOINT JSON TRACKING EN VIVO
-    # ---------------------------------------------------------
+    # =========================================================
+    # VISTA HTTP TRACKING (MAPA)
+    # =========================================================
     @http.route(
-        ['/mis-servicios/<int:service_id>/tracking'],
-        type='json',
+        ['/mis-servicios/<int:service_id>/tracking-view'],
+        type='http',
         auth='public',
         website=True
     )
-    def portal_service_tracking(self, service_id, access_token=None, **kwargs):
+    def portal_service_tracking_view(self, service_id, access_token=None, **kwargs):
 
-        service = request.env['custodia.service'].sudo().browse(service_id)
+        try:
+            service = self._document_check_access(
+                'custodia.service',
+                service_id,
+                access_token
+            )
+        except (AccessError, MissingError):
+            return request.redirect('/mis-servicios')
 
-        if not service.exists():
-            return {'error': 'Servicio no encontrado'}
-
-        # 🔐 Asegurar token
         service._portal_ensure_token()
 
-        # 🔐 Validar acceso
+        return request.render(
+            'custodia_logistica.portal_service_tracking',
+            {
+                'service': service,
+                'token': service.access_token,
+            }
+        )
+
+    # =========================================================
+    # 🔴 ENDPOINT JSON TRACKING EN VIVO
+    # =========================================================
+    @http.route(
+        ['/mis-servicios/<int:service_id>/tracking'],
+        type='json',
+        auth='public'
+    )
+    def portal_service_tracking(self, service_id, access_token=None, **kwargs):
+
         try:
-            self._document_check_access(
+            service = self._document_check_access(
                 'custodia.service',
                 service_id,
                 access_token
@@ -117,43 +136,46 @@ class CustodiaPortal(CustomerPortal):
             'lat': service.current_lat or 0.0,
             'lng': service.current_lng or 0.0,
             'last_update': service.last_update,
+            'state': service.state,
         }
 
-    # ---------------------------------------------------------
+    # =========================================================
     # FORMULARIO NUEVA SOLICITUD
-    # ---------------------------------------------------------
+    # =========================================================
     @http.route(['/solicitar-servicio'], type='http', auth='user', website=True)
     def solicitar_form(self, **kwargs):
 
-        user = request.env.user
-        company = user.partner_id.commercial_partner_id
+        partner = request.env.user.partner_id.commercial_partner_id
 
         carriers = request.env['custodia.carrier'].sudo().search([])
         rutas = request.env['custodia.ruta'].sudo().search([])
         contacts = request.env['res.partner'].sudo().search([
-            ('parent_id', '=', company.id)
+            ('parent_id', '=', partner.id)
         ])
-
-        values = {
-            'carriers': carriers,
-            'rutas': rutas,
-            'contacts': contacts,
-            'cliente': company,
-        }
 
         return request.render(
             'custodia_logistica.portal_service_form',
-            values
+            {
+                'carriers': carriers,
+                'rutas': rutas,
+                'contacts': contacts,
+                'cliente': partner,
+            }
         )
 
-    # ---------------------------------------------------------
+    # =========================================================
     # SUBMIT NUEVA SOLICITUD
-    # ---------------------------------------------------------
-    @http.route(['/solicitar-servicio/submit'],
-                type='http', auth='user', website=True, csrf=True)
+    # =========================================================
+    @http.route(
+        ['/solicitar-servicio/submit'],
+        type='http',
+        auth='user',
+        website=True,
+        csrf=True
+    )
     def solicitar_submit(self, **post):
 
-        company = request.env.user.partner_id.commercial_partner_id
+        partner = request.env.user.partner_id.commercial_partner_id
 
         try:
             start_dt = False
@@ -169,13 +191,13 @@ class CustodiaPortal(CustomerPortal):
                     )
 
             vals = {
-                'partner_id': company.id,
-                'contact_id': int(post['contact_id']),
-                'carrier_id': int(post['carrier_id']),
-                'ruta_id': int(post['ruta_id']),
+                'partner_id': partner.id,
+                'contact_id': int(post.get('contact_id')),
+                'carrier_id': int(post.get('carrier_id')),
+                'ruta_id': int(post.get('ruta_id')),
                 'start_datetime': start_dt,
-                'nivel_seguridad': post['nivel_seguridad'],
-                'load_id': post['load_id'],
+                'nivel_seguridad': post.get('nivel_seguridad'),
+                'load_id': post.get('load_id'),
                 'tipo_unidad': post.get('tipo_unidad'),
                 'placas': post.get('placas'),
                 'transporte': post.get('transporte'),
@@ -192,7 +214,6 @@ class CustodiaPortal(CustomerPortal):
             }
 
             service = request.env['custodia.service'].sudo().create(vals)
-
             service._portal_ensure_token()
 
             return request.redirect(
@@ -207,7 +228,7 @@ class CustodiaPortal(CustomerPortal):
             carriers = request.env['custodia.carrier'].sudo().search([])
             rutas = request.env['custodia.ruta'].sudo().search([])
             contacts = request.env['res.partner'].sudo().search([
-                ('parent_id', '=', company.id)
+                ('parent_id', '=', partner.id)
             ])
 
             return request.render(
@@ -216,7 +237,7 @@ class CustodiaPortal(CustomerPortal):
                     'carriers': carriers,
                     'rutas': rutas,
                     'contacts': contacts,
-                    'cliente': company,
+                    'cliente': partner,
                     'error': str(e),
                 }
             )
