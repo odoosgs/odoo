@@ -167,6 +167,13 @@ class CustodiaService(models.Model):
         'service_id'
     )
 
+    ruta_id = fields.Many2one(
+        'custodia.ruta',
+        string='Ruta',
+        required=True
+    )
+
+
     # Autogenerar nombre y secuencia
     @api.model
     def create(self, vals_list):
