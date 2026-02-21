@@ -1,16 +1,23 @@
 # -*- coding: utf-8 -*-
 from odoo import models, fields, api
 
+
 class CustodiaService(models.Model):
     _name = 'custodia.service'
     _description = 'Servicio de Custodia'
     _inherit = ['mail.thread', 'mail.activity.mixin', 'portal.mixin']
     _order = 'sequence desc, create_date desc'
-    current_lat = fields.Float(tracking=True)
-    current_lng = fields.Float(tracking=True)
-    last_update = fields.Datetime(tracking=True)
 
-    # Identificador legible
+    # =========================
+    # CAMPOS DE UBICACIÓN LIVE
+    # =========================
+    current_lat = fields.Float(string="Latitud Actual", tracking=True)
+    current_lng = fields.Float(string="Longitud Actual", tracking=True)
+    last_update = fields.Datetime(string="Última Actualización", tracking=True)
+
+    # =========================
+    # IDENTIFICADORES
+    # =========================
     name = fields.Char(
         string='Folio del Servicio',
         required=True,
@@ -19,7 +26,6 @@ class CustodiaService(models.Model):
         default='Nuevo'
     )
 
-    # Consecutivo interno
     sequence = fields.Char(
         string='Consecutivo',
         copy=False,
@@ -27,6 +33,9 @@ class CustodiaService(models.Model):
         default='Nuevo'
     )
 
+    # =========================
+    # RELACIONES
+    # =========================
     partner_id = fields.Many2one(
         'res.partner',
         string='Cliente',
@@ -34,6 +43,7 @@ class CustodiaService(models.Model):
         domain=[('is_company', '=', True)],
         tracking=True
     )
+
     contact_id = fields.Many2one(
         'res.partner',
         string='Persona solicitante',
@@ -48,12 +58,14 @@ class CustodiaService(models.Model):
         required=True,
         tracking=True
     )
+
     ruta_id = fields.Many2one(
         'custodia.ruta',
         string='Ruta',
         required=True,
         tracking=True
     )
+
     ruta_tipo = fields.Selection(
         [('local', 'Local'), ('foraneo', 'Foráneo')],
         string='Tipo de ruta',
@@ -61,11 +73,21 @@ class CustodiaService(models.Model):
         store=True
     )
 
+    planner_id = fields.Many2one(
+        'res.users',
+        string='Planeador',
+        tracking=True
+    )
+
+    # =========================
+    # DATOS OPERATIVOS
+    # =========================
     start_datetime = fields.Datetime(
         string='Inicio del servicio',
         required=True,
         tracking=True
     )
+
     nivel_seguridad = fields.Selection(
         [
             ('1', 'Nivel 1'),
@@ -78,6 +100,7 @@ class CustodiaService(models.Model):
         required=True,
         tracking=True
     )
+
     load_id = fields.Char(
         string='Load ID',
         required=True,
@@ -85,62 +108,44 @@ class CustodiaService(models.Model):
         tracking=True
     )
 
-    tipo_unidad = fields.Char(
-        string='Tipo de unidad',
-        tracking=True
-    )
-    placas = fields.Char(
-        string='Placas',
-        tracking=True
-    )
-    transporte = fields.Char(
-        string='Transporte',
-        tracking=True
-    )
-    operador1_nombre = fields.Char(
-        string='Operador 1',
-        tracking=True
-    )
-    operador1_licencia = fields.Char(
-        string='Licencia Operador 1',
-        tracking=True
-    )
-    operador2_nombre = fields.Char(
-        string='Operador 2',
-        tracking=True
-    )
-    operador2_licencia = fields.Char(
-        string='Licencia Operador 2',
-        tracking=True
-    )
-    tel_monitoreo_1 = fields.Char(
-        string='Teléfono Monitoreo 1',
-        tracking=True
-    )
-    tel_monitoreo_2 = fields.Char(
-        string='Teléfono Monitoreo 2',
-        tracking=True
-    )
-    start_coords = fields.Char(
-        string='Coordenadas de inicio',
-        tracking=True
-    )
-    end_coords = fields.Char(
-        string='Coordenadas de llegada',
-        tracking=True
-    )
+    tipo_unidad = fields.Char(string='Tipo de unidad', tracking=True)
+    placas = fields.Char(string='Placas', tracking=True)
+    transporte = fields.Char(string='Transporte', tracking=True)
+
+    operador1_nombre = fields.Char(string='Operador 1', tracking=True)
+    operador1_licencia = fields.Char(string='Licencia Operador 1', tracking=True)
+    operador2_nombre = fields.Char(string='Operador 2', tracking=True)
+    operador2_licencia = fields.Char(string='Licencia Operador 2', tracking=True)
+
+    tel_monitoreo_1 = fields.Char(string='Teléfono Monitoreo 1', tracking=True)
+    tel_monitoreo_2 = fields.Char(string='Teléfono Monitoreo 2', tracking=True)
+
+    start_coords = fields.Char(string='Coordenadas de inicio', tracking=True)
+    end_coords = fields.Char(string='Coordenadas de llegada', tracking=True)
+
     comentarios_cliente = fields.Text(
         string='Comentarios del Cliente',
         tracking=True
     )
 
-    # Relación hijo
+    # =========================
+    # RELACIONES HIJAS
+    # =========================
     asignacion_ids = fields.One2many(
         'custodia.asignacion',
         'service_id',
         string='Asignaciones'
     )
 
+    tracking_ids = fields.One2many(
+        'custodia.service.tracking',
+        'service_id',
+        string='Historial de Ubicaciones'
+    )
+
+    # =========================
+    # ESTADO
+    # =========================
     state = fields.Selection(
         [
             ('solicitado', 'Solicitado'),
@@ -156,34 +161,25 @@ class CustodiaService(models.Model):
         index=True
     )
 
-    planner_id = fields.Many2one(
-        'res.users',
-        string='Planeador',
-        tracking=True
-    )
-
-    tracking_ids = fields.One2many(
-        'custodia.service.tracking',
-        'service_id'
-    )
-
-
-
-    # Autogenerar nombre y secuencia
-    @api.model
+    # =========================
+    # CREATE (SECUENCIA)
+    # =========================
+    @api.model_create_multi
     def create(self, vals_list):
-        if isinstance(vals_list, dict):
-            vals_list = [vals_list]
-
         for vals in vals_list:
             if vals.get('sequence', 'Nuevo') == 'Nuevo':
-                vals['sequence'] = self.env['ir.sequence'].next_by_code('custodia.service') or 'Nuevo'
+                vals['sequence'] = self.env['ir.sequence'].next_by_code(
+                    'custodia.service'
+                ) or 'Nuevo'
+
             if vals.get('name', 'Nuevo') == 'Nuevo':
                 vals['name'] = vals['sequence']
 
-        return super(CustodiaService, self).create(vals_list)
+        return super().create(vals_list)
 
-    # Botones de acción para flujo de estados
+    # =========================
+    # FLUJO DE ESTADOS
+    # =========================
     def action_aprobar(self):
         self.write({'state': 'aprobado'})
 
@@ -199,16 +195,20 @@ class CustodiaService(models.Model):
     def action_cancelar(self):
         self.write({'state': 'cancelado'})
 
-    # --- MÉTODO PARA TIEMPO REAL ---
-    
+    # =========================
+    # MÉTODO TIEMPO REAL
+    # =========================
     def update_live_location(self, lat, lng):
         """Actualiza la ubicación en tiempo real del servicio"""
         self.ensure_one()
 
+        now = fields.Datetime.now()
+
+        # Actualiza ubicación actual
         self.write({
             'current_lat': lat,
             'current_lng': lng,
-            'last_update': fields.Datetime.now()
+            'last_update': now
         })
 
         # Crear registro histórico
@@ -216,8 +216,7 @@ class CustodiaService(models.Model):
             'service_id': self.id,
             'latitude': lat,
             'longitude': lng,
-            'timestamp': fields.Datetime.now()
+            'timestamp': now
         })
 
         return True
-
