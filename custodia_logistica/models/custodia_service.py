@@ -167,11 +167,6 @@ class CustodiaService(models.Model):
         'service_id'
     )
 
-    ruta_id = fields.Many2one(
-        'custodia.ruta',
-        string='Ruta',
-        required=True
-    )
 
 
     # Autogenerar nombre y secuencia
@@ -205,3 +200,24 @@ class CustodiaService(models.Model):
         self.write({'state': 'cancelado'})
 
     # --- MÉTODO PARA TIEMPO REAL ---
+    
+    def update_live_location(self, lat, lng):
+        """Actualiza la ubicación en tiempo real del servicio"""
+        self.ensure_one()
+
+        self.write({
+            'current_lat': lat,
+            'current_lng': lng,
+            'last_update': fields.Datetime.now()
+        })
+
+        # Crear registro histórico
+        self.env['custodia.service.tracking'].create({
+            'service_id': self.id,
+            'latitude': lat,
+            'longitude': lng,
+            'timestamp': fields.Datetime.now()
+        })
+
+        return True
+
