@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 from odoo import models, fields
 
+
 class CustodiaRuta(models.Model):
     _name = 'custodia.ruta'
     _description = 'Ruta Comercial de Custodia'
@@ -15,13 +16,40 @@ class CustodiaRuta(models.Model):
     )
 
     tipo = fields.Selection(
-        [('local','Local'), ('foraneo','Foráneo')],
+        [('local', 'Local'), ('foraneo', 'Foráneo')],
         string='Tipo de ruta',
         required=True,
         default='local',
         tracking=True
     )
 
+    # =========================
+    # INFORMACIÓN DEL TRAYECTO
+    # =========================
+    origen = fields.Char(
+        string='Origen',
+        tracking=True
+    )
+
+    destino = fields.Char(
+        string='Destino',
+        tracking=True
+    )
+
+    distancia_km = fields.Float(
+        string='Distancia (km)',
+        tracking=True
+    )
+
+    tiempo_estimado = fields.Float(
+        string='Tiempo Estimado (horas)',
+        tracking=True,
+        help="Tiempo estimado en horas"
+    )
+
+    # =========================
+    # COSTOS
+    # =========================
     tiene_peajes = fields.Boolean(
         string='Incluye Casetas/Peajes',
         default=False
@@ -38,6 +66,9 @@ class CustodiaRuta(models.Model):
         default=lambda self: self.env.company.currency_id
     )
 
+    # =========================
+    # OTROS
+    # =========================
     descripcion = fields.Text(
         string='Descripción / Detalles de la Ruta'
     )
@@ -46,10 +77,3 @@ class CustodiaRuta(models.Model):
         string='Activa',
         default=True
     )
-
- #   variante_ids = fields.One2many(
-  #      'custodia.ruta.variante',
-   #     'ruta_id',
-    #    string='Variantes de Ruta'
-    #)
-
