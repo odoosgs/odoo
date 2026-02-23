@@ -1,13 +1,14 @@
 # -*- coding: utf-8 -*-
 from odoo import models, fields
 
-class CustodiaRouteNode(models.Model):
-    _name = 'custodia.route.node'
+
+class CustodiaRutaNodo(models.Model):
+    _name = 'custodia.ruta.nodo'
     _description = 'Nodo Intermedio de Ruta'
     _order = 'sequence, id'
 
-    route_id = fields.Many2one(
-        'custodia.route',
+    ruta_id = fields.Many2one(
+        'custodia.ruta',
         string='Ruta',
         required=True,
         ondelete='cascade'
