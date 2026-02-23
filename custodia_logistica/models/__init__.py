@@ -6,6 +6,6 @@ from . import purchase_ext
 from . import account_move_ext
 from . import planning_ext
 from . import service_tracking
-from . import custodia_route
+from . import custodia_ruta
 from . import custodia_ruta_nodo
 
