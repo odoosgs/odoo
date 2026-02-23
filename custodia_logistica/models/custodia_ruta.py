@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-from odoo import models, fields, api
+from odoo import models, fields
 
 
 class CustodiaRuta(models.Model):
@@ -87,7 +87,10 @@ class CustodiaRuta(models.Model):
         digits=(10, 6)
     )
 
-    # Nodos intermedios
+    # =========================
+    # RELACIONES
+    # =========================
+
     node_ids = fields.One2many(
         comodel_name='custodia.ruta.nodo',
         inverse_name='ruta_id',
@@ -128,4 +131,28 @@ class CustodiaRuta(models.Model):
         points = []
 
         # Origen
-        if self.origin_latitude and self._
+        if self.origin_latitude and self.origin_longitude:
+            points.append({
+                'lat': self.origin_latitude,
+                'lng': self.origin_longitude,
+                'type': 'origin'
+            })
+
+        # Nodos ordenados por sequence
+        for node in self.node_ids.sorted(key=lambda n: n.sequence):
+            if node.latitude and node.longitude:
+                points.append({
+                    'lat': node.latitude,
+                    'lng': node.longitude,
+                    'type': 'node'
+                })
+
+        # Destino
+        if self.destination_latitude and self.destination_longitude:
+            points.append({
+                'lat': self.destination_latitude,
+                'lng': self.destination_longitude,
+                'type': 'destination'
+            })
+
+        return points
