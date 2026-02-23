@@ -111,6 +111,7 @@ class CustodiaService(models.Model):
     route_id = fields.Many2one(
         'custodia.ruta',
         string='Ruta Planificada'
+        ondelete='set null'
     )
 
 
