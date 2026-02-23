@@ -108,6 +108,12 @@ class CustodiaService(models.Model):
         tracking=True
     )
 
+    route_id = fields.Many2one(
+        'custodia.route',
+        string='Ruta Planificada'
+    )
+
+
     tipo_unidad = fields.Char(string='Tipo de unidad', tracking=True)
     placas = fields.Char(string='Placas', tracking=True)
     transporte = fields.Char(string='Transporte', tracking=True)
