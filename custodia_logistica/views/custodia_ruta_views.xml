@@ -2,6 +2,22 @@
 <odoo>
 
     <!-- =========================
+     TREE VIEW NODOS
+    ========================== -->
+    <record id="view_custodia_ruta_nodo_tree" model="ir.ui.view">
+        <field name="name">custodia.ruta.nodo.tree</field>
+        <field name="model">custodia.ruta.nodo</field>
+        <field name="arch" type="xml">
+            <tree editable="bottom">
+                <field name="sequence"/>
+                <field name="name"/>
+                <field name="latitude"/>
+                <field name="longitude"/>
+            </tree>
+        </field>
+    </record>
+
+    <!-- =========================
          FORM VIEW
     ========================== -->
     <record id="view_custodia_ruta_form" model="ir.ui.view">
@@ -52,15 +68,11 @@
                              NODOS INTERMEDIOS
                         ========================== -->
                         <page string="Nodos Intermedios">
-                            <field name="node_ids">
-                                <tree editable="bottom">
-                                    <field name="sequence"/>
-                                    <field name="name"/>
-                                    <field name="latitude"/>
-                                    <field name="longitude"/>
-                                </tree>
+                            <field name="node_ids" context="{'default_ruta_id': active_id}"
+                                   options="{'no_create_edit': False}">
                             </field>
                         </page>
+
 
                         <!-- =========================
                              COSTOS
@@ -131,3 +143,4 @@
     </record>
 
 </odoo>
+
