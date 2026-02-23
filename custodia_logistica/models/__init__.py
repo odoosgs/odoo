@@ -7,3 +7,4 @@ from . import account_move_ext
 from . import planning_ext
 from . import service_tracking
 from . import custodia_route
+from . import custodia_route_node
