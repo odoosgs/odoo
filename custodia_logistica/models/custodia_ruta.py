@@ -47,6 +47,33 @@ class CustodiaRuta(models.Model):
         help="Tiempo estimado en horas"
     )
 
+    origin_latitude = fields.Float(
+        string='Latitud Origen',
+        digits=(10, 6)
+    )
+
+    origin_longitude = fields.Float(
+        string='Longitud Origen',
+        digits=(10, 6)
+    )    
+
+    destination_latitude = fields.Float(
+        string='Latitud Destino',
+        digits=(10, 6)
+    )
+
+    destination_longitude = fields.Float(
+        string='Longitud Destino',
+        digits=(10, 6)
+    )
+
+    node_ids = fields.One2many(
+        'custodia.ruta.nodo',
+        'ruta_id',
+        string='Nodos Intermedios'
+    )
+
+
     # =========================
     # COSTOS
     # =========================
@@ -77,3 +104,4 @@ class CustodiaRuta(models.Model):
         string='Activa',
         default=True
     )
+
