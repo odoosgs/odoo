@@ -1,22 +1,18 @@
 # -*- coding: utf-8 -*-
 from odoo import http
 from odoo.http import request
+import json
 
 
 class CustodiaTrackingController(http.Controller):
 
- #   @http.route(
- #       '/api/custodia/update_location',
- #       type='json',
- #       auth='public',
- #       methods=['POST'],
- #       csrf=False
- #   )
-
-    @http.route('/test_simple', type='http', auth='public')
-    def test_simple(self):
-        return "OK FUNCIONA"
-    
+    @http.route(
+        '/api/custodia/update_location',
+        type='http',
+        auth='public',
+        methods=['POST'],
+        csrf=False
+    )
     def update_location(self, **kwargs):
         """
         Endpoint para actualizar ubicación en tiempo real.
@@ -29,33 +25,51 @@ class CustodiaTrackingController(http.Controller):
         """
 
         try:
-            service_id = kwargs.get('service_id')
-            lat = kwargs.get('lat')
-            lng = kwargs.get('lng')
+            # Leer JSON del body
+            data = json.loads(request.httprequest.data)
 
+            service_id = data.get('service_id')
+            lat = data.get('lat')
+            lng = data.get('lng')
+
+            # Validación básica
             if not service_id or lat is None or lng is None:
-                return {
-                    "success": False,
-                    "error": "Faltan parámetros obligatorios"
-                }
+                return request.make_response(
+                    json.dumps({
+                        "success": False,
+                        "error": "Faltan parámetros obligatorios"
+                    }),
+                    headers=[('Content-Type', 'application/json')]
+                )
 
-            service = request.env['custodia.service'].sudo().browse(service_id)
+            # Buscar servicio
+            service = request.env['custodia.service'].sudo().browse(int(service_id))
 
             if not service.exists():
-                return {
-                    "success": False,
-                    "error": "Servicio no encontrado"
-                }
+                return request.make_response(
+                    json.dumps({
+                        "success": False,
+                        "error": "Servicio no encontrado"
+                    }),
+                    headers=[('Content-Type', 'application/json')]
+                )
 
+            # Actualizar ubicación
             service.update_live_location(lat, lng)
 
-            return {
-                "success": True,
-                "message": "Ubicación actualizada correctamente"
-            }
+            return request.make_response(
+                json.dumps({
+                    "success": True,
+                    "message": "Ubicación actualizada correctamente"
+                }),
+                headers=[('Content-Type', 'application/json')]
+            )
 
         except Exception as e:
-            return {
-                "success": False,
-                "error": str(e)
-            }
+            return request.make_response(
+                json.dumps({
+                    "success": False,
+                    "error": str(e)
+                }),
+                headers=[('Content-Type', 'application/json')]
+            )
