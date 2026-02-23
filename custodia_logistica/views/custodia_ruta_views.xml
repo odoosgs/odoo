@@ -70,8 +70,9 @@
                         ========================== -->
                         
                         <page string="Nodos Intermedios">
-                            <field name="node_ids" context="{'default_ruta_id': active_id}"/>
+                            <field name="node_ids"/>
                         </page>
+
 
                         <!-- =========================
                              COSTOS
@@ -142,5 +143,6 @@
     </record>
 
 </odoo>
+
 
 
