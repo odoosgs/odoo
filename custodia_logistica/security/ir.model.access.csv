@@ -6,4 +6,6 @@ access_mail_followers_portal,mail.followers.portal,mail.model_mail_followers,bas
 access_custodia_asignacion_user,custodia.asignacion,model_custodia_asignacion,base.group_user,1,1,1,1
 access_custodia_carrier_user,custodia.carrier,model_custodia_carrier,base.group_user,1,1,1,1
 access_custodia_ruta_user,custodia.ruta,model_custodia_ruta,base.group_user,1,1,1,1
+access_custodia_ruta_nodo_user,custodia.ruta.nodo,model_custodia_ruta_nodo,base.group_user,1,1,1,1
+
 
