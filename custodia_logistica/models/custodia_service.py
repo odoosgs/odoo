@@ -109,7 +109,7 @@ class CustodiaService(models.Model):
     )
 
     route_id = fields.Many2one(
-        'custodia.route',
+        'custodia.ruta',
         string='Ruta Planificada'
     )
 
