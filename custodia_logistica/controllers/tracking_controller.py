@@ -5,13 +5,18 @@ from odoo.http import request
 
 class CustodiaTrackingController(http.Controller):
 
-    @http.route(
-        '/api/custodia/update_location',
-        type='json',
-        auth='public',
-        methods=['POST'],
-        csrf=False
-    )
+ #   @http.route(
+ #       '/api/custodia/update_location',
+ #       type='json',
+ #       auth='public',
+ #       methods=['POST'],
+ #       csrf=False
+ #   )
+
+    @http.route('/test_simple', type='http', auth='public')
+    def test_simple(self):
+        return "OK FUNCIONA"
+    
     def update_location(self, **kwargs):
         """
         Endpoint para actualizar ubicación en tiempo real.
