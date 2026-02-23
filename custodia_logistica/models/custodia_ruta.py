@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
-from odoo import models, fields
+
+from odoo import models, fields, api
 
 
 class CustodiaRuta(models.Model):
@@ -7,6 +8,10 @@ class CustodiaRuta(models.Model):
     _description = 'Ruta Comercial de Custodia'
     _inherit = ['mail.thread', 'mail.activity.mixin']
     _order = 'name'
+
+    # =========================
+    # INFORMACIÓN GENERAL
+    # =========================
 
     name = fields.Char(
         string='Nombre de la Ruta',
@@ -16,16 +21,29 @@ class CustodiaRuta(models.Model):
     )
 
     tipo = fields.Selection(
-        [('local', 'Local'), ('foraneo', 'Foráneo')],
+        [
+            ('local', 'Local'),
+            ('foraneo', 'Foráneo')
+        ],
         string='Tipo de ruta',
         required=True,
         default='local',
         tracking=True
     )
 
+    active = fields.Boolean(
+        string='Activa',
+        default=True
+    )
+
+    descripcion = fields.Text(
+        string='Descripción / Detalles de la Ruta'
+    )
+
     # =========================
     # INFORMACIÓN DEL TRAYECTO
     # =========================
+
     origen = fields.Char(
         string='Origen',
         tracking=True
@@ -47,6 +65,7 @@ class CustodiaRuta(models.Model):
         help="Tiempo estimado en horas"
     )
 
+    # Coordenadas Origen
     origin_latitude = fields.Float(
         string='Latitud Origen',
         digits=(10, 6)
@@ -55,8 +74,9 @@ class CustodiaRuta(models.Model):
     origin_longitude = fields.Float(
         string='Longitud Origen',
         digits=(10, 6)
-    )    
+    )
 
+    # Coordenadas Destino
     destination_latitude = fields.Float(
         string='Latitud Destino',
         digits=(10, 6)
@@ -67,16 +87,17 @@ class CustodiaRuta(models.Model):
         digits=(10, 6)
     )
 
+    # Nodos intermedios
     node_ids = fields.One2many(
-        'custodia.ruta.nodo',
-        'ruta_id',
+        comodel_name='custodia.ruta.nodo',
+        inverse_name='ruta_id',
         string='Nodos Intermedios'
     )
-
 
     # =========================
     # COSTOS
     # =========================
+
     tiene_peajes = fields.Boolean(
         string='Incluye Casetas/Peajes',
         default=False
@@ -90,18 +111,21 @@ class CustodiaRuta(models.Model):
     currency_id = fields.Many2one(
         'res.currency',
         string='Moneda',
-        default=lambda self: self.env.company.currency_id
+        default=lambda self: self.env.company.currency_id,
+        required=True
     )
 
     # =========================
-    # OTROS
+    # MÉTODOS
     # =========================
-    descripcion = fields.Text(
-        string='Descripción / Detalles de la Ruta'
-    )
 
-    active = fields.Boolean(
-        string='Activa',
-        default=True
-    )
+    def get_route_coordinates(self):
+        """
+        Devuelve la ruta completa ordenada:
+        Origen -> Nodos (sequence) -> Destino
+        """
+        self.ensure_one()
+        points = []
 
+        # Origen
+        if self.origin_latitude and self._
