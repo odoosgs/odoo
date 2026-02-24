@@ -1,29 +1,17 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
 
-    <!-- =========================================================
-         GRUPO CUSTODIO PORTAL
-    ========================================================== -->
     <record id="group_custodio_portal" model="res.groups">
         <field name="name">Custodio Portal</field>
-        <!-- Hereda permisos del portal estándar -->
         <field name="implied_ids" eval="[(4, ref('base.group_portal'))]"/>
     </record>
 
-
-    <!-- =========================================================
-         REGLA: EL CUSTODIO SOLO VE SUS SERVICIOS
-    ========================================================== -->
     <record id="custodia_service_rule_custodio" model="ir.rule">
         <field name="name">Servicios solo del custodio</field>
         <field name="model_id" ref="custodia_logistica.model_custodia_service"/>
         <field name="groups" eval="[(4, ref('custodia_logistica.group_custodio_portal'))]"/>
         <field name="domain_force">
-            [
-                '|',
-                ('planner_id', '=', user.id),
-                ('asignacion_ids.user_id', '=', user.id)
-            ]
+            [('planner_id', '=', user.id)]
         </field>
     </record>
 
