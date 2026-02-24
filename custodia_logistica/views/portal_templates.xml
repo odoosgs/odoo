@@ -111,11 +111,10 @@
                      style="display:none;">
                     <strong>Distancia estimada:</strong>
                     <span id="route-distance"></span>
-                    &nbsp;&nbsp;|&nbsp;&nbsp;
+                    <span class="mx-3">|</span>
                     <strong>Tiempo estimado:</strong>
                     <span id="route-duration"></span>
                 </div>
-
 
                 <!-- MONITOREO EN VIVO -->
                 <div class="mt-5">
