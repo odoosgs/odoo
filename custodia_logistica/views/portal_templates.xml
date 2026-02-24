@@ -118,6 +118,19 @@
 
             </div>
 
+<!-- =========================
+     MENSAJES / CHATTER
+========================== -->
+
+<div id="service_communication" class="mt-5 pt-4 border-top">
+    <h3 class="mb-4">Seguimiento e Incidencias</h3>
+    <t t-call="portal.message_thread">
+        <t t-set="object" t-value="service"/>
+        <t t-set="token" t-value="service.access_token"/>
+    </t>
+</div>
+            
+
 <script type="text/javascript">
 <![CDATA[
 document.addEventListener("DOMContentLoaded", function () {
