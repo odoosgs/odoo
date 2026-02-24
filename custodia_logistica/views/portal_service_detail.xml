@@ -1,0 +1,90 @@
+<odoo>
+    <template id="portal_service_detail"
+              name="Detalle Servicio Custodia"
+              inherit_id="portal.portal_layout">
+
+        <xpath expr="//div[@id='wrap']" position="inside">
+
+            <div class="container mt-4">
+
+                <!-- Cabecera -->
+                <h3>
+                    Servicio
+                    <t t-esc="service.name"/>
+                </h3>
+
+                <!-- Semáforo (lo activaremos después) -->
+                <div class="mb-3">
+                    <t t-if="service.incident_level == 'normal'">
+                        <span class="badge bg-success">En tiempo</span>
+                    </t>
+                    <t t-if="service.incident_level == 'warning'">
+                        <span class="badge bg-warning">Advertencia</span>
+                    </t>
+                    <t t-if="service.incident_level == 'critical'">
+                        <span class="badge bg-danger">Alerta</span>
+                    </t>
+                </div>
+
+                <!-- Datos principales -->
+                <div class="row">
+                    <div class="col-md-6">
+                        <strong>Fecha programada:</strong>
+                        <span t-field="service.start_datetime"/>
+                    </div>
+
+                    <div class="col-md-6">
+                        <strong>Estado:</strong>
+                        <t t-esc="service.state"/>
+                    </div>
+                </div>
+
+                <!-- Mapa -->
+                <div class="mt-4">
+                    <div id="route_map"
+                         t-att-data-ruta-id="service.ruta_id.id"
+                         style="height:500px;">
+                    </div>
+
+                    <div id="route_info" class="mt-2"></div>
+                </div>
+
+                <!-- Botones Custodio -->
+                <t t-if="request.env.user.has_group('custodia_logistica.group_custodio_portal')">
+
+                    <div class="mt-4 d-flex gap-2">
+
+                        <t t-if="service.state == 'assigned'">
+                            <button class="btn btn-warning"
+                                    t-att-data-service-id="service.id"
+                                    id="btn-en-ruta">
+                                Iniciar Traslado
+                            </button>
+                        </t>
+
+                        <t t-if="service.state == 'en_ruta'">
+                            <button class="btn btn-success"
+                                    t-att-data-service-id="service.id"
+                                    id="btn-llegada">
+                                Marcar Llegada
+                            </button>
+                        </t>
+
+                        <t t-if="service.state == 'llegada'">
+                            <button class="btn btn-primary"
+                                    t-att-data-service-id="service.id"
+                                    id="btn-iniciar-servicio">
+                                Iniciar Servicio
+                            </button>
+                        </t>
+
+                    </div>
+
+                </t>
+
+            </div>
+
+        </xpath>
+
+    </template>
+</odoo>
