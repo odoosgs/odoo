@@ -6,7 +6,8 @@
             <div class="container my-4">
                 <div class="d-flex justify-content-between align-items-center mb-3">
                     <h2>Mis Servicios de Custodia</h2>
-                    <a href="/solicitar-servicio" class="btn btn-primary">
+ <!--                    <a href="/solicitar-servicio" class="btn btn-primary"> -->
+                    <a t-att-href="'/solicitar-servicio'" class="btn btn-primary">
                         Solicitar Servicio
                     </a>
                 </div>
