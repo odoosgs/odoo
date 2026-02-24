@@ -23,6 +23,7 @@
         'data/sequence.xml',
 
         # Seguridad
+        'security/security.xml',
         'security/ir.model.access.csv',
         'security/ir_rule.xml',
 
@@ -53,6 +54,7 @@
     'application': True,
     'installable': True,
 }
+
 
 
 
