@@ -217,10 +217,21 @@ document.addEventListener("DOMContentLoaded", function () {
                         // =========================
                     
                         var distanceKm = (routeData.distance / 1000).toFixed(2);
-                        var durationMin = Math.round(routeData.duration / 60);
 
+                        var totalMinutes = Math.round(routeData.duration / 60);
+                        var hours = Math.floor(totalMinutes / 60);
+                        var minutes = totalMinutes % 60;
+                        
+                        var formattedDuration = "";
+                        
+                        if (hours > 0) {
+                            formattedDuration += hours + " h ";
+                        }
+                        formattedDuration += minutes + " min";
+                        
                         document.getElementById("route-distance").innerText = distanceKm + " km";
-                        document.getElementById("route-duration").innerText = durationMin + " minutos";
+                        document.getElementById("route-duration").innerText = formattedDuration;
+
 
                         document.getElementById("route-summary").style.display = "block";
                     }
