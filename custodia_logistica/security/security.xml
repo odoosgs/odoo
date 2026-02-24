@@ -1,0 +1,11 @@
+<odoo>
+
+    <!-- Grupo Custodio Portal -->
+    <record id="group_custodio_portal" model="res.groups">
+        <field name="name">Custodio Portal</field>
+        <field name="category_id" ref="base.module_category_hidden"/>
+        <!-- Hereda permisos de portal -->
+        <field name="implied_ids" eval="[(4, ref('base.group_portal'))]"/>
+    </record>
+
+</odoo>
