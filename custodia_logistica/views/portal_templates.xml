@@ -107,6 +107,16 @@
                     </div>
                 </div>
 
+                <div id="route-summary" class="mt-3 p-3 bg-light border rounded text-center"
+                     style="display:none;">
+                    <strong>Distancia estimada:</strong>
+                    <span id="route-distance"></span>
+                    &nbsp;&nbsp;|&nbsp;&nbsp;
+                    <strong>Tiempo estimado:</strong>
+                    <span id="route-duration"></span>
+                </div>
+
+
                 <!-- MONITOREO EN VIVO -->
                 <div class="mt-5">
                     <h3>Monitoreo en Vivo</h3>
@@ -190,9 +200,10 @@ document.addEventListener("DOMContentLoaded", function () {
                 .then(osrmData => {
 
                     if (osrmData.routes && osrmData.routes.length) {
-
-                        var routeGeometry = osrmData.routes[0].geometry;
-
+                    
+                        var routeData = osrmData.routes[0];
+                        var routeGeometry = routeData.geometry;
+                    
                         var geojsonLayer = L.geoJSON(routeGeometry, {
                             style: {
                                 color: "blue",
@@ -201,7 +212,20 @@ document.addEventListener("DOMContentLoaded", function () {
                         }).addTo(routeMap);
 
                         routeMap.fitBounds(geojsonLayer.getBounds());
+                    
+                        // =========================
+                        // MOSTRAR MÉTRICAS
+                        // =========================
+                    
+                        var distanceKm = (routeData.distance / 1000).toFixed(2);
+                        var durationMin = Math.round(routeData.duration / 60);
+
+                        document.getElementById("route-distance").innerText = distanceKm + " km";
+                        document.getElementById("route-duration").innerText = durationMin + " minutos";
+
+                        document.getElementById("route-summary").style.display = "block";
                     }
+
                 });
             }
         });
