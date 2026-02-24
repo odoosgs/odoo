@@ -172,6 +172,36 @@ class CustodiaPortal(CustomerPortal):
             }
         )
 
+
+    # ========================================================
+    #         TIEMPOS CUSTODIA
+    # ========================================================
+    
+    @http.route('/custodia/service/<int:service_id>/en_ruta', type='json', auth='user')
+    def marcar_en_ruta(self, service_id):
+        service = request.env['custodia.service'].sudo().browse(service_id)
+        service.write({'state': 'en_ruta'})
+        return True
+
+    @http.route('/custodia/service/<int:service_id>/llegada', type='json', auth='user')
+    def marcar_llegada(self, service_id):
+        service = request.env['custodia.service'].sudo().browse(service_id)
+        service.write({
+            'arrival_datetime': fields.Datetime.now(),
+            'state': 'llegada'
+        })
+        return True
+
+    @http.route('/custodia/service/<int:service_id>/iniciar', type='json', auth='user')
+    def iniciar_servicio(self, service_id):
+        service = request.env['custodia.service'].sudo().browse(service_id)
+        service.write({
+            'real_start_datetime': fields.Datetime.now(),
+            'state': 'iniciado'
+        })
+        return True
+
+    
     # =========================================================
     # SUBMIT NUEVA SOLICITUD
     # =========================================================
