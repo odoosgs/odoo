@@ -30,6 +30,19 @@ class CustodiaPortal(CustomerPortal):
     # =========================================================
     # LISTADO DE SERVICIOS
     # =========================================================
+
+     @http.route('/custodia/service/<int:service_id>/llegada', type='json', auth='user')
+    def marcar_llegada(self, service_id):
+        service = request.env['custodia.service'].sudo().browse(service_id)
+        service.hora_llegada = fields.Datetime.now()
+        return {'status': 'ok'}
+
+    @http.route('/custodia/service/<int:service_id>/iniciar', type='json', auth='user')
+    def iniciar_servicio(self, service_id):
+        service = request.env['custodia.service'].sudo().browse(service_id)
+        service.hora_inicio_real = fields.Datetime.now()
+        return {'status': 'ok'}
+        
     @http.route(['/mis-servicios'], type='http', auth='user', website=True)
     def portal_services(self, **kwargs):
 
