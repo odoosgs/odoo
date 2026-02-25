@@ -4,45 +4,39 @@
         <t t-call="portal.portal_layout">
             <div class="container my-4">
                 <div class="d-flex justify-content-between align-items-center mb-3">
-                    <h2 class="m-0 text-primary">Mis Servicios de Custodia</h2>
-                    <a href="/solicitar-servicio" class="btn btn-primary shadow-sm">
-                        <i class="fa fa-plus me-1"/> Solicitar Servicio
-                    </a>
+                    <h2>Mis Servicios de Custodia</h2>
+                    <a href="/solicitar-servicio" class="btn btn-primary">Solicitar Servicio</a>
                 </div>
-                <div class="table-responsive bg-white shadow-sm rounded">
-                    <table class="table table-hover mb-0">
-                        <thead class="table-light">
+                <table class="table table-striped bg-white shadow-sm rounded">
+                    <thead>
+                        <tr>
+                            <th>Folio</th>
+                            <th>Ruta</th>
+                            <th>Estado</th>
+                            <th class="text-end">Acción</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <t t-foreach="services" t-as="s">
                             <tr>
-                                <th>Folio</th>
-                                <th>Ruta</th>
-                                <th>Inicio</th>
-                                <th>Estado</th>
-                                <th class="text-end"></th>
+                                <td><t t-esc="s.sequence"/></td>
+                                <td><t t-esc="s.ruta_id.name"/></td>
+                                <td><span t-field="s.state" class="badge rounded-pill bg-info"/></td>
+                                <td class="text-end">
+                                    <a t-att-href="'/mis-servicios/%s?access_token=%s' % (s.id, s.access_token)" class="btn btn-sm btn-secondary">Ver</a>
+                                </td>
                             </tr>
-                        </thead>
-                        <tbody>
-                            <t t-foreach="services" t-as="s">
-                                <tr class="align-middle">
-                                    <td class="fw-bold"><t t-esc="s.sequence"/></td>
-                                    <td><t t-esc="s.ruta_id.name"/></td>
-                                    <td><t t-esc="s.start_datetime" t-options='{"widget": "datetime"}'/></td>
-                                    <td><span t-field="s.state" class="badge rounded-pill bg-info"/></td>
-                                    <td class="text-end">
-                                        <a t-att-href="'/mis-servicios/%s?access_token=%s' % (s.id, s.access_token)" class="btn btn-sm btn-outline-secondary">Ver</a>
-                                    </td>
-                                </tr>
-                            </t>
-                        </tbody>
-                    </table>
-                </div>
+                        </t>
+                    </tbody>
+                </table>
             </div>
         </t>
     </template>
 
-    <template id="portal_service_form" name="Solicitud de Servicio">
+    <template id="portal_service_form" name="Nueva Solicitud">
         <t t-call="portal.portal_layout">
             <div id="wrap" class="container my-4 bg-white p-4 shadow-sm rounded">
-                <h2 class="mb-4 text-primary">Nueva Solicitud</h2>
+                <h2 class="mb-4 text-primary">Nueva Solicitud de Custodia</h2>
                 <form action="/solicitar-servicio/submit" method="post" class="row g-3">
                     <input type="hidden" name="csrf_token" t-att-value="request.csrf_token()"/>
                     <div class="col-md-12">
@@ -64,25 +58,22 @@
                         </select>
                     </div>
                     <div class="col-md-6">
-                        <label class="form-label fw-bold">Inicio Estimado</label>
-                        <input type="datetime-local" name="start_datetime" class="form-control" required="1"/>
-                    </div>
-                    <div class="col-md-6">
                         <label class="form-label fw-bold">Nivel de Seguridad</label>
                         <select name="nivel_seguridad" class="form-select" required="1">
-                            <option value="">-- Seleccione --</option>
-                            <option value="1">Nivel 1</option>
-                            <option value="2">Nivel 2</option>
-                            <option value="3">Nivel 3</option>
-                            <option value="4">Nivel 4</option>
+                            <option value="1">Nivel 1</option><option value="2">Nivel 2</option>
+                            <option value="3">Nivel 3</option><option value="4">Nivel 4</option>
                         </select>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label fw-bold">Inicio Estimado</label>
+                        <input type="datetime-local" name="start_datetime" class="form-control" required="1"/>
                     </div>
                     <div class="col-md-6">
                         <label class="form-label fw-bold">Load ID</label>
                         <input type="text" name="load_id" class="form-control" required="1"/>
                     </div>
                     <div class="col-12 mt-4 text-end">
-                        <button type="submit" class="btn btn-success btn-lg shadow-sm">Registrar Solicitud</button>
+                        <button type="submit" class="btn btn-success btn-lg px-5">Registrar</button>
                     </div>
                 </form>
             </div>
@@ -96,21 +87,29 @@
 
             <div class="container my-4 bg-white pb-5 shadow-sm rounded">
                 <div class="d-flex justify-content-between align-items-center pt-3 px-3">
-                    <h2 class="mb-0 text-primary">Servicio <t t-esc="service.sequence"/></h2>
-                    <span t-field="service.state" class="badge rounded-pill bg-info p-2 px-3"/>
+                    <h2>Servicio <t t-esc="service.sequence"/></h2>
+                    <div class="d-flex gap-2">
+                        <t t-if="service.state == 'asignado'">
+                            <button class="btn btn-primary btn-custodio-action" t-att-data-service-id="service.id" data-action="iniciar" id="btn-iniciar-servicio">Iniciar Servicio</button>
+                        </t>
+                        <t t-if="service.state == 'iniciado'">
+                            <button class="btn btn-warning btn-custodio-action" t-att-data-service-id="service.id" data-action="en_ruta" id="btn-en-ruta">En Ruta</button>
+                        </t>
+                        <t t-if="service.state == 'en_ruta'">
+                            <button class="btn btn-success btn-custodio-action" t-att-data-service-id="service.id" data-action="llegada" id="btn-llegada">Registrar Llegada</button>
+                        </t>
+                        <span t-field="service.state" class="badge rounded-pill bg-info p-2 px-3"/>
+                    </div>
                 </div>
                 <hr class="mx-3"/>
 
                 <div class="row mt-4 px-3">
                     <div class="col-md-6">
-                        <h5 class="text-muted border-bottom pb-2">Información de Ruta</h5>
                         <p><b>Cliente:</b> <t t-esc="cliente.display_name"/></p>
                         <p><b>Ruta:</b> <t t-esc="service.ruta_id.name"/></p>
                         <p><b>Inicio:</b> <t t-esc="service.start_datetime"/></p>
-                        <p><b>Nivel:</b> Nivel <t t-esc="service.nivel_seguridad"/></p>
                     </div>
                     <div class="col-md-6 border-start">
-                        <h5 class="text-muted border-bottom pb-2">Logística</h5>
                         <ul class="list-unstyled">
                             <li><b>Unidad:</b> <span t-field="service.tipo_unidad"/></li>
                             <li><b>Placas:</b> <span t-field="service.placas"/></li>
@@ -127,7 +126,7 @@
                     </div>
                     <div class="col-lg-6 mb-4">
                         <h4 class="text-secondary">Monitoreo en Vivo</h4>
-                        <div id="live_map" style="height:400px;" class="border rounded shadow-sm"></div>
+                        <div id="live_map" t-att-data-service-id="service.id" t-att-data-token="service.access_token" style="height:400px;" class="border rounded shadow-sm"></div>
                     </div>
                 </div>
 
@@ -138,33 +137,16 @@
                     </t>
                 </div>
             </div>
-
-            <script type="text/javascript">
-            <![CDATA[
-            document.addEventListener("DOMContentLoaded", function () {
-                var sId = "]]><t t-out='service.id'/><![CDATA[";
-                var tok = "]]><t t-out='service.access_token'/><![CDATA[";
-                var liveMap = L.map('live_map').setView([19.43, -99.13], 6);
-                L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png").addTo(liveMap);
-                var marker = L.marker([19.43, -99.13]).addTo(liveMap);
-
-                function up() {
-                    fetch("/mis-servicios/" + sId + "/tracking", {
-                        method: "POST",
-                        headers: { "Content-Type": "application/json" },
-                        body: JSON.stringify({ params: { access_token: tok } })
-                    }).then(res => res.json()).then(d => {
-                        var r = d.result || d;
-                        if (r.lat && r.lng) {
-                            marker.setLatLng([r.lat, r.lng]);
-                            liveMap.panTo([r.lat, r.lng]);
-                        }
-                    });
-                }
-                up(); setInterval(up, 15000);
-            });
-            ]]>
-            </script>
         </t>
+    </template>
+
+    <template id="portal_my_home_custodia" inherit_id="portal.portal_my_home" name="Custodia Portal" priority="40">
+        <xpath expr="//div[contains(@class,'o_portal_docs')]" position="inside">
+            <t t-call="portal.portal_docs_entry">
+                <t t-set="title">Servicios de Custodia</t>
+                <t t-set="url" t-value="'/mis-servicios'"/>
+                <t t-set="placeholder_count" t-value="'services_count'"/>
+            </t>
+        </xpath>
     </template>
 </odoo>
