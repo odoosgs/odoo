@@ -107,6 +107,47 @@
                     </div>
                 </div>
 
+                <div class="mt-4">
+                    <h4>Control de Servicio</h4>
+                
+                    <p><b>Hora planeada:</b> <t t-esc="service.start_datetime"/></p>
+                
+                    <t t-if="not service.hora_llegada">
+                        <button id="btn-llegada"
+                                t-att-data-service-id="service.id"
+                                class="btn btn-warning me-2">
+                            Marcar llegada custodio
+                        </button>
+                    </t>
+                
+                    <t t-if="service.hora_llegada and not service.hora_inicio_real">
+                        <button id="btn-iniciar-servicio"
+                                t-att-data-service-id="service.id"
+                                class="btn btn-success">
+                            Iniciar servicio
+                        </button>
+                    </t>
+                
+                    <hr/>
+                
+                    <p><b>Hora llegada:</b>
+                        <t t-esc="service.hora_llegada or 'Pendiente'"/>
+                    </p>
+                
+                    <p><b>Diferencia llegada:</b>
+                        <t t-esc="service.diff_llegada_min"/> minutos
+                    </p>
+                
+                    <p><b>Hora inicio real:</b>
+                        <t t-esc="service.hora_inicio_real or 'Pendiente'"/>
+                    </p>
+                
+                    <p><b>Diferencia inicio:</b>
+                        <t t-esc="service.diff_inicio_min"/> minutos
+                    </p>
+                
+                </div>
+                
                 <!-- ===================== -->
                 <!-- RUTA PLANEADA -->
                 <!-- ===================== -->
