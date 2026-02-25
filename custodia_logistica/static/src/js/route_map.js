@@ -4,10 +4,8 @@ odoo.define('custodia_logistica.route_map', function (require) {
     var ajax = require('web.ajax');
 
     document.addEventListener("DOMContentLoaded", function () {
-
         initRouteMap();
         initCustodioActions();
-
     });
 
     /* ============================================================
@@ -23,6 +21,12 @@ odoo.define('custodia_logistica.route_map', function (require) {
 
         var rutaId = mapContainer.dataset.rutaId;
         if (!rutaId) {
+            console.warn("Ruta ID no encontrado.");
+            return;
+        }
+
+        if (typeof L === "undefined") {
+            console.error("Leaflet no está cargado.");
             return;
         }
 
@@ -35,8 +39,8 @@ odoo.define('custodia_logistica.route_map', function (require) {
         ajax.jsonRpc('/custodia/ruta/' + rutaId + '/coordinates', 'call', {})
             .then(function (data) {
 
-                if (!data || !data.length) {
-                    console.warn("No hay coordenadas para la ruta.");
+                if (!data || !Array.isArray(data) || data.length < 2) {
+                    console.warn("No hay suficientes coordenadas para la ruta.");
                     return;
                 }
 
@@ -50,17 +54,26 @@ odoo.define('custodia_logistica.route_map', function (require) {
 
     function drawRoute(routeMap, points) {
 
-        var startPoint = points[0];
-        var endPoint = points[points.length - 1];
+        // Filtrar puntos válidos
+        var validPoints = points.filter(function (p) {
+            return p && p.lat && p.lng;
+        });
 
-        if (!startPoint || !endPoint) {
+        if (validPoints.length < 2) {
+            console.warn("No hay suficientes puntos válidos.");
             return;
         }
 
+        // Construir coordenadas OSRM con TODOS los puntos
+        var coords = validPoints
+            .map(function (p) {
+                return p.lng + "," + p.lat;
+            })
+            .join(";");
+
         var osrmUrl =
             "https://router.project-osrm.org/route/v1/driving/" +
-            startPoint.lng + "," + startPoint.lat + ";" +
-            endPoint.lng + "," + endPoint.lat +
+            coords +
             "?overview=full&geometries=geojson";
 
         fetch(osrmUrl)
@@ -76,29 +89,31 @@ odoo.define('custodia_logistica.route_map', function (require) {
 
                 var route = osrm.routes[0];
 
-                // Línea azul
+                // Línea azul marino profesional
                 var geojson = L.geoJSON(route.geometry, {
                     style: {
-                        color: "blue",
+                        color: "#003366",
                         weight: 5
                     }
                 }).addTo(routeMap);
 
                 routeMap.fitBounds(geojson.getBounds());
 
-                // Marcador inicio (verde)
+                // Marcador inicio
+                var startPoint = validPoints[0];
                 L.circleMarker([startPoint.lat, startPoint.lng], {
-                    color: 'green',
+                    color: '#0d6efd',
                     radius: 8,
-                    fillColor: 'green',
+                    fillColor: '#0d6efd',
                     fillOpacity: 1
                 }).addTo(routeMap).bindPopup("Inicio");
 
-                // Marcador fin (rojo)
+                // Marcador fin
+                var endPoint = validPoints[validPoints.length - 1];
                 L.circleMarker([endPoint.lat, endPoint.lng], {
-                    color: 'red',
+                    color: '#dc3545',
                     radius: 8,
-                    fillColor: 'red',
+                    fillColor: '#dc3545',
                     fillOpacity: 1
                 }).addTo(routeMap).bindPopup("Destino");
 
