@@ -1,13 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
 
-    <template id="portal_service_list" name="Listado de Servicios de Custodia">
+    <template id="portal_service_list" name="Mis Servicios">
         <t t-call="portal.portal_layout">
             <div class="container my-4">
                 <div class="d-flex justify-content-between align-items-center mb-3">
-                    <h2 class="m-0">Mis Servicios de Custodia</h2>
+                    <h2 class="m-0 text-primary">Mis Servicios de Custodia</h2>
                     <a href="/solicitar-servicio" class="btn btn-primary shadow-sm">
-                        <i class="fa fa-plus-circle me-1"/> Solicitar Servicio
+                        <i class="fa fa-plus me-1"/> Solicitar Servicio
                     </a>
                 </div>
 
@@ -57,13 +57,13 @@
         </t>
     </template>
 
-    <template id="portal_service_form" name="Nueva Solicitud de Custodia">
+    <template id="portal_service_form" name="Nueva Solicitud">
         <t t-call="portal.portal_layout">
             <div id="wrap" class="container my-4 bg-white p-4 shadow-sm rounded">
                 <h2 class="mb-4 text-primary">Nueva Solicitud de Custodia</h2>
                 <t t-if="error">
                     <div class="alert alert-danger shadow-sm" role="alert">
-                        <t t-esc="error"/>
+                        <i class="fa fa-exclamation-triangle me-2"/> <t t-esc="error"/>
                     </div>
                 </t>
                 <form action="/solicitar-servicio/submit" method="post" class="row g-3">
@@ -77,6 +77,7 @@
                             </t>
                         </select>
                     </div>
+
                     <div class="col-md-6">
                         <label class="form-label fw-bold">Carrier</label>
                         <select name="carrier_id" class="form-select" required="1">
@@ -85,6 +86,7 @@
                             </t>
                         </select>
                     </div>
+
                     <div class="col-md-6">
                         <label class="form-label fw-bold">Ruta</label>
                         <select name="ruta_id" class="form-select" required="1">
@@ -93,23 +95,57 @@
                             </t>
                         </select>
                     </div>
+
                     <div class="col-md-6">
                         <label class="form-label fw-bold">Inicio Estimado</label>
                         <input type="datetime-local" name="start_datetime" class="form-control" required="1"/>
                     </div>
+
                     <div class="col-md-6">
-                        <label class="form-label fw-bold">Load ID</label>
+                        <label class="form-label fw-bold text-danger">Nivel de Seguridad *</label>
+                        <select name="nivel_seguridad" class="form-select" required="1">
+                            <option value="">-- Seleccione un nivel --</option>
+                            <option value="1">Nivel 1 (Básico)</option>
+                            <option value="2">Nivel 2 (Estándar)</option>
+                            <option value="3">Nivel 3 (Reforzado)</option>
+                            <option value="4">Nivel 4 (Alto Impacto)</option>
+                            <option value="4x">Excepción + Nivel 4</option>
+                        </select>
+                        <div class="form-text">Este dato es requerido por el sistema de monitoreo.</div>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label class="form-label fw-bold">Load ID / Referencia</label>
                         <input type="text" name="load_id" class="form-control" placeholder="Ej. NKS221255" required="1"/>
                     </div>
+
+                    <div class="col-md-6">
+                        <label class="form-label fw-bold">Tipo de Unidad</label>
+                        <input type="text" name="tipo_unidad" class="form-control" placeholder="Caja Seca, Plataforma..." required="1"/>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label class="form-label fw-bold">Placas</label>
+                        <input type="text" name="placas" class="form-control" placeholder="ABC-123" required="1"/>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label class="form-label fw-bold">Transporte (Línea)</label>
+                        <input type="text" name="transporte" class="form-control" placeholder="Nombre de la línea" required="1"/>
+                    </div>
+
                     <div class="col-12 mt-4 text-end border-top pt-3">
-                        <button type="submit" class="btn btn-success btn-lg px-5 shadow-sm">Enviar Solicitud</button>
+                        <a href="/mis-servicios" class="btn btn-light me-2">Cancelar</a>
+                        <button type="submit" class="btn btn-success btn-lg px-5 shadow-sm">
+                            Registrar Solicitud
+                        </button>
                     </div>
                 </form>
             </div>
         </t>
     </template>
 
-    <template id="portal_service_detail" name="Detalle del Servicio de Custodia">
+    <template id="portal_service_detail" name="Detalle del Servicio">
         <t t-call="portal.portal_layout">
             <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
             <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
@@ -126,6 +162,7 @@
                         <h5 class="text-muted border-bottom pb-2">Información de Ruta</h5>
                         <p><b>Ruta:</b> <t t-esc="service.ruta_id.name"/></p>
                         <p><b>Inicio:</b> <t t-esc="service.start_datetime"/></p>
+                        <p><b>Nivel de Seguridad:</b> <span class="badge border text-dark">Nivel <t t-esc="service.nivel_seguridad"/></span></p>
                         <p><b>Load ID:</b> <t t-esc="service.load_id"/></p>
                     </div>
                     <div class="col-md-6 border-start">
@@ -138,22 +175,19 @@
                     </div>
                 </div>
 
-                <div class="mt-5 px-3">
-                    <h4 class="text-secondary"><i class="fa fa-map-o me-2"/>Ruta Planeada (Estimación Carretera)</h4>
-                    <div id="route-map" t-att-data-ruta-id="service.ruta_id.id" style="height:400px;" class="border rounded shadow-sm"></div>
-                    <div id="route-summary" class="mt-2 p-2 bg-light border rounded text-center" style="display:none;">
-                        <b>Distancia Estimada:</b> <span id="route-distance" class="me-3 text-primary fw-bold"/>
-                        <b>Tiempo Estimado:</b> <span id="route-duration" class="text-primary fw-bold"/>
+                <div class="row mt-5 px-3">
+                    <div class="col-lg-6 mb-4">
+                        <h4 class="text-secondary">Ruta Planeada</h4>
+                        <div id="route-map" t-att-data-ruta-id="service.ruta_id.id" style="height:400px;" class="border rounded shadow-sm"></div>
+                    </div>
+                    <div class="col-lg-6 mb-4">
+                        <h4 class="text-secondary">Monitoreo en Vivo</h4>
+                        <div id="live-map" style="height:400px;" class="border rounded shadow-sm"></div>
                     </div>
                 </div>
 
-                <div class="mt-5 px-3">
-                    <h4 class="text-secondary"><i class="fa fa-crosshairs me-2"/>Ubicación Actual de la Unidad</h4>
-                    <div id="live-map" style="height:400px;" class="border rounded shadow-sm"></div>
-                </div>
-
-                <div id="service_communication" class="mt-5 pt-4 border-top px-3">
-                    <h4 class="mb-4 text-muted"><i class="fa fa-comments-o me-2"/>Bitácora y Eventualidades</h4>
+                <div id="service_communication" class="mt-4 pt-4 border-top px-3">
+                    <h4 class="mb-4 text-muted">Bitácora de Seguimiento</h4>
                     <t t-call="portal.message_thread">
                         <t t-set="object" t-value="service"/>
                         <t t-set="token" t-value="service.access_token"/>
@@ -164,67 +198,58 @@
             <script type="text/javascript">
             <![CDATA[
             document.addEventListener("DOMContentLoaded", function () {
-                // --- MAPA DE RUTA ---
-                var routeContainer = document.getElementById("route-map");
-                if (routeContainer && routeContainer.dataset.rutaId) {
-                    var rutaId = routeContainer.dataset.rutaId;
-                    fetch("/custodia/ruta/" + rutaId + "/coordinates", {
+                // Mapa Ruta
+                var rCont = document.getElementById("route-map");
+                if (rCont && rCont.dataset.rutaId) {
+                    fetch("/custodia/ruta/" + rCont.dataset.rutaId + "/coordinates", {
                         method: "POST",
                         headers: { "Content-Type": "application/json" },
                         body: JSON.stringify({ params: {} })
                     }).then(res => res.json()).then(data => {
                         if (data.result && data.result.length) {
-                            var points = data.result;
-                            var rMap = L.map("route-map").setView([points[0].lat, points[0].lng], 6);
+                            var pts = data.result;
+                            var rMap = L.map("route-map").setView([pts[0].lat, pts[0].lng], 6);
                             L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png").addTo(rMap);
-                            var coords = points.map(p => p.lng + "," + p.lat).join(";");
+                            var coords = pts.map(p => p.lng + "," + p.lat).join(";");
                             fetch("https://router.project-osrm.org/route/v1/driving/" + coords + "?overview=full&geometries=geojson")
                             .then(res => res.json()).then(osrm => {
                                 if (osrm.routes && osrm.routes.length) {
-                                    var geojson = L.geoJSON(osrm.routes[0].geometry, { style: { color: "#3388ff", weight: 5 } }).addTo(rMap);
-                                    rMap.fitBounds(geojson.getBounds());
-                                    document.getElementById("route-distance").innerText = (osrm.routes[0].distance / 1000).toFixed(1) + " km";
-                                    document.getElementById("route-duration").innerText = Math.round(osrm.routes[0].duration / 3600) + "h " + Math.round((osrm.routes[0].duration % 3600) / 60) + "m";
-                                    document.getElementById("route-summary").style.display = "block";
+                                    var layer = L.geoJSON(osrm.routes[0].geometry, { style: { color: "#3388ff", weight: 5 } }).addTo(rMap);
+                                    rMap.fitBounds(layer.getBounds());
                                 }
                             });
                         }
                     });
                 }
 
-                // --- MONITOREO EN VIVO ---
-                var serviceId = "]]><t t-out='service.id'/><![CDATA[";
-                var token = "]]><t t-out='service.access_token'/><![CDATA[";
+                // Mapa Vivo
+                var sId = "]]><t t-out='service.id'/><![CDATA[";
+                var tok = "]]><t t-out='service.access_token'/><![CDATA[";
                 var liveMap = L.map('live-map').setView([19.43, -99.13], 6);
                 L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png").addTo(liveMap);
                 var marker = L.marker([19.43, -99.13]).addTo(liveMap);
 
-                function updateLocation() {
-                    // Llamada al endpoint portal_service_tracking de tu portal.py
-                    fetch("/mis-servicios/" + serviceId + "/tracking", {
+                function up() {
+                    fetch("/mis-servicios/" + sId + "/tracking", {
                         method: "POST",
                         headers: { "Content-Type": "application/json" },
-                        body: JSON.stringify({ params: { access_token: token } })
-                    }).then(res => res.json()).then(data => {
-                        // En tu portal.py respondes con json.dumps(data), fetch lo interpreta como data
-                        // pero si usas type='http' con json.dumps, data es el objeto directo
-                        var res = data.result || data; 
-                        if (res.lat && res.lng) {
-                            var pos = [res.lat, res.lng];
-                            marker.setLatLng(pos);
-                            liveMap.panTo(pos);
+                        body: JSON.stringify({ params: { access_token: tok } })
+                    }).then(res => res.json()).then(d => {
+                        var r = d.result || d;
+                        if (r.lat && r.lng) {
+                            marker.setLatLng([r.lat, r.lng]);
+                            liveMap.panTo([r.lat, r.lng]);
                         }
                     });
                 }
-                updateLocation();
-                setInterval(updateLocation, 15000);
+                up(); setInterval(up, 15000);
             });
             ]]>
             </script>
         </t>
     </template>
 
-    <template id="portal_my_home_custodia" inherit_id="portal.portal_my_home" name="Custodia Portal" priority="25">
+    <template id="portal_my_home_custodia" inherit_id="portal.portal_my_home" name="Custodia Portal" priority="30">
         <xpath expr="//div[contains(@class,'o_portal_docs')]" position="inside">
             <t t-call="portal.portal_docs_entry">
                 <t t-set="title">Servicios de Custodia</t>
