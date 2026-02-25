@@ -1,8 +1,10 @@
 # -*- coding: utf-8 -*-
 
+import json
+from datetime import datetime
+
 from odoo import http, fields
 from odoo.http import request
-from datetime import datetime
 from odoo.addons.portal.controllers.portal import CustomerPortal
 from odoo.exceptions import AccessError
 
@@ -17,7 +19,6 @@ class CustodiaPortal(CustomerPortal):
 
         if 'services_count' in counters:
             partner = request.env.user.partner_id.commercial_partner_id
-
             values['services_count'] = request.env[
                 'custodia.service'
             ].sudo().search_count([
@@ -107,12 +108,14 @@ class CustodiaPortal(CustomerPortal):
         )
 
     # =========================================================
-    # ENDPOINT JSON TRACKING EN VIVO
+    # ENDPOINT JSON TRACKING (COMPATIBLE CON FETCH)
     # =========================================================
     @http.route(
         ['/mis-servicios/<int:service_id>/tracking'],
-        type='json',
-        auth='public'
+        type='http',
+        auth='public',
+        website=True,
+        csrf=False
     )
     def portal_service_tracking(self, service_id, access_token=None, **kwargs):
 
@@ -122,15 +125,23 @@ class CustodiaPortal(CustomerPortal):
                 service_id,
                 access_token
             )
-        except AccessError:
-            return {'error': 'Acceso no autorizado'}
+        except Exception:
+            return request.make_response(
+                json.dumps({'error': 'Acceso no autorizado'}),
+                headers=[('Content-Type', 'application/json')]
+            )
 
-        return {
+        data = {
             'lat': service.current_lat or 0.0,
             'lng': service.current_lng or 0.0,
-            'last_update': service.last_update,
+            'last_update': str(service.last_update) if service.last_update else False,
             'state': service.state,
         }
+
+        return request.make_response(
+            json.dumps(data),
+            headers=[('Content-Type', 'application/json')]
+        )
 
     # =========================================================
     # FORMULARIO NUEVA SOLICITUD
@@ -153,13 +164,16 @@ class CustodiaPortal(CustomerPortal):
         )
 
     # =========================================================
-    # CAMBIOS DE ESTADO (VALIDANDO PROPIEDAD)
+    # VALIDACIÓN DE PROPIEDAD
     # =========================================================
     def _check_service_owner(self, service):
         partner = request.env.user.partner_id.commercial_partner_id
         if service.partner_id.id != partner.id:
             raise AccessError("No autorizado")
 
+    # =========================================================
+    # CAMBIOS DE ESTADO
+    # =========================================================
     @http.route('/custodia/service/<int:service_id>/en_ruta', type='json', auth='user')
     def marcar_en_ruta(self, service_id):
         service = request.env['custodia.service'].sudo().browse(service_id)
