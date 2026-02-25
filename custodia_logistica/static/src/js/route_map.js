@@ -16,7 +16,6 @@ odoo.define('custodia_logistica.route_map', function (require) {
     ============================================================ */
 
     function initPlannedRoute() {
-
         var routeContainer = document.getElementById("route-map");
         if (!routeContainer || !routeContainer.dataset.rutaId) {
             return;
@@ -31,17 +30,24 @@ odoo.define('custodia_logistica.route_map', function (require) {
         })
         .then(res => res.json())
         .then(function (response) {
+            // === AQUÍ LA DEPURACIÓN ===
+            console.log("1. Respuesta completa de Odoo:", response);
 
             if (!response.result || !response.result.length) {
-                console.warn("No hay coordenadas para la ruta.");
+                console.warn("2. No hay coordenadas. Verifica si la ruta tiene lat/lng en el backend.");
                 return;
             }
 
             var points = response.result;
+            console.log("3. Puntos a procesar:", points);
+            
             var firstPoint = points[0];
 
-            var routeMap = L.map("route-map")
-                .setView([firstPoint.lat, firstPoint.lng], 6);
+            // Asegúrate de que el contenedor no esté inicializado ya
+            if (window.routeMapInstance) { window.routeMapInstance.remove(); }
+
+            var routeMap = L.map("route-map").setView([firstPoint.lat, firstPoint.lng], 6);
+            window.routeMapInstance = routeMap; // Guardamos instancia
 
             L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
                 attribution: "© OpenStreetMap"
@@ -49,7 +55,6 @@ odoo.define('custodia_logistica.route_map', function (require) {
 
             // Marcadores
             points.forEach(function(p) {
-
                 var color = "blue";
                 if (p.type === "origin") color = "green";
                 if (p.type === "destination") color = "red";
@@ -64,34 +69,32 @@ odoo.define('custodia_logistica.route_map', function (require) {
 
             // Construir string OSRM
             var coords = points.map(p => p.lng + "," + p.lat).join(";");
+            console.log("4. Coordenadas enviadas a OSRM:", coords);
 
             fetch("https://router.project-osrm.org/route/v1/driving/" +
                   coords + "?overview=full&geometries=geojson")
             .then(res => res.json())
             .then(function(osrmData) {
+                console.log("5. Respuesta de OSRM:", osrmData);
 
                 if (!osrmData.routes || !osrmData.routes.length) {
+                    console.error("OSRM no pudo encontrar una ruta entre esos puntos.");
                     return;
                 }
 
                 var routeData = osrmData.routes[0];
-
                 var geojsonLayer = L.geoJSON(routeData.geometry, {
-                    style: {
-                        color: "#003366",
-                        weight: 5
-                    }
+                    style: { color: "#003366", weight: 5 }
                 }).addTo(routeMap);
 
                 routeMap.fitBounds(geojsonLayer.getBounds());
-
                 updateRouteSummary(routeData);
-
-            });
-
-        });
+            })
+            .catch(err => console.error("Error consultando OSRM:", err));
+        })
+        .catch(err => console.error("Error en la petición a Odoo:", err));
     }
-
+    
     function updateRouteSummary(routeData) {
 
         var summary = document.getElementById("route-summary");
