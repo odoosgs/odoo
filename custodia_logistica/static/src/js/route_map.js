@@ -2,11 +2,12 @@ odoo.define('custodia_logistica.route_map', function (require) {
     "use strict";
 
     var ajax = require('web.ajax');
-    var domReady = require('web.dom_ready');
 
-    domReady(function () {
+    document.addEventListener("DOMContentLoaded", function () {
+
         initRouteMap();
         initCustodioActions();
+
     });
 
     /* ============================================================
@@ -25,11 +26,6 @@ odoo.define('custodia_logistica.route_map', function (require) {
             return;
         }
 
-        if (typeof L === "undefined") {
-            console.error("Leaflet no está cargado.");
-            return;
-        }
-
         var routeMap = L.map('route_map').setView([23.6345, -102.5528], 6);
 
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -39,36 +35,35 @@ odoo.define('custodia_logistica.route_map', function (require) {
         ajax.jsonRpc('/custodia/ruta/' + rutaId + '/coordinates', 'call', {})
             .then(function (response) {
 
+                // 🔥 Corrección clave: leer correctamente JSONRPC
                 var points = response.result || response;
 
                 if (!points || !Array.isArray(points) || points.length < 2) {
-                    console.warn("No hay coordenadas suficientes.");
+                    console.warn("No hay coordenadas válidas para la ruta.");
                     return;
                 }
 
                 drawRoute(routeMap, points);
+
+            })
+            .catch(function (error) {
+                console.error("Error obteniendo coordenadas:", error);
             });
     }
 
     function drawRoute(routeMap, points) {
 
-        var validPoints = points.filter(function (p) {
-            return p && p.lat && p.lng;
-        });
+        var startPoint = points[0];
+        var endPoint = points[points.length - 1];
 
-        if (validPoints.length < 2) {
+        if (!startPoint || !endPoint) {
             return;
         }
 
-        var coords = validPoints
-            .map(function (p) {
-                return p.lng + "," + p.lat;
-            })
-            .join(";");
-
         var osrmUrl =
             "https://router.project-osrm.org/route/v1/driving/" +
-            coords +
+            startPoint.lng + "," + startPoint.lat + ";" +
+            endPoint.lng + "," + endPoint.lat +
             "?overview=full&geometries=geojson";
 
         fetch(osrmUrl)
@@ -78,21 +73,43 @@ odoo.define('custodia_logistica.route_map', function (require) {
             .then(function (osrm) {
 
                 if (!osrm.routes || !osrm.routes.length) {
+                    console.warn("OSRM no devolvió rutas.");
                     return;
                 }
 
                 var route = osrm.routes[0];
 
+                // Línea azul
                 var geojson = L.geoJSON(route.geometry, {
                     style: {
-                        color: "#003366",
+                        color: "blue",
                         weight: 5
                     }
                 }).addTo(routeMap);
 
                 routeMap.fitBounds(geojson.getBounds());
 
+                // Marcador inicio (verde)
+                L.circleMarker([startPoint.lat, startPoint.lng], {
+                    color: 'green',
+                    radius: 8,
+                    fillColor: 'green',
+                    fillOpacity: 1
+                }).addTo(routeMap).bindPopup("Inicio");
+
+                // Marcador fin (rojo)
+                L.circleMarker([endPoint.lat, endPoint.lng], {
+                    color: 'red',
+                    radius: 8,
+                    fillColor: 'red',
+                    fillOpacity: 1
+                }).addTo(routeMap).bindPopup("Destino");
+
                 updateRouteInfo(route);
+
+            })
+            .catch(function (error) {
+                console.error("Error consultando OSRM:", error);
             });
     }
 
@@ -118,8 +135,9 @@ odoo.define('custodia_logistica.route_map', function (require) {
             "<strong>Tiempo:</strong> " + timeFormatted;
     }
 
+
     /* ============================================================
-       ACCIONES CUSTODIO
+       ACCIONES CUSTODIO (Botones Portal)
     ============================================================ */
 
     function initCustodioActions() {
@@ -149,11 +167,19 @@ odoo.define('custodia_logistica.route_map', function (require) {
 
         fetch("/custodia/service/" + serviceId + "/" + action, {
             method: "POST",
-            headers: { "Content-Type": "application/json" },
+            headers: {
+                "Content-Type": "application/json"
+            },
             body: JSON.stringify({ params: {} })
+        })
+        .then(function (res) {
+            return res.json();
         })
         .then(function () {
             location.reload();
+        })
+        .catch(function (error) {
+            console.error("Error ejecutando acción:", error);
         });
     }
 
