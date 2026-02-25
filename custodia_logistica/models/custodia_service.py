@@ -169,6 +169,37 @@ class CustodiaService(models.Model):
     )
 
     # =========================
+    # TIEMPOS REALES Y CONTROL
+    # =========================
+    
+    hora_llegada = fields.Datetime(string='Hora de llegada custodio', tracking=True)
+    hora_inicio_real = fields.Datetime(string='Hora de inicio real', tracking=True)
+    
+    diff_llegada_min = fields.Integer(
+        string='Diferencia llegada (min)', 
+        compute='_compute_diferencias'
+    )
+    diff_inicio_min = fields.Integer(
+        string='Diferencia inicio (min)', 
+        compute='_compute_diferencias'
+    )
+
+    @api.depends('start_datetime', 'hora_llegada', 'hora_inicio_real')
+    def _compute_diferencias(self):
+        for record in self:
+            diff_llegada = 0
+            diff_inicio = 0
+            if record.start_datetime:
+                if record.hora_llegada:
+                    diff = (record.hora_llegada - record.start_datetime).total_seconds() / 60
+                    diff_llegada = int(diff)
+                if record.hora_inicio_real:
+                    diff = (record.hora_inicio_real - record.start_datetime).total_seconds() / 60
+                    diff_inicio = int(diff)
+            record.diff_llegada_min = diff_llegada
+            record.diff_inicio_min = diff_inicio
+
+    # =========================
     # CREATE (SECUENCIA)
     # =========================
     @api.model_create_multi
