@@ -49,12 +49,15 @@
         'web.assets_frontend': [
             # Aquí puedes agregar CSS/JS para personalizar el portal
             #'custodia_logistica/static/src/js/portal_chatter_live.js',
+            'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css',
+            'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js',
             'custodia_logistica/static/src/js/route_map.js',
         ],
     },
     'application': True,
     'installable': True,
 }
+
 
 
 
