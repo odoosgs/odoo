@@ -1,256 +1,307 @@
-<?xml version="1.0" encoding="utf-8"?>
-<odoo>
+# -*- coding: utf-8 -*-
 
-    <template id="portal_service_list" name="Mis Servicios de Custodia">
-        <t t-call="portal.portal_layout">
-            <div class="container my-4">
-                <div class="d-flex justify-content-between align-items-center mb-3">
-                    <h2 class="m-0">Mis Servicios de Custodia</h2>
-                    <a href="/solicitar-servicio" class="btn btn-primary shadow-sm">
-                        <i class="fa fa-plus-circle me-1"/> Solicitar Servicio
-                    </a>
-                </div>
+import json
+from datetime import datetime
 
-                <div class="table-responsive bg-white shadow-sm rounded">
-                    <table class="table table-hover mb-0">
-                        <thead class="table-light">
-                            <tr>
-                                <th>Folio</th>
-                                <th>Ruta</th>
-                                <th>Inicio</th>
-                                <th>Nivel</th>
-                                <th>Estado</th>
-                                <th class="text-end">Acción</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <t t-if="services">
-                                <t t-foreach="services" t-as="s">
-                                    <tr class="align-middle">
-                                        <td class="fw-bold"><t t-esc="s.sequence"/></td>
-                                        <td><t t-esc="s.ruta_id.name"/></td>
-                                        <td><t t-esc="s.start_datetime" t-options='{"widget": "datetime"}'/></td>
-                                        <td><span class="badge border text-dark">Nivel <t t-esc="s.nivel_seguridad"/></span></td>
-                                        <td>
-                                            <span t-field="s.state" class="badge rounded-pill bg-info text-white"/>
-                                        </td>
-                                        <td class="text-end">
-                                            <a t-att-href="'/mis-servicios/%s?access_token=%s' % (s.id, s.access_token)" 
-                                               class="btn btn-sm btn-outline-secondary">
-                                                Ver Detalle
-                                            </a>
-                                        </td>
-                                    </tr>
-                                </t>
-                            </t>
-                            <t t-else="">
-                                <tr>
-                                    <td colspan="6" class="text-center text-muted py-5">
-                                        <i class="fa fa-folder-open-o fa-3x mb-3 d-block"/>
-                                        No existen servicios registrados para su cuenta.
-                                    </td>
-                                </tr>
-                            </t>
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        </t>
-    </template>
+from odoo import http, fields
+from odoo.http import request
+from odoo.addons.portal.controllers.portal import CustomerPortal
+from odoo.exceptions import AccessError
 
-    <template id="portal_service_form" name="Formulario Solicitud Custodia">
-        <t t-call="portal.portal_layout">
-            <div id="wrap" class="container my-4 bg-white p-4 shadow-sm rounded">
-                <h2 class="mb-4 text-primary">Nueva Solicitud de Custodia</h2>
-                <t t-if="error">
-                    <div class="alert alert-danger shadow-sm" role="alert">
-                        <i class="fa fa-exclamation-triangle me-2"/> <t t-esc="error"/>
-                    </div>
-                </t>
-                <form action="/solicitar-servicio/submit" method="post" class="row g-3">
-                    <input type="hidden" name="csrf_token" t-att-value="request.csrf_token()"/>
-                    
-                    <div class="col-md-12">
-                        <label class="form-label fw-bold">Persona Solicitante</label>
-                        <select name="contact_id" class="form-select" required="1">
-                            <t t-foreach="contacts" t-as="c">
-                                <option t-att-value="c.id"><t t-esc="c.display_name"/></option>
-                            </t>
-                        </select>
-                    </div>
-                    <div class="col-md-6">
-                        <label class="form-label fw-bold">Carrier</label>
-                        <select name="carrier_id" class="form-select" required="1">
-                            <t t-foreach="carriers" t-as="car">
-                                <option t-att-value="car.id"><t t-esc="car.name"/></option>
-                            </t>
-                        </select>
-                    </div>
-                    <div class="col-md-6">
-                        <label class="form-label fw-bold">Ruta</label>
-                        <select name="ruta_id" class="form-select" required="1">
-                            <t t-foreach="rutas" t-as="r">
-                                <option t-att-value="r.id"><t t-esc="r.name"/></option>
-                            </t>
-                        </select>
-                    </div>
-                    <div class="col-md-6">
-                        <label class="form-label fw-bold">Inicio Estimado</label>
-                        <input type="datetime-local" name="start_datetime" class="form-control" required="1"/>
-                    </div>
-                    <div class="col-md-6">
-                        <label class="form-label fw-bold">Nivel de Seguridad</label>
-                        <select name="nivel_seguridad" class="form-select" required="1">
-                            <option value="1">Nivel 1</option>
-                            <option value="2">Nivel 2</option>
-                            <option value="3">Nivel 3</option>
-                            <option value="4">Nivel 4</option>
-                            <option value="4x">Excepción + Nivel 4</option>
-                        </select>
-                    </div>
-                    <div class="col-md-6">
-                        <label class="form-label fw-bold">Load ID / Referencia</label>
-                        <input type="text" name="load_id" class="form-control" placeholder="Ej. NKS221255" required="1"/>
-                    </div>
-                    <div class="col-md-6">
-                        <label class="form-label fw-bold">Tipo de Unidad</label>
-                        <input type="text" name="tipo_unidad" class="form-control" placeholder="Ej. Caja Seca" required="1"/>
-                    </div>
-                    <div class="col-md-6">
-                        <label class="form-label fw-bold">Placas</label>
-                        <input type="text" name="placas" class="form-control" placeholder="ABC-123" required="1"/>
-                    </div>
-                    <div class="col-12 mt-4 text-end border-top pt-3">
-                        <a href="/mis-servicios" class="btn btn-light me-2">Cancelar</a>
-                        <button type="submit" class="btn btn-success btn-lg px-5 shadow-sm">Enviar Solicitud</button>
-                    </div>
-                </form>
-            </div>
-        </t>
-    </template>
 
-    <template id="portal_service_detail" name="Detalle Servicio Custodia">
-        <t t-call="portal.portal_layout">
-            <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
-            <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+class CustodiaPortal(CustomerPortal):
 
-            <div class="container my-4 bg-white pb-5 shadow-sm rounded">
-                <div class="d-flex justify-content-between align-items-center pt-3 px-3">
-                    <h2 class="mb-0 text-primary">Servicio <t t-esc="service.sequence"/></h2>
-                    <span t-field="service.state" class="badge rounded-pill bg-info p-2 px-3" style="font-size: 0.9rem;"/>
-                </div>
-                <hr class="mx-3"/>
+    # =========================================================
+    # CONTADOR EN HOME DEL PORTAL
+    # =========================================================
+    def _prepare_home_portal_values(self, counters):
+        values = super()._prepare_home_portal_values(counters)
 
-                <div class="row mt-4 px-3">
-                    <div class="col-md-6">
-                        <h5 class="text-muted mb-3 border-bottom pb-2">Información de Solicitud</h5>
-                        <p><b>Cliente:</b> <t t-esc="cliente.display_name"/></p>
-                        <p><b>Ruta:</b> <t t-esc="service.ruta_id.name"/></p>
-                        <p><b>Inicio:</b> <t t-esc="service.start_datetime"/></p>
-                        <p><b>Nivel:</b> <t t-esc="service.nivel_seguridad"/></p>
-                        <p><b>Load ID:</b> <t t-esc="service.load_id"/></p>
-                    </div>
-                    <div class="col-md-6 border-start">
-                        <h5 class="text-muted mb-3 border-bottom pb-2">Datos de Logística</h5>
-                        <ul class="list-unstyled">
-                            <li class="mb-2"><b>Unidad:</b> <span t-field="service.tipo_unidad"/></li>
-                            <li class="mb-2"><b>Placas:</b> <span t-field="service.placas"/></li>
-                            <li class="mb-2"><b>Transporte:</b> <span t-field="service.transporte"/></li>
-                            <li class="mb-2"><b>Operador:</b> <span t-field="service.operador1_nombre"/></li>
-                            <li class="mb-2"><b>Monitoreo:</b> <span t-field="service.tel_monitoreo_1"/></li>
-                        </ul>
-                    </div>
-                </div>
+        if 'services_count' in counters:
+            partner = request.env.user.partner_id.commercial_partner_id
+            values['services_count'] = request.env[
+                'custodia.service'
+            ].sudo().search_count([
+                ('partner_id', '=', partner.id)
+            ])
 
-                <div class="row mt-5 px-3">
-                    <div class="col-lg-6 mb-4">
-                        <h4 class="text-secondary"><i class="fa fa-map-o me-2"/>Ruta Planeada</h4>
-                        <div id="route-map" t-att-data-ruta-id="service.ruta_id.id" style="height:350px;" class="border rounded shadow-sm"></div>
-                        <div id="route-summary" class="mt-2 p-2 bg-light border rounded text-center small" style="display:none;">
-                            <b>Distancia:</b> <span id="route-distance" class="me-3 text-primary"/>
-                            <b>Tiempo:</b> <span id="route-duration" class="text-primary"/>
-                        </div>
-                    </div>
-                    <div class="col-lg-6 mb-4">
-                        <h4 class="text-secondary"><i class="fa fa-crosshairs me-2"/>Monitoreo en Vivo</h4>
-                        <div id="live-map" style="height:350px;" class="border rounded shadow-sm"></div>
-                    </div>
-                </div>
+        return values
 
-                <div id="service_communication" class="mt-4 pt-4 border-top px-3">
-                    <h4 class="mb-4 text-muted"><i class="fa fa-comments-o me-2"/>Bitácora y Seguimiento</h4>
-                    <t t-call="portal.message_thread">
-                        <t t-set="object" t-value="service"/>
-                        <t t-set="token" t-value="service.access_token"/>
-                    </t>
-                </div>
-            </div>
+    # =========================================================
+    # LISTADO DE SERVICIOS
+    # =========================================================
+    @http.route(['/mis-servicios'], type='http', auth='user', website=True)
+    def portal_services(self, **kwargs):
 
-            <script type="text/javascript">
-            <![CDATA[
-            document.addEventListener("DOMContentLoaded", function () {
-                var routeContainer = document.getElementById("route-map");
-                if (routeContainer && routeContainer.dataset.rutaId) {
-                    var rutaId = routeContainer.dataset.rutaId;
-                    fetch("/custodia/ruta/" + rutaId + "/coordinates", {
-                        method: "POST",
-                        headers: { "Content-Type": "application/json" },
-                        body: JSON.stringify({ params: {} })
-                    }).then(res => res.json()).then(data => {
-                        if (data.result && data.result.length) {
-                            var points = data.result;
-                            var routeMap = L.map("route-map").setView([points[0].lat, points[0].lng], 6);
-                            L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", { attribution: "© OpenStreetMap" }).addTo(routeMap);
-                            var coords = points.map(p => p.lng + "," + p.lat).join(";");
-                            fetch("https://router.project-osrm.org/route/v1/driving/" + coords + "?overview=full&geometries=geojson")
-                            .then(res => res.json()).then(osrm => {
-                                if (osrm.routes && osrm.routes.length) {
-                                    var geojson = L.geoJSON(osrm.routes[0].geometry, { style: { color: "#3388ff", weight: 5, opacity: 0.7 } }).addTo(routeMap);
-                                    routeMap.fitBounds(geojson.getBounds());
-                                    document.getElementById("route-distance").innerText = (osrm.routes[0].distance / 1000).toFixed(1) + " km";
-                                    document.getElementById("route-summary").style.display = "block";
-                                }
-                            });
-                        }
-                    });
+        partner = request.env.user.partner_id.commercial_partner_id
+
+        services = request.env['custodia.service'].sudo().search(
+            [('partner_id', '=', partner.id)],
+            order='create_date desc'
+        )
+
+        return request.render(
+            'custodia_logistica.portal_service_list',
+            {
+                'services': services,
+                'cliente': partner,
+                'page_name': 'services',
+            }
+        )
+
+    # =========================================================
+    # DETALLE DEL SERVICIO
+    # =========================================================
+    @http.route(
+        ['/mis-servicios/<int:service_id>'],
+        type='http',
+        auth='public',
+        website=True
+    )
+    def portal_service_detail(self, service_id, access_token=None, **kwargs):
+
+        try:
+            service = self._document_check_access(
+                'custodia.service',
+                service_id,
+                access_token
+            )
+        except AccessError:
+            return request.redirect('/mis-servicios')
+
+        return request.render(
+            'custodia_logistica.portal_service_detail',
+            {
+                'service': service,
+                'cliente': service.partner_id,
+                'token': service.access_token,
+                'page_name': 'service_detail',
+            }
+        )
+
+    # =========================================================
+    # VISTA TRACKING MAPA
+    # =========================================================
+    @http.route(
+        ['/mis-servicios/<int:service_id>/tracking-view'],
+        type='http',
+        auth='public',
+        website=True
+    )
+    def portal_service_tracking_view(self, service_id, access_token=None, **kwargs):
+
+        try:
+            service = self._document_check_access(
+                'custodia.service',
+                service_id,
+                access_token
+            )
+        except AccessError:
+            return request.redirect('/mis-servicios')
+
+        return request.render(
+            'custodia_logistica.portal_service_tracking',
+            {
+                'service': service,
+                'token': service.access_token,
+            }
+        )
+
+    # =========================================================
+    # ENDPOINT JSON TRACKING (COMPATIBLE CON FETCH)
+    # =========================================================
+    @http.route(
+        ['/mis-servicios/<int:service_id>/tracking'],
+        type='http',
+        auth='public',
+        website=True,
+        csrf=False
+    )
+    def portal_service_tracking(self, service_id, access_token=None, **kwargs):
+
+        try:
+            service = self._document_check_access(
+                'custodia.service',
+                service_id,
+                access_token
+            )
+        except Exception:
+            return request.make_response(
+                json.dumps({'error': 'Acceso no autorizado'}),
+                headers=[('Content-Type', 'application/json')]
+            )
+
+        data = {
+            'lat': service.current_lat or 0.0,
+            'lng': service.current_lng or 0.0,
+            'last_update': str(service.last_update) if service.last_update else False,
+            'state': service.state,
+        }
+
+        return request.make_response(
+            json.dumps(data),
+            headers=[('Content-Type', 'application/json')]
+        )
+
+    # =========================================================
+    # FORMULARIO NUEVA SOLICITUD
+    # =========================================================
+    @http.route(['/solicitar-servicio'], type='http', auth='user', website=True)
+    def solicitar_form(self, **kwargs):
+
+        partner = request.env.user.partner_id.commercial_partner_id
+
+        return request.render(
+            'custodia_logistica.portal_service_form',
+            {
+                'carriers': request.env['custodia.carrier'].sudo().search([]),
+                'rutas': request.env['custodia.ruta'].sudo().search([]),
+                'contacts': request.env['res.partner'].sudo().search([
+                    ('parent_id', '=', partner.id)
+                ]),
+                'cliente': partner,
+            }
+        )
+
+    # =========================================================
+    # VALIDACIÓN DE PROPIEDAD
+    # =========================================================
+    def _check_service_owner(self, service):
+        partner = request.env.user.partner_id.commercial_partner_id
+        if service.partner_id.id != partner.id:
+            raise AccessError("No autorizado")
+
+    # =========================================================
+    # CAMBIOS DE ESTADO
+    # =========================================================
+    @http.route('/custodia/service/<int:service_id>/en_ruta', type='json', auth='user')
+    def marcar_en_ruta(self, service_id):
+        service = request.env['custodia.service'].sudo().browse(service_id)
+        self._check_service_owner(service)
+        service.write({'state': 'en_ruta'})
+        return True
+
+    @http.route('/custodia/service/<int:service_id>/llegada', type='json', auth='user')
+    def marcar_llegada(self, service_id):
+        service = request.env['custodia.service'].sudo().browse(service_id)
+        self._check_service_owner(service)
+        service.write({
+            'arrival_datetime': fields.Datetime.now(),
+            'state': 'llegada'
+        })
+        return True
+
+    @http.route('/custodia/service/<int:service_id>/iniciar', type='json', auth='user')
+    def iniciar_servicio(self, service_id):
+        service = request.env['custodia.service'].sudo().browse(service_id)
+        self._check_service_owner(service)
+        service.write({
+            'real_start_datetime': fields.Datetime.now(),
+            'state': 'iniciado'
+        })
+        return True
+
+    # =========================================================
+    # COORDENADAS DE RUTA
+    # =========================================================
+    @http.route(
+        ['/custodia/ruta/<int:ruta_id>/coordinates'],
+        type='json',
+        auth='public'
+    )
+    def get_ruta_coordinates(self, ruta_id, **kwargs):
+
+        ruta = request.env['custodia.ruta'].sudo().browse(ruta_id)
+
+        if not ruta.exists():
+            return []
+
+        coords = []
+
+        if hasattr(ruta, 'punto_ids') and ruta.punto_ids:
+            for punto in ruta.punto_ids:
+                if punto.lat and punto.lng:
+                    coords.append({
+                        'lat': punto.lat,
+                        'lng': punto.lng,
+                    })
+
+        if not coords and ruta.start_coords and ruta.end_coords:
+            try:
+                start_lat, start_lng = map(float, ruta.start_coords.split(','))
+                end_lat, end_lng = map(float, ruta.end_coords.split(','))
+                coords = [
+                    {'lat': start_lat, 'lng': start_lng},
+                    {'lat': end_lat, 'lng': end_lng},
+                ]
+            except Exception:
+                pass
+
+        return coords
+
+    # =========================================================
+    # SUBMIT NUEVA SOLICITUD
+    # =========================================================
+    @http.route(
+        ['/solicitar-servicio/submit'],
+        type='http',
+        auth='user',
+        website=True,
+        csrf=True
+    )
+    def solicitar_submit(self, **post):
+
+        partner = request.env.user.partner_id.commercial_partner_id
+
+        try:
+            start_dt = False
+            if post.get('start_datetime'):
+                start_dt = datetime.strptime(
+                    post['start_datetime'],
+                    "%Y-%m-%dT%H:%M"
+                )
+
+            vals = {
+                'partner_id': partner.id,
+                'contact_id': int(post.get('contact_id')) if post.get('contact_id') else False,
+                'carrier_id': int(post.get('carrier_id')) if post.get('carrier_id') else False,
+                'ruta_id': int(post.get('ruta_id')) if post.get('ruta_id') else False,
+                'start_datetime': start_dt,
+                'nivel_seguridad': post.get('nivel_seguridad'),
+                'load_id': post.get('load_id'),
+                'tipo_unidad': post.get('tipo_unidad'),
+                'placas': post.get('placas'),
+                'transporte': post.get('transporte'),
+                'operador1_nombre': post.get('operador1_nombre'),
+                'operador1_licencia': post.get('operador1_licencia'),
+                'operador2_nombre': post.get('operador2_nombre') or False,
+                'operador2_licencia': post.get('operador2_licencia') or False,
+                'tel_monitoreo_1': post.get('tel_monitoreo_1'),
+                'tel_monitoreo_2': post.get('tel_monitoreo_2') or False,
+                'comentarios_cliente': post.get('comentarios_cliente') or False,
+                'start_coords': post.get('start_coords'),
+                'end_coords': post.get('end_coords'),
+                'state': 'solicitado',
+            }
+
+            service = request.env['custodia.service'].sudo().create(vals)
+            service._portal_ensure_token()
+
+            return request.redirect(
+                f'/mis-servicios/{service.id}?access_token={service.access_token}'
+            )
+
+        except Exception as e:
+
+            return request.render(
+                'custodia_logistica.portal_service_form',
+                {
+                    'carriers': request.env['custodia.carrier'].sudo().search([]),
+                    'rutas': request.env['custodia.ruta'].sudo().search([]),
+                    'contacts': request.env['res.partner'].sudo().search([
+                        ('parent_id', '=', partner.id)
+                    ]),
+                    'cliente': partner,
+                    'error': str(e),
                 }
-
-                // Monitoreo en Vivo (Refresco cada 20s)
-                var serviceId = "]]><t t-out='service.id'/><![CDATA[";
-                var token = "]]><t t-out='service.access_token'/><![CDATA[";
-                var liveMap = L.map('live-map').setView([19.43, -99.13], 6);
-                L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png").addTo(liveMap);
-                var marker = L.marker([19.43, -99.13]).addTo(liveMap);
-
-                function updateLocation() {
-                    fetch("/mis-servicios/" + serviceId + "/tracking", {
-                        method: "POST",
-                        headers: { "Content-Type": "application/json" },
-                        body: JSON.stringify({ params: { access_token: token } })
-                    }).then(res => res.json()).then(data => {
-                        if (data.result && data.result.lat && data.result.lng) {
-                            var pos = [data.result.lat, data.result.lng];
-                            marker.setLatLng(pos);
-                            liveMap.panTo(pos);
-                        }
-                    }).catch(err => console.error("Tracking Error:", err));
-                }
-                updateLocation();
-                setInterval(updateLocation, 20000);
-            });
-            ]]>
-            </script>
-        </t>
-    </template>
-
-    <template id="portal_my_home_custodia" inherit_id="portal.portal_my_home" name="Custodia Portal" priority="20">
-        <xpath expr="//div[contains(@class,'o_portal_docs')]" position="inside">
-            <t t-call="portal.portal_docs_entry">
-                <t t-set="title">Servicios de Custodia</t>
-                <t t-set="url" t-value="'/mis-servicios'"/>
-                <t t-set="placeholder_count" t-value="'services_count'"/>
-            </t>
-        </xpath>
-    </template>
-
-</odoo>
+            )
