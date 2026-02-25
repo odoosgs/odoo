@@ -15,103 +15,102 @@ odoo.define('custodia_logistica.route_map', function (require) {
     ============================================================ */
 
     function initRouteMap() {
-
         var mapContainer = document.getElementById('route_map');
-        if (!mapContainer) {
-            return;
-        }
-
+        if (!mapContainer) return;
+    
         var rutaId = mapContainer.dataset.rutaId;
-        if (!rutaId) {
-            return;
-        }
-
-        var routeMap = L.map('route_map').setView([23.6345, -102.5528], 6);
-
+        if (!rutaId) return;
+    
+        // Inicializamos el mapa centrado en México
+        var routeMap = L.map('route_map').setView([19.4326, -99.1332], 6);
+    
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
             attribution: '&copy; OpenStreetMap contributors'
         }).addTo(routeMap);
-
-        ajax.jsonRpc('/custodia/service/' + rutaId + '/coordinates', 'call', {})
-            .then(function (response) {
-
-                // 🔥 Corrección clave: leer correctamente JSONRPC
-                var points = response.result || response;
-
-                if (!points || !Array.isArray(points) || points.length < 2) {
-                    console.warn("No hay coordenadas válidas para la ruta.");
-                    return;
-                }
-
-                drawRoute(routeMap, points);
-
-            })
-            .catch(function (error) {
-                console.error("Error obteniendo coordenadas:", error);
-            });
+    
+        // LLAMADA CORREGIDA: Debe coincidir con portal_route.py
+        // Usamos JSON.stringify({params: {}}) porque Odoo espera ese formato para type='json'
+        fetch('/custodia/ruta/' + rutaId + '/coordinates', {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ params: {} })
+        })
+        .then(res => res.json())
+        .then(response => {
+            // En Odoo, el resultado viene dentro de response.result
+            var points = response.result;
+    
+            if (!points || !Array.isArray(points) || points.length < 2) {
+                console.warn("No hay coordenadas suficientes para pintar la ruta.");
+                return;
+            }
+    
+            drawRoute(routeMap, points);
+        })
+        .catch(err => console.error("Error obteniendo coordenadas:", err));
     }
-
-    function drawRoute(routeMap, points) {
-
-        var startPoint = points[0];
-        var endPoint = points[points.length - 1];
-
-        if (!startPoint || !endPoint) {
-            return;
-        }
-
-        var osrmUrl =
-            "https://router.project-osrm.org/route/v1/driving/" +
-            startPoint.lng + "," + startPoint.lat + ";" +
-            endPoint.lng + "," + endPoint.lat +
-            "?overview=full&geometries=geojson";
-
-        fetch(osrmUrl)
-            .then(function (response) {
-                return response.json();
-            })
-            .then(function (osrm) {
-
-                if (!osrm.routes || !osrm.routes.length) {
-                    console.warn("OSRM no devolvió rutas.");
-                    return;
-                }
-
-                var route = osrm.routes[0];
-
-                // Línea azul
-                var geojson = L.geoJSON(route.geometry, {
-                    style: {
-                        color: "blue",
-                        weight: 5
+        
+        function drawRoute(routeMap, points) {
+    
+            var startPoint = points[0];
+            var endPoint = points[points.length - 1];
+    
+            if (!startPoint || !endPoint) {
+                return;
+            }
+    
+            var osrmUrl =
+                "https://router.project-osrm.org/route/v1/driving/" +
+                startPoint.lng + "," + startPoint.lat + ";" +
+                endPoint.lng + "," + endPoint.lat +
+                "?overview=full&geometries=geojson";
+    
+            fetch(osrmUrl)
+                .then(function (response) {
+                    return response.json();
+                })
+                .then(function (osrm) {
+    
+                    if (!osrm.routes || !osrm.routes.length) {
+                        console.warn("OSRM no devolvió rutas.");
+                        return;
                     }
-                }).addTo(routeMap);
-
-                routeMap.fitBounds(geojson.getBounds());
-
-                // Marcador inicio (verde)
-                L.circleMarker([startPoint.lat, startPoint.lng], {
-                    color: 'green',
-                    radius: 8,
-                    fillColor: 'green',
-                    fillOpacity: 1
-                }).addTo(routeMap).bindPopup("Inicio");
-
-                // Marcador fin (rojo)
-                L.circleMarker([endPoint.lat, endPoint.lng], {
-                    color: 'red',
-                    radius: 8,
-                    fillColor: 'red',
-                    fillOpacity: 1
-                }).addTo(routeMap).bindPopup("Destino");
-
-                updateRouteInfo(route);
-
-            })
-            .catch(function (error) {
-                console.error("Error consultando OSRM:", error);
-            });
-    }
+    
+                    var route = osrm.routes[0];
+    
+                    // Línea azul
+                    var geojson = L.geoJSON(route.geometry, {
+                        style: {
+                            color: "blue",
+                            weight: 5
+                        }
+                    }).addTo(routeMap);
+    
+                    routeMap.fitBounds(geojson.getBounds());
+    
+                    // Marcador inicio (verde)
+                    L.circleMarker([startPoint.lat, startPoint.lng], {
+                        color: 'green',
+                        radius: 8,
+                        fillColor: 'green',
+                        fillOpacity: 1
+                    }).addTo(routeMap).bindPopup("Inicio");
+    
+                    // Marcador fin (rojo)
+                    L.circleMarker([endPoint.lat, endPoint.lng], {
+                        color: 'red',
+                        radius: 8,
+                        fillColor: 'red',
+                        fillOpacity: 1
+                    }).addTo(routeMap).bindPopup("Destino");
+        
+                    updateRouteInfo(route);
+    
+                })
+                .catch(function (error) {
+                    console.error("Error consultando OSRM:", error);
+                });
+        }
 
     function updateRouteInfo(route) {
 
