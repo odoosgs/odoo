@@ -2,8 +2,9 @@ odoo.define('custodia_logistica.route_map', function (require) {
     "use strict";
 
     var ajax = require('web.ajax');
+    var domReady = require('web.dom_ready');
 
-    document.addEventListener("DOMContentLoaded", function () {
+    domReady(function () {
         initRouteMap();
         initCustodioActions();
     });
@@ -21,7 +22,6 @@ odoo.define('custodia_logistica.route_map', function (require) {
 
         var rutaId = mapContainer.dataset.rutaId;
         if (!rutaId) {
-            console.warn("Ruta ID no encontrado.");
             return;
         }
 
@@ -37,34 +37,29 @@ odoo.define('custodia_logistica.route_map', function (require) {
         }).addTo(routeMap);
 
         ajax.jsonRpc('/custodia/ruta/' + rutaId + '/coordinates', 'call', {})
-            .then(function (data) {
+            .then(function (response) {
 
-                if (!data || !Array.isArray(data) || data.length < 2) {
-                    console.warn("No hay suficientes coordenadas para la ruta.");
+                var points = response.result || response;
+
+                if (!points || !Array.isArray(points) || points.length < 2) {
+                    console.warn("No hay coordenadas suficientes.");
                     return;
                 }
 
-                drawRoute(routeMap, data);
-
-            })
-            .catch(function (error) {
-                console.error("Error obteniendo coordenadas:", error);
+                drawRoute(routeMap, points);
             });
     }
 
     function drawRoute(routeMap, points) {
 
-        // Filtrar puntos válidos
         var validPoints = points.filter(function (p) {
             return p && p.lat && p.lng;
         });
 
         if (validPoints.length < 2) {
-            console.warn("No hay suficientes puntos válidos.");
             return;
         }
 
-        // Construir coordenadas OSRM con TODOS los puntos
         var coords = validPoints
             .map(function (p) {
                 return p.lng + "," + p.lat;
@@ -83,13 +78,11 @@ odoo.define('custodia_logistica.route_map', function (require) {
             .then(function (osrm) {
 
                 if (!osrm.routes || !osrm.routes.length) {
-                    console.warn("OSRM no devolvió rutas.");
                     return;
                 }
 
                 var route = osrm.routes[0];
 
-                // Línea azul marino profesional
                 var geojson = L.geoJSON(route.geometry, {
                     style: {
                         color: "#003366",
@@ -99,29 +92,7 @@ odoo.define('custodia_logistica.route_map', function (require) {
 
                 routeMap.fitBounds(geojson.getBounds());
 
-                // Marcador inicio
-                var startPoint = validPoints[0];
-                L.circleMarker([startPoint.lat, startPoint.lng], {
-                    color: '#0d6efd',
-                    radius: 8,
-                    fillColor: '#0d6efd',
-                    fillOpacity: 1
-                }).addTo(routeMap).bindPopup("Inicio");
-
-                // Marcador fin
-                var endPoint = validPoints[validPoints.length - 1];
-                L.circleMarker([endPoint.lat, endPoint.lng], {
-                    color: '#dc3545',
-                    radius: 8,
-                    fillColor: '#dc3545',
-                    fillOpacity: 1
-                }).addTo(routeMap).bindPopup("Destino");
-
                 updateRouteInfo(route);
-
-            })
-            .catch(function (error) {
-                console.error("Error consultando OSRM:", error);
             });
     }
 
@@ -147,9 +118,8 @@ odoo.define('custodia_logistica.route_map', function (require) {
             "<strong>Tiempo:</strong> " + timeFormatted;
     }
 
-
     /* ============================================================
-       ACCIONES CUSTODIO (Botones Portal)
+       ACCIONES CUSTODIO
     ============================================================ */
 
     function initCustodioActions() {
@@ -179,19 +149,11 @@ odoo.define('custodia_logistica.route_map', function (require) {
 
         fetch("/custodia/service/" + serviceId + "/" + action, {
             method: "POST",
-            headers: {
-                "Content-Type": "application/json"
-            },
+            headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ params: {} })
-        })
-        .then(function (res) {
-            return res.json();
         })
         .then(function () {
             location.reload();
-        })
-        .catch(function (error) {
-            console.error("Error ejecutando acción:", error);
         });
     }
 
