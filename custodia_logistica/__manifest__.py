@@ -43,6 +43,7 @@
 
         # Portal
         'views/portal_templates.xml',
+        'views/portal_service_form.xml',
         #'views/portal_service_detail.xml',
     ],
     'assets': {
@@ -57,6 +58,7 @@
     'application': True,
     'installable': True,
 }
+
 
 
 
