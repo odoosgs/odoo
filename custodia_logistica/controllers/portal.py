@@ -21,6 +21,19 @@ class CustodiaPortal(CustomerPortal):
         return values
 
     # =========================================================
+    # ENDPOINT PARA COORDENADAS (Necesario para route_map.js)
+    # =========================================================
+    @http.route(['/custodia/ruta/<int:ruta_id>/coordinates'], type='json', auth='public', website=True)
+    def get_ruta_coordinates(self, ruta_id, **kwargs):
+        ruta = request.env['custodia.ruta'].sudo().browse(ruta_id)
+        if not ruta.exists():
+            return []
+        return ruta.get_route_coordinates()
+
+    # NOTA: Asegúrate de que el template 'portal_service_form' 
+    # exista en tus archivos XML. Si no existe, el 404 persistirá.
+
+    # =========================================================
     # LISTADO DE SERVICIOS
     # =========================================================
     @http.route(['/mis-servicios'], type='http', auth='user', website=True)
