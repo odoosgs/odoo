@@ -25,9 +25,11 @@ class CustodiaPortal(CustomerPortal):
     # =========================================================
     @http.route(['/custodia/ruta/<int:ruta_id>/coordinates'], type='json', auth='public', website=True)
     def get_ruta_coordinates(self, ruta_id, **kwargs):
+        # Buscamos la ruta de forma segura (sudo para que el portal pueda leerla)
         ruta = request.env['custodia.ruta'].sudo().browse(ruta_id)
         if not ruta.exists():
             return []
+        # Llamamos al método que definimos en el modelo
         return ruta.get_route_coordinates()
 
     # NOTA: Asegúrate de que el template 'portal_service_form' 
