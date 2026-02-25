@@ -32,7 +32,7 @@ odoo.define('custodia_logistica.route_map', function (require) {
             attribution: '&copy; OpenStreetMap contributors'
         }).addTo(routeMap);
 
-        ajax.jsonRpc('/custodia/ruta/' + rutaId + '/coordinates', 'call', {})
+        ajax.jsonRpc('/custodia/service/' + rutaId + '/coordinates', 'call', {})
             .then(function (response) {
 
                 // 🔥 Corrección clave: leer correctamente JSONRPC
