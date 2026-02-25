@@ -30,19 +30,6 @@ class CustodiaPortal(CustomerPortal):
     # =========================================================
     # LISTADO DE SERVICIOS
     # =========================================================
-
-     @http.route('/custodia/service/<int:service_id>/llegada', type='json', auth='user')
-    def marcar_llegada(self, service_id):
-        service = request.env['custodia.service'].sudo().browse(service_id)
-        service.hora_llegada = fields.Datetime.now()
-        return {'status': 'ok'}
-
-    @http.route('/custodia/service/<int:service_id>/iniciar', type='json', auth='user')
-    def iniciar_servicio(self, service_id):
-        service = request.env['custodia.service'].sudo().browse(service_id)
-        service.hora_inicio_real = fields.Datetime.now()
-        return {'status': 'ok'}
-        
     @http.route(['/mis-servicios'], type='http', auth='user', website=True)
     def portal_services(self, **kwargs):
 
@@ -93,35 +80,60 @@ class CustodiaPortal(CustomerPortal):
         )
 
     # =========================================================
-    # VISTA TRACKING MAPA
+    # MARCAR EN RUTA
     # =========================================================
-    @http.route(
-        ['/mis-servicios/<int:service_id>/tracking-view'],
-        type='http',
-        auth='public',
-        website=True
-    )
-    def portal_service_tracking_view(self, service_id, access_token=None, **kwargs):
+    @http.route('/custodia/service/<int:service_id>/en_ruta',
+                type='json',
+                auth='user')
+    def marcar_en_ruta(self, service_id):
 
-        try:
-            service = self._document_check_access(
-                'custodia.service',
-                service_id,
-                access_token
-            )
-        except AccessError:
-            return request.redirect('/mis-servicios')
+        service = request.env['custodia.service'].sudo().browse(service_id)
+        self._check_service_owner(service)
 
-        return request.render(
-            'custodia_logistica.portal_service_tracking',
-            {
-                'service': service,
-                'token': service.access_token,
-            }
-        )
+        service.write({
+            'state': 'en_ruta'
+        })
+
+        return True
 
     # =========================================================
-    # ENDPOINT JSON TRACKING (COMPATIBLE CON FETCH)
+    # MARCAR LLEGADA
+    # =========================================================
+    @http.route('/custodia/service/<int:service_id>/llegada',
+                type='json',
+                auth='user')
+    def marcar_llegada(self, service_id):
+
+        service = request.env['custodia.service'].sudo().browse(service_id)
+        self._check_service_owner(service)
+
+        service.write({
+            'hora_llegada': fields.Datetime.now(),
+            'state': 'llegada'
+        })
+
+        return True
+
+    # =========================================================
+    # INICIAR SERVICIO
+    # =========================================================
+    @http.route('/custodia/service/<int:service_id>/iniciar',
+                type='json',
+                auth='user')
+    def iniciar_servicio(self, service_id):
+
+        service = request.env['custodia.service'].sudo().browse(service_id)
+        self._check_service_owner(service)
+
+        service.write({
+            'hora_inicio_real': fields.Datetime.now(),
+            'state': 'iniciado'
+        })
+
+        return True
+
+    # =========================================================
+    # ENDPOINT JSON TRACKING
     # =========================================================
     @http.route(
         ['/mis-servicios/<int:service_id>/tracking'],
@@ -175,82 +187,6 @@ class CustodiaPortal(CustomerPortal):
                 'cliente': partner,
             }
         )
-
-    # =========================================================
-    # VALIDACIÓN DE PROPIEDAD
-    # =========================================================
-    def _check_service_owner(self, service):
-        partner = request.env.user.partner_id.commercial_partner_id
-        if service.partner_id.id != partner.id:
-            raise AccessError("No autorizado")
-
-    # =========================================================
-    # CAMBIOS DE ESTADO
-    # =========================================================
-    @http.route('/custodia/service/<int:service_id>/en_ruta', type='json', auth='user')
-    def marcar_en_ruta(self, service_id):
-        service = request.env['custodia.service'].sudo().browse(service_id)
-        self._check_service_owner(service)
-        service.write({'state': 'en_ruta'})
-        return True
-
-    @http.route('/custodia/service/<int:service_id>/llegada', type='json', auth='user')
-    def marcar_llegada(self, service_id):
-        service = request.env['custodia.service'].sudo().browse(service_id)
-        self._check_service_owner(service)
-        service.write({
-            'arrival_datetime': fields.Datetime.now(),
-            'state': 'llegada'
-        })
-        return True
-
-    @http.route('/custodia/service/<int:service_id>/iniciar', type='json', auth='user')
-    def iniciar_servicio(self, service_id):
-        service = request.env['custodia.service'].sudo().browse(service_id)
-        self._check_service_owner(service)
-        service.write({
-            'real_start_datetime': fields.Datetime.now(),
-            'state': 'iniciado'
-        })
-        return True
-
-    # =========================================================
-    # COORDENADAS DE RUTA
-    # =========================================================
-    @http.route(
-        ['/custodia/ruta/<int:ruta_id>/coordinates'],
-        type='json',
-        auth='public'
-    )
-    def get_ruta_coordinates(self, ruta_id, **kwargs):
-
-        ruta = request.env['custodia.ruta'].sudo().browse(ruta_id)
-
-        if not ruta.exists():
-            return []
-
-        coords = []
-
-        if hasattr(ruta, 'punto_ids') and ruta.punto_ids:
-            for punto in ruta.punto_ids:
-                if punto.lat and punto.lng:
-                    coords.append({
-                        'lat': punto.lat,
-                        'lng': punto.lng,
-                    })
-
-        if not coords and ruta.start_coords and ruta.end_coords:
-            try:
-                start_lat, start_lng = map(float, ruta.start_coords.split(','))
-                end_lat, end_lng = map(float, ruta.end_coords.split(','))
-                coords = [
-                    {'lat': start_lat, 'lng': start_lng},
-                    {'lat': end_lat, 'lng': end_lng},
-                ]
-            except Exception:
-                pass
-
-        return coords
 
     # =========================================================
     # SUBMIT NUEVA SOLICITUD
@@ -318,3 +254,11 @@ class CustodiaPortal(CustomerPortal):
                     'error': str(e),
                 }
             )
+
+    # =========================================================
+    # VALIDACIÓN DE PROPIEDAD
+    # =========================================================
+    def _check_service_owner(self, service):
+        partner = request.env.user.partner_id.commercial_partner_id
+        if not service.exists() or service.partner_id.id != partner.id:
+            raise AccessError("No autorizado")
