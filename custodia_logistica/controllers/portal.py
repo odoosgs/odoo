@@ -147,24 +147,26 @@ class CustodiaPortal(CustomerPortal):
     # =========================================================
     # ACCIONES DEL CUSTODIO
     # =========================================================
-    @http.route('/custodia/service/<int:service_id>/<string:action>', type='json', auth='user')
-    def custodia_action(self, service_id, action):
+    @http.route('/custodia/service/<int:service_id>/<string:action>', type='json', auth='user', methods=['POST'], website=True)
+    def custodia_action(self, service_id, action, **kwargs):
         service = request.env['custodia.service'].sudo().browse(service_id)
-        
-        # Odoo 19 usa mecanismos de seguridad estrictos, verificamos acceso
         if not service.exists():
-            return False
-            
+            return {'status': 'error', 'message': 'Servicio no encontrado'}
+
         now = fields.Datetime.now()
         
         if action == 'llegada':
             service.write({
-                'state': 'aprobado', # O el estado que desees
-                'hora_llegada': now
+                'hora_llegada': now,
+                'state': 'aprobado' # O el estado que desees para confirmar presencia
             })
+            service.message_post(body="El custodio ha marcado su llegada al punto de origen.")
+            
         elif action == 'iniciar':
             service.write({
-                'state': 'en_ejecucion', 
-                'hora_inicio_real': now
+                'hora_inicio_real': now,
+                'state': 'en_ejecucion'
             })
-        return True
+            service.message_post(body="Servicio iniciado formalmente.")
+
+        return {'status': 'success'}
