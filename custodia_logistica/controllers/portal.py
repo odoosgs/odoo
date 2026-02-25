@@ -201,6 +201,49 @@ class CustodiaPortal(CustomerPortal):
         })
         return True
 
+    # =========================================================
+    # ENDPOINT COORDENADAS RUTA (PARA MAPA)
+    # =========================================================
+    @http.route(
+        ['/custodia/ruta/<int:ruta_id>/coordinates'],
+        type='json',
+        auth='public'
+    )
+    def get_ruta_coordinates(self, ruta_id, access_token=None, **kwargs):
+
+        ruta = request.env['custodia.ruta'].sudo().browse(ruta_id)
+
+        if not ruta.exists():
+            return []
+
+        coords = []
+
+        # Si tu modelo ruta tiene puntos relacionados
+        if hasattr(ruta, 'punto_ids') and ruta.punto_ids:
+            for punto in ruta.punto_ids:
+                if punto.lat and punto.lng:
+                    coords.append({
+                        'lat': punto.lat,
+                        'lng': punto.lng,
+                    })
+
+        # Fallback: si no tiene puntos, usar coordenadas inicio/fin
+        if not coords:
+            if ruta.start_coords and ruta.end_coords:
+                try:
+                    start_lat, start_lng = map(float, ruta.start_coords.split(','))
+                    end_lat, end_lng = map(float, ruta.end_coords.split(','))
+
+                    coords = [
+                        {'lat': start_lat, 'lng': start_lng},
+                        {'lat': end_lat, 'lng': end_lng},
+                    ]
+                except Exception:
+                    pass
+
+        return coords
+
+
     
     # =========================================================
     # SUBMIT NUEVA SOLICITUD
