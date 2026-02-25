@@ -155,7 +155,7 @@
                     <h3>Ruta Planeada</h3>
                     <div id="route-map"
                          t-att-data-ruta-id="service.ruta_id.id"
-                         style="height:450px;"
+                         style="height:450px; width:100%;"
                          class="border shadow-sm">
                     </div>
                 </div>
