@@ -1,10 +1,8 @@
 odoo.define('custodia_logistica.route_map', function (require) {
     "use strict";
 
-    var ajax = require('web.ajax');
-
     document.addEventListener("DOMContentLoaded", function () {
-        // Pequeño retardo para asegurar que Leaflet esté en el DOM
+        // Inicializar con retraso para asegurar carga de librerías
         setTimeout(function() {
             initRouteMap();
             initLiveMap();
@@ -17,11 +15,9 @@ odoo.define('custodia_logistica.route_map', function (require) {
         if (!mapContainer || !mapContainer.dataset.rutaId) return;
 
         var routeMap = L.map('route_map').setView([19.4326, -99.1332], 6);
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            attribution: '&copy; OpenStreetMap'
-        }).addTo(routeMap);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(routeMap);
 
-        // FETCH robusto al controlador de rutas
+        // Llamada al controlador portal_route.py
         fetch('/custodia/ruta/' + mapContainer.dataset.rutaId + '/coordinates', {
             method: "POST",
             headers: { "Content-Type": "application/json" },
@@ -38,15 +34,14 @@ odoo.define('custodia_logistica.route_map', function (require) {
             .then(osrm => {
                 if (osrm.routes && osrm.routes.length) {
                     var route = osrm.routes[0];
-                    var geojson = L.geoJSON(route.geometry, {style: {color: "blue", weight: 5}}).addTo(routeMap);
-                    routeMap.fitBounds(geojson.getBounds());
+                    L.geoJSON(route.geometry, {style: {color: "#3388ff", weight: 6}}).addTo(routeMap);
+                    routeMap.fitBounds(L.geoJSON(route.geometry).getBounds());
                     
-                    // Inyectar métricas en el div correspondiente
                     var infoDiv = document.getElementById('route_info');
                     if (infoDiv) {
-                        var dist = (route.distance / 1000).toFixed(2);
-                        var dur = Math.round(route.duration / 60);
-                        infoDiv.innerHTML = "<strong>Distancia:</strong> " + dist + " km | <strong>Tiempo:</strong> " + Math.floor(dur/60) + "h " + (dur%60) + "min";
+                        var dist = (route.distance / 1000).toFixed(1);
+                        var dur = Math.floor(route.duration / 3600) + "h " + Math.round((route.duration % 3600) / 60) + "m";
+                        infoDiv.innerHTML = "<strong>Distancia:</strong> " + dist + " km | <strong>Tiempo:</strong> " + dur;
                         infoDiv.style.display = "block";
                     }
                 }
@@ -55,30 +50,27 @@ odoo.define('custodia_logistica.route_map', function (require) {
     }
 
     function initLiveMap() {
-        var liveContainer = document.getElementById('live_map');
-        if (!liveContainer) return;
+        var liveCont = document.getElementById('live_map');
+        if (!liveCont) return;
 
         var liveMap = L.map('live_map').setView([19.43, -99.13], 6);
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(liveMap);
         var marker = L.marker([19.43, -99.13]).addTo(liveMap);
 
         function update() {
-            fetch("/mis-servicios/" + liveContainer.dataset.serviceId + "/tracking", {
+            fetch("/mis-servicios/" + liveCont.dataset.serviceId + "/tracking", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ params: { access_token: liveContainer.dataset.token } })
-            })
-            .then(res => res.json())
-            .then(data => {
-                var r = data.result || data;
+                body: JSON.stringify({ params: { access_token: liveCont.dataset.token } })
+            }).then(res => res.json()).then(d => {
+                var r = d.result || d;
                 if (r.lat && r.lng) {
                     marker.setLatLng([r.lat, r.lng]);
                     liveMap.panTo([r.lat, r.lng]);
                 }
             });
         }
-        update();
-        setInterval(update, 15000);
+        update(); setInterval(update, 15000);
     }
 
     function initCustodioActions() {
