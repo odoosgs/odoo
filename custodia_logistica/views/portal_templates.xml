@@ -196,9 +196,6 @@
 
             </div>
 
-            <!-- JS externo -->
-            <script type="text/javascript"
-                    src="/custodia_logistica/static/src/js/route_map.js"></script>
 
         </t>
     </template>
