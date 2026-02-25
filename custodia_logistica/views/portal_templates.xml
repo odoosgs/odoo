@@ -5,30 +5,30 @@
             <div class="container my-4">
                 <div class="d-flex justify-content-between align-items-center mb-3">
                     <h2>Mis Servicios de Custodia</h2>
-                    <a href="/solicitar-servicio" class="btn btn-primary">Solicitar Servicio</a>
+                    <a href="/solicitar-servicio" class="btn btn-primary shadow-sm">Solicitar Servicio</a>
                 </div>
-                <table class="table table-striped bg-white shadow-sm rounded">
-                    <thead>
-                        <tr>
-                            <th>Folio</th>
-                            <th>Ruta</th>
-                            <th>Estado</th>
-                            <th class="text-end">Acción</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <t t-foreach="services" t-as="s">
+                <div class="table-responsive bg-white shadow-sm rounded">
+                    <table class="table table-striped">
+                        <thead>
                             <tr>
-                                <td><t t-esc="s.sequence"/></td>
-                                <td><t t-esc="s.ruta_id.name"/></td>
-                                <td><span t-field="s.state" class="badge rounded-pill bg-info"/></td>
-                                <td class="text-end">
-                                    <a t-att-href="'/mis-servicios/%s?access_token=%s' % (s.id, s.access_token)" class="btn btn-sm btn-secondary">Ver</a>
-                                </td>
+                                <th>Folio</th><th>Ruta</th><th>Inicio</th><th>Estado</th><th class="text-end"></th>
                             </tr>
-                        </t>
-                    </tbody>
-                </table>
+                        </thead>
+                        <tbody>
+                            <t t-foreach="services" t-as="s">
+                                <tr>
+                                    <td><t t-esc="s.sequence"/></td>
+                                    <td><t t-esc="s.ruta_id.name"/></td>
+                                    <td><t t-esc="s.start_datetime"/></td>
+                                    <td><span t-field="s.state" class="badge rounded-pill bg-info"/></td>
+                                    <td class="text-end">
+                                        <a t-att-href="'/mis-servicios/%s?access_token=%s' % (s.id, s.access_token)" class="btn btn-sm btn-secondary">Ver</a>
+                                    </td>
+                                </tr>
+                            </t>
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </t>
     </template>
@@ -73,7 +73,7 @@
                         <input type="text" name="load_id" class="form-control" required="1"/>
                     </div>
                     <div class="col-12 mt-4 text-end">
-                        <button type="submit" class="btn btn-success btn-lg px-5">Registrar</button>
+                        <button type="submit" class="btn btn-success btn-lg px-5">Enviar Solicitud</button>
                     </div>
                 </form>
             </div>
@@ -90,13 +90,7 @@
                     <h2>Servicio <t t-esc="service.sequence"/></h2>
                     <div class="d-flex gap-2">
                         <t t-if="service.state == 'asignado'">
-                            <button class="btn btn-primary btn-custodio-action" t-att-data-service-id="service.id" data-action="iniciar" id="btn-iniciar-servicio">Iniciar Servicio</button>
-                        </t>
-                        <t t-if="service.state == 'iniciado'">
-                            <button class="btn btn-warning btn-custodio-action" t-att-data-service-id="service.id" data-action="en_ruta" id="btn-en-ruta">En Ruta</button>
-                        </t>
-                        <t t-if="service.state == 'en_ruta'">
-                            <button class="btn btn-success btn-custodio-action" t-att-data-service-id="service.id" data-action="llegada" id="btn-llegada">Registrar Llegada</button>
+                            <button class="btn btn-primary btn-custodio-action" t-att-data-service-id="service.id" data-action="iniciar">Iniciar</button>
                         </t>
                         <span t-field="service.state" class="badge rounded-pill bg-info p-2 px-3"/>
                     </div>
@@ -121,12 +115,12 @@
                 <div class="row mt-5 px-3">
                     <div class="col-lg-6 mb-4">
                         <h4 class="text-secondary">Ruta Planeada</h4>
-                        <div id="route_map" t-att-data-ruta-id="service.ruta_id.id" style="height:400px;" class="border rounded shadow-sm"></div>
+                        <div id="route_map" t-att-data-ruta-id="service.ruta_id.id" style="height:450px; min-height:450px;" class="border rounded"></div>
                         <div id="route_info" class="mt-2 p-2 bg-light border rounded text-center small" style="display:none;"></div>
                     </div>
                     <div class="col-lg-6 mb-4">
                         <h4 class="text-secondary">Monitoreo en Vivo</h4>
-                        <div id="live_map" t-att-data-service-id="service.id" t-att-data-token="service.access_token" style="height:400px;" class="border rounded shadow-sm"></div>
+                        <div id="live_map" t-att-data-service-id="service.id" t-att-data-token="service.access_token" style="height:450px; min-height:450px;" class="border rounded"></div>
                     </div>
                 </div>
 
@@ -140,7 +134,7 @@
         </t>
     </template>
 
-    <template id="portal_my_home_custodia" inherit_id="portal.portal_my_home" name="Custodia Portal" priority="40">
+    <template id="portal_my_home_custodia" inherit_id="portal.portal_my_home" priority="50">
         <xpath expr="//div[contains(@class,'o_portal_docs')]" position="inside">
             <t t-call="portal.portal_docs_entry">
                 <t t-set="title">Servicios de Custodia</t>
