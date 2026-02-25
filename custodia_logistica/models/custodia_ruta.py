@@ -156,3 +156,15 @@ class CustodiaRuta(models.Model):
             })
 
         return points
+
+class CustodiaRutaNodo(models.Model):
+    _name = 'custodia.ruta.nodo'
+    _description = 'Nodo Intermedio de Ruta'
+    _order = 'sequence'
+
+    ruta_id = fields.Many2one('custodia.ruta', string='Ruta', ondelete='cascade')
+    sequence = fields.Integer(string='Orden', default=10)
+    name = fields.Char(string='Referencia (Punto de parada)')
+    latitude = fields.Float(string='Latitud', digits=(10, 6), required=True)
+    longitude = fields.Float(string='Longitud', digits=(10, 6), required=True)
+
