@@ -3,12 +3,41 @@
 import { jsonrpc } from "@web/core/network/rpc_service";
 
 document.addEventListener("DOMContentLoaded", function () {
-    // Esperamos un momento a que el DOM esté listo para Leaflet
-    setTimeout(() => {
-        initPlannedRoute();
-        initLiveTracking();
-        initCustodioActions();
-    }, 500);
+    console.log("JS de Custodia Cargado Correctamente");
+    
+    // Función para inicializar el mapa planeado
+    const initMap = async () => {
+        const container = document.getElementById("route-map");
+        if (!container) return;
+
+        const rutaId = container.dataset.rutaId;
+        const response = await fetch("/custodia/ruta/" + rutaId + "/coordinates", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ params: {} })
+        });
+        const data = await response.json();
+
+        if (data.result && data.result.length > 0) {
+            const points = data.result;
+            const map = L.map("route-map").setView([points[0].lat, points[0].lng], 8);
+            L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png").addTo(map);
+
+            // Marcadores
+            points.forEach(p => L.marker([p.lat, p.lng]).addTo(map));
+
+            // Trazo OSRM
+            const coords = points.map(p => p.lng + "," + p.lat).join(";");
+            const osrmRes = await fetch("https://router.project-osrm.org/route/v1/driving/" + coords + "?overview=full&geometries=geojson");
+            const osrmData = await osrmRes.json();
+            if (osrmData.routes) {
+                L.geoJSON(osrmData.routes[0].geometry, {style: {color: 'blue'}}).addTo(map);
+                map.fitBounds(L.geoJSON(osrmData.routes[0].geometry).getBounds());
+            }
+        }
+    };
+
+    initMap();
 });
 
 async function initPlannedRoute() {
