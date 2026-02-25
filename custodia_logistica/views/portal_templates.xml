@@ -104,41 +104,38 @@
                     <div class="col-md-6">
                         <label class="form-label fw-bold text-danger">Nivel de Seguridad *</label>
                         <select name="nivel_seguridad" class="form-select" required="1">
-                            <option value="">-- Seleccione un nivel --</option>
-                            <option value="1">Nivel 1 (Básico)</option>
-                            <option value="2">Nivel 2 (Estándar)</option>
-                            <option value="3">Nivel 3 (Reforzado)</option>
-                            <option value="4">Nivel 4 (Alto Impacto)</option>
+                            <option value="">-- Seleccione nivel --</option>
+                            <option value="1">Nivel 1</option>
+                            <option value="2">Nivel 2</option>
+                            <option value="3">Nivel 3</option>
+                            <option value="4">Nivel 4</option>
                             <option value="4x">Excepción + Nivel 4</option>
                         </select>
-                        <div class="form-text">Este dato es requerido por el sistema de monitoreo.</div>
                     </div>
 
                     <div class="col-md-6">
                         <label class="form-label fw-bold">Load ID / Referencia</label>
-                        <input type="text" name="load_id" class="form-control" placeholder="Ej. NKS221255" required="1"/>
+                        <input type="text" name="load_id" class="form-control" required="1"/>
                     </div>
 
                     <div class="col-md-6">
                         <label class="form-label fw-bold">Tipo de Unidad</label>
-                        <input type="text" name="tipo_unidad" class="form-control" placeholder="Caja Seca, Plataforma..." required="1"/>
+                        <input type="text" name="tipo_unidad" class="form-control" placeholder="Ej. Caja Seca" required="1"/>
                     </div>
 
                     <div class="col-md-6">
                         <label class="form-label fw-bold">Placas</label>
-                        <input type="text" name="placas" class="form-control" placeholder="ABC-123" required="1"/>
+                        <input type="text" name="placas" class="form-control" required="1"/>
                     </div>
 
                     <div class="col-md-6">
                         <label class="form-label fw-bold">Transporte (Línea)</label>
-                        <input type="text" name="transporte" class="form-control" placeholder="Nombre de la línea" required="1"/>
+                        <input type="text" name="transporte" class="form-control" required="1"/>
                     </div>
 
                     <div class="col-12 mt-4 text-end border-top pt-3">
                         <a href="/mis-servicios" class="btn btn-light me-2">Cancelar</a>
-                        <button type="submit" class="btn btn-success btn-lg px-5 shadow-sm">
-                            Registrar Solicitud
-                        </button>
+                        <button type="submit" class="btn btn-success btn-lg px-5 shadow-sm">Registrar Solicitud</button>
                     </div>
                 </form>
             </div>
@@ -160,9 +157,10 @@
                 <div class="row mt-4 px-3">
                     <div class="col-md-6">
                         <h5 class="text-muted border-bottom pb-2">Información de Ruta</h5>
+                        <p><b>Cliente:</b> <t t-esc="cliente.display_name"/></p>
                         <p><b>Ruta:</b> <t t-esc="service.ruta_id.name"/></p>
                         <p><b>Inicio:</b> <t t-esc="service.start_datetime"/></p>
-                        <p><b>Nivel de Seguridad:</b> <span class="badge border text-dark">Nivel <t t-esc="service.nivel_seguridad"/></span></p>
+                        <p><b>Nivel:</b> <span class="badge border text-dark">Nivel <t t-esc="service.nivel_seguridad"/></span></p>
                         <p><b>Load ID:</b> <t t-esc="service.load_id"/></p>
                     </div>
                     <div class="col-md-6 border-start">
@@ -170,7 +168,9 @@
                         <ul class="list-unstyled">
                             <li><b>Unidad:</b> <span t-field="service.tipo_unidad"/></li>
                             <li><b>Placas:</b> <span t-field="service.placas"/></li>
+                            <li><b>Transporte:</b> <span t-field="service.transporte"/></li>
                             <li><b>Operador:</b> <span t-field="service.operador1_nombre"/></li>
+                            <li><b>Monitoreo:</b> <span t-field="service.tel_monitoreo_1"/></li>
                         </ul>
                     </div>
                 </div>
@@ -178,7 +178,8 @@
                 <div class="row mt-5 px-3">
                     <div class="col-lg-6 mb-4">
                         <h4 class="text-secondary">Ruta Planeada</h4>
-                        <div id="route-map" t-att-data-ruta-id="service.ruta_id.id" style="height:400px;" class="border rounded shadow-sm"></div>
+                        <div id="route_map" t-att-data-ruta-id="service.ruta_id.id" style="height:400px;" class="border rounded shadow-sm"></div>
+                        <div id="route_info" class="mt-2 p-2 bg-light border rounded text-center small" style="display:none;"></div>
                     </div>
                     <div class="col-lg-6 mb-4">
                         <h4 class="text-secondary">Monitoreo en Vivo</h4>
@@ -198,31 +199,9 @@
             <script type="text/javascript">
             <![CDATA[
             document.addEventListener("DOMContentLoaded", function () {
-                // Mapa Ruta
-                var rCont = document.getElementById("route-map");
-                if (rCont && rCont.dataset.rutaId) {
-                    fetch("/custodia/ruta/" + rCont.dataset.rutaId + "/coordinates", {
-                        method: "POST",
-                        headers: { "Content-Type": "application/json" },
-                        body: JSON.stringify({ params: {} })
-                    }).then(res => res.json()).then(data => {
-                        if (data.result && data.result.length) {
-                            var pts = data.result;
-                            var rMap = L.map("route-map").setView([pts[0].lat, pts[0].lng], 6);
-                            L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png").addTo(rMap);
-                            var coords = pts.map(p => p.lng + "," + p.lat).join(";");
-                            fetch("https://router.project-osrm.org/route/v1/driving/" + coords + "?overview=full&geometries=geojson")
-                            .then(res => res.json()).then(osrm => {
-                                if (osrm.routes && osrm.routes.length) {
-                                    var layer = L.geoJSON(osrm.routes[0].geometry, { style: { color: "#3388ff", weight: 5 } }).addTo(rMap);
-                                    rMap.fitBounds(layer.getBounds());
-                                }
-                            });
-                        }
-                    });
-                }
-
-                // Mapa Vivo
+                // El mapa de la izquierda (route_map) se gestiona por route_map.js
+                
+                // Mapa de la derecha (Monitoreo en Vivo) se gestiona aquí
                 var sId = "]]><t t-out='service.id'/><![CDATA[";
                 var tok = "]]><t t-out='service.access_token'/><![CDATA[";
                 var liveMap = L.map('live-map').setView([19.43, -99.13], 6);
