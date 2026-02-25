@@ -1,8 +1,10 @@
 # -*- coding: utf-8 -*-
+
 from odoo import http, fields
 from odoo.http import request
 from datetime import datetime
 from odoo.addons.portal.controllers.portal import CustomerPortal
+from odoo.exceptions import AccessError
 
 
 class CustodiaPortal(CustomerPortal):
@@ -37,19 +39,17 @@ class CustodiaPortal(CustomerPortal):
             order='create_date desc'
         )
 
-        values = {
-            'services': services,
-            'cliente': partner,
-            'page_name': 'services',
-        }
-
         return request.render(
             'custodia_logistica.portal_service_list',
-            values
+            {
+                'services': services,
+                'cliente': partner,
+                'page_name': 'services',
+            }
         )
 
     # =========================================================
-    # DETALLE DEL SERVICIO (ESTABLE PARA ODOO 19)
+    # DETALLE DEL SERVICIO
     # =========================================================
     @http.route(
         ['/mis-servicios/<int:service_id>'],
@@ -57,38 +57,29 @@ class CustodiaPortal(CustomerPortal):
         auth='public',
         website=True
     )
-    def portal_service_detail(self, service_id=None, access_token=None, **kwargs):
-
-        service = request.env['custodia.service'].sudo().browse(service_id)
-
-        if not service.exists():
-            return request.redirect('/mis-servicios')
-
-        service._portal_ensure_token()
+    def portal_service_detail(self, service_id, access_token=None, **kwargs):
 
         try:
-            service_sudo = self._document_check_access(
+            service = self._document_check_access(
                 'custodia.service',
                 service_id,
                 access_token
             )
-        except Exception:
+        except AccessError:
             return request.redirect('/mis-servicios')
-
-        values = {
-            'service': service_sudo,
-            'cliente': service_sudo.partner_id,
-            'token': service_sudo.access_token,
-            'page_name': 'service_detail',
-        }
 
         return request.render(
             'custodia_logistica.portal_service_detail',
-            values
+            {
+                'service': service,
+                'cliente': service.partner_id,
+                'token': service.access_token,
+                'page_name': 'service_detail',
+            }
         )
 
     # =========================================================
-    # VISTA HTTP TRACKING (MAPA)
+    # VISTA TRACKING MAPA
     # =========================================================
     @http.route(
         ['/mis-servicios/<int:service_id>/tracking-view'],
@@ -96,29 +87,22 @@ class CustodiaPortal(CustomerPortal):
         auth='public',
         website=True
     )
-    def portal_service_tracking_view(self, service_id=None, access_token=None, **kwargs):
-
-        service = request.env['custodia.service'].sudo().browse(service_id)
-
-        if not service.exists():
-            return request.redirect('/mis-servicios')
-
-        service._portal_ensure_token()
+    def portal_service_tracking_view(self, service_id, access_token=None, **kwargs):
 
         try:
-            service_sudo = self._document_check_access(
+            service = self._document_check_access(
                 'custodia.service',
                 service_id,
                 access_token
             )
-        except Exception:
+        except AccessError:
             return request.redirect('/mis-servicios')
 
         return request.render(
             'custodia_logistica.portal_service_tracking',
             {
-                'service': service_sudo,
-                'token': service_sudo.access_token,
+                'service': service,
+                'token': service.access_token,
             }
         )
 
@@ -130,7 +114,7 @@ class CustodiaPortal(CustomerPortal):
         type='json',
         auth='public'
     )
-    def portal_service_tracking(self, service_id=None, access_token=None, **kwargs):
+    def portal_service_tracking(self, service_id, access_token=None, **kwargs):
 
         try:
             service = self._document_check_access(
@@ -138,7 +122,7 @@ class CustodiaPortal(CustomerPortal):
                 service_id,
                 access_token
             )
-        except Exception:
+        except AccessError:
             return {'error': 'Acceso no autorizado'}
 
         return {
@@ -156,36 +140,37 @@ class CustodiaPortal(CustomerPortal):
 
         partner = request.env.user.partner_id.commercial_partner_id
 
-        carriers = request.env['custodia.carrier'].sudo().search([])
-        rutas = request.env['custodia.ruta'].sudo().search([])
-        contacts = request.env['res.partner'].sudo().search([
-            ('parent_id', '=', partner.id)
-        ])
-
         return request.render(
             'custodia_logistica.portal_service_form',
             {
-                'carriers': carriers,
-                'rutas': rutas,
-                'contacts': contacts,
+                'carriers': request.env['custodia.carrier'].sudo().search([]),
+                'rutas': request.env['custodia.ruta'].sudo().search([]),
+                'contacts': request.env['res.partner'].sudo().search([
+                    ('parent_id', '=', partner.id)
+                ]),
                 'cliente': partner,
             }
         )
 
+    # =========================================================
+    # CAMBIOS DE ESTADO (VALIDANDO PROPIEDAD)
+    # =========================================================
+    def _check_service_owner(self, service):
+        partner = request.env.user.partner_id.commercial_partner_id
+        if service.partner_id.id != partner.id:
+            raise AccessError("No autorizado")
 
-    # ========================================================
-    #         TIEMPOS CUSTODIA
-    # ========================================================
-    
     @http.route('/custodia/service/<int:service_id>/en_ruta', type='json', auth='user')
     def marcar_en_ruta(self, service_id):
         service = request.env['custodia.service'].sudo().browse(service_id)
+        self._check_service_owner(service)
         service.write({'state': 'en_ruta'})
         return True
 
     @http.route('/custodia/service/<int:service_id>/llegada', type='json', auth='user')
     def marcar_llegada(self, service_id):
         service = request.env['custodia.service'].sudo().browse(service_id)
+        self._check_service_owner(service)
         service.write({
             'arrival_datetime': fields.Datetime.now(),
             'state': 'llegada'
@@ -195,6 +180,7 @@ class CustodiaPortal(CustomerPortal):
     @http.route('/custodia/service/<int:service_id>/iniciar', type='json', auth='user')
     def iniciar_servicio(self, service_id):
         service = request.env['custodia.service'].sudo().browse(service_id)
+        self._check_service_owner(service)
         service.write({
             'real_start_datetime': fields.Datetime.now(),
             'state': 'iniciado'
@@ -202,14 +188,14 @@ class CustodiaPortal(CustomerPortal):
         return True
 
     # =========================================================
-    # ENDPOINT COORDENADAS RUTA (PARA MAPA)
+    # COORDENADAS DE RUTA
     # =========================================================
     @http.route(
         ['/custodia/ruta/<int:ruta_id>/coordinates'],
         type='json',
         auth='public'
     )
-    def get_ruta_coordinates(self, ruta_id, access_token=None, **kwargs):
+    def get_ruta_coordinates(self, ruta_id, **kwargs):
 
         ruta = request.env['custodia.ruta'].sudo().browse(ruta_id)
 
@@ -218,7 +204,6 @@ class CustodiaPortal(CustomerPortal):
 
         coords = []
 
-        # Si tu modelo ruta tiene puntos relacionados
         if hasattr(ruta, 'punto_ids') and ruta.punto_ids:
             for punto in ruta.punto_ids:
                 if punto.lat and punto.lng:
@@ -227,24 +212,19 @@ class CustodiaPortal(CustomerPortal):
                         'lng': punto.lng,
                     })
 
-        # Fallback: si no tiene puntos, usar coordenadas inicio/fin
-        if not coords:
-            if ruta.start_coords and ruta.end_coords:
-                try:
-                    start_lat, start_lng = map(float, ruta.start_coords.split(','))
-                    end_lat, end_lng = map(float, ruta.end_coords.split(','))
-
-                    coords = [
-                        {'lat': start_lat, 'lng': start_lng},
-                        {'lat': end_lat, 'lng': end_lng},
-                    ]
-                except Exception:
-                    pass
+        if not coords and ruta.start_coords and ruta.end_coords:
+            try:
+                start_lat, start_lng = map(float, ruta.start_coords.split(','))
+                end_lat, end_lng = map(float, ruta.end_coords.split(','))
+                coords = [
+                    {'lat': start_lat, 'lng': start_lng},
+                    {'lat': end_lat, 'lng': end_lng},
+                ]
+            except Exception:
+                pass
 
         return coords
 
-
-    
     # =========================================================
     # SUBMIT NUEVA SOLICITUD
     # =========================================================
@@ -262,21 +242,16 @@ class CustodiaPortal(CustomerPortal):
         try:
             start_dt = False
             if post.get('start_datetime'):
-                try:
-                    start_dt = datetime.strptime(
-                        post['start_datetime'],
-                        "%Y-%m-%dT%H:%M"
-                    )
-                except Exception:
-                    start_dt = fields.Datetime.from_string(
-                        post['start_datetime']
-                    )
+                start_dt = datetime.strptime(
+                    post['start_datetime'],
+                    "%Y-%m-%dT%H:%M"
+                )
 
             vals = {
                 'partner_id': partner.id,
-                'contact_id': int(post.get('contact_id')),
-                'carrier_id': int(post.get('carrier_id')),
-                'ruta_id': int(post.get('ruta_id')),
+                'contact_id': int(post.get('contact_id')) if post.get('contact_id') else False,
+                'carrier_id': int(post.get('carrier_id')) if post.get('carrier_id') else False,
+                'ruta_id': int(post.get('ruta_id')) if post.get('ruta_id') else False,
                 'start_datetime': start_dt,
                 'nivel_seguridad': post.get('nivel_seguridad'),
                 'load_id': post.get('load_id'),
@@ -299,26 +274,19 @@ class CustodiaPortal(CustomerPortal):
             service._portal_ensure_token()
 
             return request.redirect(
-                '/mis-servicios/%s?access_token=%s' % (
-                    service.id,
-                    service.access_token
-                )
+                f'/mis-servicios/{service.id}?access_token={service.access_token}'
             )
 
         except Exception as e:
 
-            carriers = request.env['custodia.carrier'].sudo().search([])
-            rutas = request.env['custodia.ruta'].sudo().search([])
-            contacts = request.env['res.partner'].sudo().search([
-                ('parent_id', '=', partner.id)
-            ])
-
             return request.render(
                 'custodia_logistica.portal_service_form',
                 {
-                    'carriers': carriers,
-                    'rutas': rutas,
-                    'contacts': contacts,
+                    'carriers': request.env['custodia.carrier'].sudo().search([]),
+                    'rutas': request.env['custodia.ruta'].sudo().search([]),
+                    'contacts': request.env['res.partner'].sudo().search([
+                        ('parent_id', '=', partner.id)
+                    ]),
                     'cliente': partner,
                     'error': str(e),
                 }
