@@ -31,32 +31,32 @@
     });
 
     // Dentro del escuchador de clics en document.addEventListener("click"...)
-    if (e.target.matches("#btn-incidencia")) {
-        const serviceId = e.target.dataset.serviceId;
-        const msg = document.getElementById("incidencia_msg").value;
+    //if (e.target.matches("#btn-incidencia")) {
+    //    const serviceId = e.target.dataset.serviceId;
+    //    const msg = document.getElementById("incidencia_msg").value;
+    //
+      //  if (!msg) {
+     //     alert("Por favor, describa la incidencia antes de enviar.");
+       //     return;
+       // }
 
-        if (!msg) {
-            alert("Por favor, describa la incidencia antes de enviar.");
-            return;
-        }
-
-        if (confirm("¿Desea enviar este reporte de incidencia al centro de monitoreo?")) {
-            try {
-                const response = await fetch(`/custodia/service/${serviceId}/incidencia`, {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ params: { mensaje: msg } })
-                });
-                const data = await response.json();
-                if (data.result && data.result.status === 'success') {
-                    alert("Incidencia reportada correctamente.");
-                    document.getElementById("incidencia_msg").value = ""; // Limpiar campo
-                }
-            } catch (err) {
-                console.error("Error al enviar incidencia:", err);
-            }
-        }
-    }
+        //if (confirm("¿Desea enviar este reporte de incidencia al centro de monitoreo?")) {
+          //  try {
+          //      const response = await fetch(`/custodia/service/${serviceId}/incidencia`, {
+         //           method: "POST",
+         //           headers: { "Content-Type": "application/json" },
+         //           body: JSON.stringify({ params: { mensaje: msg } })
+         //       });
+         //       const data = await response.json();
+         //       if (data.result && data.result.status === 'success') {
+         //           alert("Incidencia reportada correctamente.");
+         //           document.getElementById("incidencia_msg").value = ""; // Limpiar campo
+         //       }
+         //   } catch (err) {
+         //       console.error("Error al enviar incidencia:", err);
+         //   }
+       // }
+   // }
     
 
     async function executeCustodiaAction(serviceId, action) {
