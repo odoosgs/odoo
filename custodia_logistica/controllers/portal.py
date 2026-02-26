@@ -70,6 +70,26 @@ class CustodiaPortal(CustomerPortal):
 
     # =========================================================
     # ENDPOINT JSON TRACKING (Sincronizado con route_map.js)
+    # ========================================================= 
+    @http.route('/custodia/service/<int:service_id>/incidencia', type='json', auth='user', methods=['POST'], website=True)
+    def custodia_reportar_incidencia(self, service_id, **kwargs):
+        service = request.env['custodia.service'].sudo().browse(service_id)
+        mensaje = kwargs.get('mensaje')
+        
+        if not service.exists() or not mensaje:
+            return {'status': 'error', 'message': 'Datos incompletos'}
+
+        # Publicar en el Chatter con un formato de alerta
+        service.message_post(
+            body=f"⚠️ <b>INCIDENCIA REPORTADA:</b><br/>{mensaje}",
+            message_type='comment',
+            subtype_xmlid='mail.mt_comment'
+        )
+        return {'status': 'success'}
+    
+    
+    # =========================================================
+    # ENDPOINT JSON TRACKING (Sincronizado con route_map.js)
     # =========================================================
     @http.route(['/mis-servicios/<int:service_id>/tracking'], type='http', auth='public', website=True, csrf=False)
     def portal_service_tracking(self, service_id, access_token=None, **kwargs):
