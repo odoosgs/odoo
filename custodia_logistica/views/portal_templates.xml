@@ -148,7 +148,7 @@
                 
                 </div>
 
-            <div class="mt-3 p-3 border rounded bg-light">
+            <!-- <div class="mt-3 p-3 border rounded bg-light">
                 <h5>Reportar Incidencia</h5>
                 <textarea id="incidencia_msg" class="form-control mb-2" placeholder="Describa la situación..."></textarea>
                 <button id="btn-incidencia" 
@@ -156,7 +156,7 @@
                         class="btn btn-danger w-100">
                     <i class="fa fa-exclamation-triangle"></i> Enviar Reporte
                 </button>
-            </div>
+            </div> -->
                 
                 <!-- ===================== -->
                 <!-- RUTA PLANEADA -->
