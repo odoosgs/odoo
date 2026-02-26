@@ -1,98 +1,36 @@
 (function () {
     "use strict";
 
-    console.log("Custodia Logística: Inicializando scripts de mapa...");
+    console.log("Custodia Logística: Scripts de mapa y acciones listos.");
 
     document.addEventListener("DOMContentLoaded", function () {
-        // Pequeño retraso para asegurar que Leaflet (L) esté cargado
-        setTimeout(() => {
-            initPlannedRoute();
-        }, 300);
-    });
-
-    async function initPlannedRoute() {
-        const container = document.getElementById("route-map");
-        if (!container || !container.dataset.rutaId) return;
-
-        const rutaId = container.dataset.rutaId;
-        console.log("Cargando ruta ID:", rutaId);
-
-        try {
-            // Usamos fetch nativo para no depender de librerías de Odoo
-            const response = await fetch("/custodia/ruta/" + rutaId + "/coordinates", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ params: {} })
-            });
-            const data = await response.json();
-
-            if (!data.result || data.result.length === 0) {
-                console.warn("No se recibieron coordenadas.");
-                return;
-            }
-
-            const points = data.result;
-            // Inicializar el mapa de Leaflet
-            const map = L.map("route-map").setView([points[0].lat, points[0].lng], 10);
-
-            L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-                attribution: "© OpenStreetMap"
-            }).addTo(map);
-
-            // Dibujar puntos
-            points.forEach(p => {
-                let color = p.type === "origin" ? "green" : (p.type === "destination" ? "red" : "blue");
-                L.circleMarker([p.lat, p.lng], { color: color, radius: 5 }).addTo(map);
-            });
-
-            // Trazado de carretera vía OSRM
-            const coords = points.map(p => p.lng + "," + p.lat).join(";");
-            const osrmRes = await fetch(`https://router.project-osrm.org/route/v1/driving/${coords}?overview=full&geometries=geojson`);
-            const osrmData = await osrmRes.json();
-
-            if (osrmData.routes && osrmData.routes.length > 0) {
-                const routeLine = L.geoJSON(osrmData.routes[0].geometry, {
-                    style: { color: "#003366", weight: 5 }
-                }).addTo(map);
-                map.fitBounds(routeLine.getBounds());
-            }
-        } catch (e) {
-            console.error("Error en initPlannedRoute:", e);
-        }
-    }
-
-(function () {
-    "use strict";
-
-    console.log("Custodia Logística: Inicializando scripts de mapa y acciones...");
-
-    document.addEventListener("DOMContentLoaded", function () {
-        // Pequeño retraso para asegurar que Leaflet (L) esté cargado
         setTimeout(() => {
             initPlannedRoute();
         }, 300);
     });
 
     // ==========================================
-    // ESCUCHADOR DE CLICS (Para la demostración)
+    // ESCUCHADOR DE CLICS CON CONFIRMACIÓN
     // ==========================================
     document.addEventListener("click", async function (e) {
         // Botón: Marcar llegada
         if (e.target.matches("#btn-llegada")) {
             const serviceId = e.target.dataset.serviceId;
-            await executeCustodiaAction(serviceId, 'llegada');
+            if (confirm("¿Confirmar llegada del custodio al punto de origen?")) {
+                await executeCustodiaAction(serviceId, 'llegada');
+            }
         }
 
         // Botón: Iniciar servicio
         if (e.target.matches("#btn-iniciar-servicio")) {
             const serviceId = e.target.dataset.serviceId;
-            await executeCustodiaAction(serviceId, 'iniciar');
+            if (confirm("¿Desea iniciar formalmente la ejecución del servicio?")) {
+                await executeCustodiaAction(serviceId, 'iniciar');
+            }
         }
     });
 
-    // Función auxiliar para enviar datos a Odoo
     async function executeCustodiaAction(serviceId, action) {
-        console.log(`Ejecutando acción: ${action} para el servicio: ${serviceId}`);
         try {
             const response = await fetch(`/custodia/service/${serviceId}/${action}`, {
                 method: "POST",
@@ -102,64 +40,48 @@
             const data = await response.json();
             
             if (data.result && data.result.status === 'success') {
-                window.location.reload(); // Refresca para ver los nuevos tiempos calculados
+                // Efecto visual antes de recargar
+                const btn = document.querySelector(action === 'llegada' ? "#btn-llegada" : "#btn-iniciar-servicio");
+                if (btn) {
+                    btn.innerHTML = '<i class="fa fa-check"></i> Registrando...';
+                    btn.classList.replace('btn-warning', 'btn-success');
+                }
+                setTimeout(() => window.location.reload(), 800);
             } else {
-                console.error("Error en la respuesta de Odoo:", data);
-                alert("No se pudo completar la acción. Revisa la consola.");
+                alert("Error: " + (data.result ? data.result.message : "No se pudo conectar con el servidor."));
             }
         } catch (err) {
-            console.error("Error de conexión:", err);
+            console.error("Error de red:", err);
+            alert("Error de conexión. Verifica que el servidor de Odoo esté respondiendo.");
         }
     }
 
-    // ==========================================
-    // RUTA PLANEADA (Mapa)
-    // ==========================================
+    // ... (Mantén tu función initPlannedRoute igual que antes) ...
     async function initPlannedRoute() {
         const container = document.getElementById("route-map");
         if (!container || !container.dataset.rutaId) return;
-
         const rutaId = container.dataset.rutaId;
-        console.log("Cargando mapa para ruta ID:", rutaId);
-
         try {
             const response = await fetch("/custodia/ruta/" + rutaId + "/coordinates", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
+                method: "POST", headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ params: {} })
             });
             const data = await response.json();
-
-            if (!data.result || data.result.length === 0) {
-                console.warn("No se recibieron coordenadas de la ruta.");
-                return;
-            }
-
+            if (!data.result || data.result.length === 0) return;
             const points = data.result;
             const map = L.map("route-map").setView([points[0].lat, points[0].lng], 10);
-
-            L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-                attribution: "© OpenStreetMap"
-            }).addTo(map);
-
+            L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png").addTo(map);
             points.forEach(p => {
                 let color = p.type === "origin" ? "green" : (p.type === "destination" ? "red" : "blue");
                 L.circleMarker([p.lat, p.lng], { color: color, radius: 5 }).addTo(map);
             });
-
             const coords = points.map(p => p.lng + "," + p.lat).join(";");
             const osrmRes = await fetch(`https://router.project-osrm.org/route/v1/driving/${coords}?overview=full&geometries=geojson`);
             const osrmData = await osrmRes.json();
-
             if (osrmData.routes && osrmData.routes.length > 0) {
-                const routeLine = L.geoJSON(osrmData.routes[0].geometry, {
-                    style: { color: "#003366", weight: 5 }
-                }).addTo(map);
+                const routeLine = L.geoJSON(osrmData.routes[0].geometry, { style: { color: "#003366", weight: 5 } }).addTo(map);
                 map.fitBounds(routeLine.getBounds());
             }
-        } catch (e) {
-            console.error("Error en initPlannedRoute:", e);
-        }
+        } catch (e) { console.error("Error mapa:", e); }
     }
-})();    
 })();
