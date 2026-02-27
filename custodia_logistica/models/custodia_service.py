@@ -66,12 +66,12 @@ class CustodiaService(models.Model):
         tracking=True
     )
 
-    ruta_tipo = fields.Selection(
-        [('local', 'Local'), ('foraneo', 'Foráneo')],
-        string='Tipo de ruta',
-        related='ruta_id.tipo',
-        store=True
-    )
+   # ruta_tipo = fields.Selection(
+   #     [('local', 'Local'), ('foraneo', 'Foráneo')],
+   #     string='Tipo de ruta',
+   #     related='ruta_id.tipo',
+   #     store=True
+   # )
 
     planner_id = fields.Many2one(
         'res.users',
