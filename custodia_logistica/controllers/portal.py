@@ -94,18 +94,18 @@ class CustodiaPortal(CustomerPortal):
     @http.route(['/mis-servicios/<int:service_id>/tracking'], type='http', auth='public', website=True, csrf=False)
     def portal_service_tracking(self, service_id, access_token=None, **kwargs):
         try:
-            # Verificamos acceso mediante token o sesión
             service = self._document_check_access('custodia.service', service_id, access_token)
         except Exception:
-            return request.make_response(
-                json.dumps({'error': 'Acceso no autorizado'}),
-                headers=[('Content-Type', 'application/json')]
-            )
-
+            return request.make_response(json.dumps({'error': 'Acceso denegado'}), headers=[('Content-Type', 'application/json')])
+    
+        # Si no hay ubicación actual, enviamos la de origen de la ruta para que el mapa no esté en blanco
+        lat = service.current_lat or service.ruta_id.origin_latitude
+        lng = service.current_lng or service.ruta_id.origin_longitude
+    
         data = {
-            'lat': service.current_lat or 0.0,
-            'lng': service.current_lng or 0.0,
-            'last_update': str(service.last_update) if service.last_update else False,
+            'lat': lat,
+            'lng': lng,
+            'last_update': str(service.last_update) if service.last_update else "Sin reportes",
             'state': service.state,
         }
         return request.make_response(json.dumps(data), headers=[('Content-Type', 'application/json')])
