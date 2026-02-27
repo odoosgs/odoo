@@ -167,28 +167,28 @@ class CustodiaPortal(CustomerPortal):
     # =========================================================
     # ACCIONES DEL CUSTODIO
     # =========================================================
-    #def custodia_action(self, service_id, action, **kwargs):
-     #   service = request.env['custodia.service'].sudo().browse(service_id)
-     #   if not service.exists():
-     #       return {'status': 'error', 'message': 'Servicio no encontrado'}
-     #
-     #   now = fields.Datetime.now()
-     #   
-     #   if action == 'llegada':
-     #       service.write({
-     #           'hora_llegada': now,
-     #           'state': 'aprobado' # O el estado que desees para confirmar presencia
-     #       })
-     #       service.message_post(body="El custodio ha marcado su llegada al punto de origen.")
-     #       
-     #   elif action == 'iniciar':
-     #       service.write({
-     #           'hora_inicio_real': now,
-     #           'state': 'en_ejecucion'
-     #       })
-     #       service.message_post(body="Servicio iniciado formalmente.")
-     #
-     #   return {'status': 'success'}
+    def custodia_action(self, service_id, action, **kwargs):
+        service = request.env['custodia.service'].sudo().browse(service_id)
+        if not service.exists():
+            return {'status': 'error', 'message': 'Servicio no encontrado'}
+     
+        now = fields.Datetime.now()
+        
+        if action == 'llegada':
+            service.write({
+                'hora_llegada': now,
+                'state': 'aprobado' # O el estado que desees para confirmar presencia
+            })
+            service.message_post(body="El custodio ha marcado su llegada al punto de origen.")
+            
+        elif action == 'iniciar':
+            service.write({
+                'hora_inicio_real': now,
+                'state': 'en_ejecucion'
+            })
+            service.message_post(body="Servicio iniciado formalmente.")
+     
+        return {'status': 'success'}
 
     # =========================================================
     # ACCIONES DEL CUSTODIO (Versión Optimizada)
