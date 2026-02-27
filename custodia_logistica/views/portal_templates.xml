@@ -163,21 +163,19 @@
                 <!-- ===================== -->
                 <div class="mt-5">
                     <h3>Ruta Planeada</h3>
-                        <div id="route-map" 
-                             t-att-data-ruta-id="service.ruta_id.id" 
-                             style="height: 500px; width: 100%; min-height: 500px; display: block;" 
-                             class="border shadow-sm">
-                        </div>
+                    <div id="route-map"
+                         t-att-data-ruta-id="service.ruta_id.id"
+                         class="border shadow-sm bg-light"
+                         style="height: 450px; width: 100%; position: relative;">
+                    </div>
                 </div>
 
                 <div id="route-summary"
                      class="mt-3 p-3 bg-light border rounded text-center"
                      style="display:none;">
-                    <strong>Distancia estimada:</strong>
-                    <span id="route-distance"></span>
+                    <strong>Distancia estimada:</strong> <span id="route-distance"></span>
                     <span class="mx-3">|</span>
-                    <strong>Tiempo estimado:</strong>
-                    <span id="route-duration"></span>
+                    <strong>Tiempo estimado:</strong> <span id="route-duration"></span>
                 </div>
 
                 <!-- ===================== -->
@@ -188,10 +186,20 @@
                     <div id="live-map"
                          t-att-data-service-id="service.id"
                          t-att-data-token="service.access_token"
-                         style="height:450px;"
-                         class="border shadow-sm">
+                         class="border shadow-sm bg-light"
+                         style="height: 450px; width: 100%; position: relative;">
                     </div>
                 </div>
+
+                <div id="service_communication" class="mt-5 pt-4 border-top">
+                    <h3 class="mb-4">Seguimiento e Incidencias</h3>
+                    <t t-call="portal.message_thread">
+                        <t t-set="object" t-value="service"/>
+                        <t t-set="token" t-value="service.access_token"/>
+                    </t>
+                </div>
+            </div> <script type="text/javascript" src="/custodia_logistica/static/src/js/route_map.js"></script>
+            
 
                 <!-- ===================== -->
                 <!-- CHATTER -->
