@@ -108,11 +108,6 @@ class CustodiaService(models.Model):
         tracking=True
     )
 
-    route_id = fields.Many2one(
-        'custodia.ruta',
-        string='Ruta Planificada',
-        ondelete='set null'
-    )
 
 
     tipo_unidad = fields.Char(string='Tipo de unidad', tracking=True)
