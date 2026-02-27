@@ -73,6 +73,13 @@ class CustodiaService(models.Model):
    #     store=True
    # )
 
+    ruta_tipo = fields.Selection(
+        related='ruta_id.tipo',
+        string='Tipo de ruta',
+        store=True,
+        readonly=True
+    )
+
     planner_id = fields.Many2one(
         'res.users',
         string='Planeador',
