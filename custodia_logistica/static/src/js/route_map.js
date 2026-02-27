@@ -30,7 +30,7 @@
         }
     });
 
-     Dentro del escuchador de clics en document.addEventListener("click"...)
+     //Dentro del escuchador de clics en document.addEventListener("click"...)
     if (e.target.matches("#btn-incidencia")) {
         const serviceId = e.target.dataset.serviceId;
         const msg = document.getElementById("incidencia_msg").value;
