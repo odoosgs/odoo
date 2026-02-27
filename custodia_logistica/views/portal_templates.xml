@@ -198,7 +198,8 @@
                         <t t-set="token" t-value="service.access_token"/>
                     </t>
                 </div>
-            </div> <script type="text/javascript" src="/custodia_logistica/static/src/js/route_map.js"></script>
+            </div> <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+            <script type="text/javascript" src="/custodia_logistica/static/src/js/route_map.js"></script>
             
 
                 <!-- ===================== -->
