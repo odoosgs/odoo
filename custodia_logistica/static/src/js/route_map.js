@@ -15,33 +15,51 @@
     });
 
     // --- 1. FUNCIÓN MAPA RUTA PLANEADA ---
-    async function initPlannedRouteMap() {
-        const container = document.getElementById("route-map");
-        if (!container || !container.dataset.rutaId) return;
+async function initPlannedRouteMap() {
+    const container = document.getElementById("route-map");
+    if (!container || !container.dataset.rutaId) return;
 
-        const rutaId = container.dataset.rutaId;
-        try {
-            const response = await fetch("/custodia/ruta/" + rutaId + "/coordinates", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ params: {} })
-            });
-            const data = await response.json();
-            const coords = data.result;
+    const rutaId = container.dataset.rutaId;
 
-            if (!coords || coords.length < 2) return;
+    try {
+        const response = await fetch("/custodia/ruta/" + rutaId + "/coordinates", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ params: {} })
+        });
 
-            // Instancia única para la ruta
-            const mapRoute = L.map("route-map").setView([coords[0].lat, coords[0].lng], 6);
-            L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png").addTo(mapRoute);
+        const data = await response.json();
+        const coords = data.result;
 
-            const path = coords.map(p => [p.lat, p.lng]);
-            const polyline = L.polyline(path, { color: "blue", weight: 5 }).addTo(mapRoute);
-            mapRoute.fitBounds(polyline.getBounds());
-            
-            setTimeout(() => mapRoute.invalidateSize(), 200);
-        } catch (e) { console.error("Error en Mapa de Ruta:", e); }
+        if (!coords || coords.length < 2) return;
+
+        const origin = coords[0];
+        const destination = coords[coords.length - 1];
+
+        const osrmUrl = `https://router.project-osrm.org/route/v1/driving/${origin.lng},${origin.lat};${destination.lng},${destination.lat}?overview=full&geometries=geojson`;
+
+        const routeResponse = await fetch(osrmUrl);
+        const routeData = await routeResponse.json();
+
+        if (!routeData.routes || routeData.routes.length === 0) return;
+
+        const routeGeo = routeData.routes[0].geometry;
+
+        const mapRoute = L.map("route-map").setView([origin.lat, origin.lng], 6);
+        L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png").addTo(mapRoute);
+
+        const routeLayer = L.geoJSON(routeGeo, {
+            style: { color: "blue", weight: 5 }
+        }).addTo(mapRoute);
+
+        mapRoute.fitBounds(routeLayer.getBounds());
+
+        setTimeout(() => mapRoute.invalidateSize(), 200);
+
+    } catch (e) {
+        console.error("Error en Mapa de Ruta:", e);
     }
+}
 
     // --- 2. FUNCIÓN MAPA MONITOREO EN VIVO ---
     function initLiveTrackingMap() {
