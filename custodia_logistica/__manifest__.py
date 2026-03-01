@@ -50,13 +50,14 @@
         'web.assets_frontend': [
             # Aquí puedes agregar CSS/JS para personalizar el portal
             'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css',
-            'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js',
+            #'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js',
             'custodia_logistica/static/src/js/route_map.js', # Sin el "/" inicial
         ],
     },
     'application': True,
     'installable': True,
 }
+
 
 
 
