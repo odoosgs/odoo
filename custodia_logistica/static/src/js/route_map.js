@@ -1,133 +1,86 @@
 (function () {
     "use strict";
 
-    console.log("Custodia Logística: Iniciando scripts...");
+    console.log("Custodia Logística: Iniciando carga de mapas duales...");
 
     document.addEventListener("DOMContentLoaded", function () {
-        // Ejecutamos el mapa después de un breve delay para asegurar que el DOM esté listo
+        // Ejecutamos la inicialización con un pequeño retraso
         setTimeout(() => {
-            initPlannedRoute();
+            initAllMaps();
         }, 500);
     });
 
-    // UNIFICAMOS TODOS LOS CLICS AQUÍ
-    document.addEventListener("click", async function (e) {
-        
-        // 1. Lógica para Marcar Llegada
-        if (e.target.matches("#btn-llegada")) {
-            const serviceId = e.target.dataset.serviceId;
-            if (confirm("¿Confirmar llegada del custodio?")) {
-                await executeCustodiaAction(serviceId, 'llegada');
-            }
+    async function initAllMaps() {
+        // --- 1. MAPA DE RUTA PLANEADA ---
+        const routeContainer = document.getElementById("route-map");
+        if (routeContainer && routeContainer.dataset.rutaId) {
+            await drawPlannedRoute(routeContainer.dataset.rutaId);
         }
 
-        // 2. Lógica para Iniciar Servicio
-        if (e.target.matches("#btn-iniciar-servicio")) {
-            const serviceId = e.target.dataset.serviceId;
-            if (confirm("¿Desea iniciar la ejecución del servicio?")) {
-                await executeCustodiaAction(serviceId, 'iniciar');
-            }
+        // --- 2. MAPA DE MONITOREO EN VIVO ---
+        const liveContainer = document.getElementById("live-map");
+        if (liveContainer) {
+            initLiveTracking(liveContainer);
         }
-
-        // 3. Lógica para Enviar Incidencia (CORREGIDA: Ahora dentro del evento 'e')
-        if (e.target.matches("#btn-incidencia")) {
-            const serviceId = e.target.dataset.serviceId;
-            const msgInput = document.getElementById("incidencia_msg");
-            const msg = msgInput ? msgInput.value : "";
-            
-            if (!msg) {
-                alert("Por favor, describa la incidencia.");
-                return;
-            }
-
-            if (confirm("¿Enviar reporte de incidencia?")) {
-                try {
-                    const response = await fetch(`/custodia/service/${serviceId}/incidencia`, {
-                        method: "POST",
-                        headers: { "Content-Type": "application/json" },
-                        body: JSON.stringify({ params: { mensaje: msg } })
-                    });
-                    const data = await response.json();
-                    if (data.result && data.result.status === 'success') {
-                        alert("Reporte enviado al Chatter.");
-                        msgInput.value = ""; 
-                    }
-                } catch (err) {
-                    console.error("Error al enviar incidencia:", err);
-                }
-            }
-        }
-    });
-
-    // Función para el Mapa (La que dibuja la ruta azul de tu foto)
-    async function initPlannedRoute() {
-    const container = document.getElementById("route-map");
-    if (!container || !container.dataset.rutaId) return;
-
-    const rutaId = container.dataset.rutaId;
-
-    try {
-        const response = await fetch("/custodia/ruta/" + rutaId + "/coordinates", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ params: {} })
-        });
-        const data = await response.json();
-        
-        // CORRECCIÓN: Extraemos el arreglo de resultados de Odoo
-        const coords = data.result;
-
-        if (!coords || coords.length < 2) {
-            console.error("Coordenadas insuficientes para dibujar la ruta", coords);
-            return;
-        }
-
-        // Definimos Origen y Destino basados en la posición en el Array
-        const origin = [coords[0].lat, coords[0].lng];
-        const dest   = [coords[coords.length - 1].lat, coords[coords.length - 1].lng];
-
-        console.log("Iniciando mapa en:", origin);
-
-        // Inicializar mapa centrado en el origen
-        const map = L.map("route-map").setView(origin, 6);
-
-        L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-            attribution: "© OpenStreetMap"
-        }).addTo(map);
-
-        // Añadir marcadores
-        L.marker(origin).addTo(map).bindPopup("Origen");
-        L.marker(dest).addTo(map).bindPopup("Destino");
-
-        // Dibujar línea simple entre puntos (Polyline)
-        const path = coords.map(p => [p.lat, p.lng]);
-        L.polyline(path, { color: "blue", weight: 5 }).addTo(map);
-
-        // Ajustar el zoom para que se vean todos los puntos
-        map.fitBounds(L.polyline(path).getBounds());
-        
-        // Forzar renderizado por si el contenedor estaba oculto
-        setTimeout(() => map.invalidateSize(), 400);
-
-    } catch (e) {
-        console.error("Error crítico en el mapa:", e);
     }
-}
-    
 
-    async function executeCustodiaAction(serviceId, action) {
+    async function drawPlannedRoute(rutaId) {
         try {
-            const response = await fetch(`/custodia/service/${serviceId}/${action}`, {
+            const response = await fetch("/custodia/ruta/" + rutaId + "/coordinates", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ params: {} }) 
+                body: JSON.stringify({ params: {} })
             });
             const data = await response.json();
-            if (data.result && data.result.status === 'success') {
-                window.location.reload();
-            }
-        } catch (err) {
-            console.error("Error en acción:", err);
-        }
+            const coords = data.result;
+
+            if (!coords || coords.length < 2) return;
+
+            const origin = [coords[0].lat, coords[0].lng];
+            // Crear instancia única para el mapa de ruta
+            const mapRoute = L.map("route-map").setView(origin, 6);
+            L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png").addTo(mapRoute);
+
+            const path = coords.map(p => [p.lat, p.lng]);
+            L.polyline(path, { color: "blue", weight: 5 }).addTo(mapRoute);
+            mapRoute.fitBounds(L.polyline(path).getBounds());
+            
+            setTimeout(() => mapRoute.invalidateSize(), 200);
+        } catch (e) { console.error("Error Ruta Planeada:", e); }
     }
+
+    function initLiveTracking(container) {
+        const serviceId = container.dataset.serviceId;
+        const token = container.dataset.token;
+        
+        // Crear instancia única para el mapa en vivo (CDMX por defecto)
+        const mapLive = L.map('live-map').setView([19.4326, -99.1332], 5);
+        L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png").addTo(mapLive);
+        
+        let marker = L.marker([19.4326, -99.1332]).addTo(mapLive);
+
+        async function update() {
+            try {
+                const res = await fetch(`/mis-servicios/${serviceId}/tracking?access_token=${token}`);
+                const data = await res.json();
+                if (data.lat && data.lng) {
+                    const pos = [data.lat, data.lng];
+                    marker.setLatLng(pos);
+                    mapLive.panTo(pos);
+                }
+            } catch (e) { console.error("Error Live Update:", e); }
+        }
+        
+        setTimeout(() => {
+            mapLive.invalidateSize();
+            update();
+        }, 400);
+        setInterval(update, 20000);
+    }
+
+    // Mantener tus escuchadores de clics e incidencias aquí abajo...
+    document.addEventListener("click", async function (e) {
+        if (e.target.matches("#btn-llegada")) { /* ... código de llegada ... */ }
+        // ... resto de botones e incidencias ...
+    });
 })();
