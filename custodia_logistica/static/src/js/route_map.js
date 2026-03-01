@@ -27,46 +27,48 @@
 
             if (!coords || coords.length < 2) return;
 
+            // 1. CREAR EL MAPA INMEDIATAMENTE
             const origin = [coords[0].lat, coords[0].lng];
+            const dest = [coords[coords.length - 1].lat, coords[coords.length - 1].lng];
             const mapRoute = L.map("route-map").setView(origin, 6);
-            L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png").addTo(mapRoute);
+            
+            L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+                attribution: "© OpenStreetMap"
+            }).addTo(mapRoute);
 
-            // Marcadores de Origen y Destino
-            coords.forEach(p => {
-                let color = p.type === 'origin' ? 'green' : (p.type === 'destination' ? 'red' : 'blue');
-                L.circleMarker([p.lat, p.lng], {radius: 7, color: color, fillOpacity: 1}).addTo(mapRoute);
-            });
+            // 2. PONER MARCADORES BÁSICOS (Para que el mapa no esté vacío)
+            L.marker(origin).addTo(mapRoute).bindPopup("Origen");
+            L.marker(dest).addTo(mapRoute).bindPopup("Destino");
 
-            // --- LLAMADA A OSRM PARA CARRETERA REAL ---
-            // Formato requerido: lng,lat;lng,lat
+            // 3. PEDIR RUTA A OSRM (En segundo plano)
             const osrmCoords = coords.map(p => p.lng + "," + p.lat).join(";");
             
             fetch(`https://router.project-osrm.org/route/v1/driving/${osrmCoords}?overview=full&geometries=geojson`)
                 .then(res => res.json())
                 .then(osrmData => {
                     if (osrmData.routes && osrmData.routes.length > 0) {
-                        // Dibujamos la geometría de la carretera real
                         const routeGeo = L.geoJSON(osrmData.routes[0].geometry, {
-                            style: { color: "blue", weight: 5, opacity: 0.7 }
+                            style: { color: "blue", weight: 5, opacity: 0.8 }
                         }).addTo(mapRoute);
                         
                         mapRoute.fitBounds(routeGeo.getBounds());
-
-                        // Actualizar etiquetas de distancia y tiempo (opcional si tienes los IDs en el HTML)
-                        const distElem = document.getElementById("route-distance");
-                        const durElem = document.getElementById("route-duration");
-                        if(distElem) distElem.innerText = (osrmData.routes[0].distance / 1000).toFixed(2) + " km";
-                        if(durElem) durElem.innerText = Math.round(osrmData.routes[0].duration / 60) + " min";
+                        
+                        // Actualizar textos si existen
+                        if(document.getElementById("route-distance")) {
+                            document.getElementById("route-distance").innerText = (osrmData.routes[0].distance / 1000).toFixed(2) + " km";
+                        }
                     } else {
-                        // Respaldo: Si falla OSRM, dibujamos línea recta
-                        const fallbackPath = coords.map(p => [p.lat, p.lng]);
-                        const poly = L.polyline(fallbackPath, {color: 'red', weight: 3, dashArray: '5, 10'}).addTo(mapRoute);
-                        mapRoute.fitBounds(poly.getBounds());
+                        // Respaldo si falla OSRM: Línea recta
+                        const simplePath = coords.map(p => [p.lat, p.lng]);
+                        L.polyline(simplePath, {color: 'blue', weight: 4, dashArray: '5, 10'}).addTo(mapRoute);
                     }
-                });
-            
-            setTimeout(() => mapRoute.invalidateSize(), 200);
-        } catch (e) { console.error("Error Ruta Planeada:", e); }
+                })
+                .catch(err => console.error("OSRM Error:", err));
+
+            // Forzar renderizado
+            setTimeout(() => mapRoute.invalidateSize(), 300);
+
+        } catch (e) { console.error("Error crítico:", e); }
     }
 
     // --- 2. FUNCIÓN MAPA MONITOREO EN VIVO ---
