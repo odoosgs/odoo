@@ -15,11 +15,7 @@
     });
 
     // --- 1. FUNCIÓN MAPA RUTA PLANEADA ---
-    async function initPlannedRouteMap() {
-        const container = document.getElementById("route-map");
-        if (!container || !container.dataset.rutaId) return;
-
-        const rutaId = container.dataset.rutaId;
+    async function drawPlannedRoute(rutaId) {
         try {
             const response = await fetch("/custodia/ruta/" + rutaId + "/coordinates", {
                 method: "POST",
@@ -31,16 +27,46 @@
 
             if (!coords || coords.length < 2) return;
 
-            // Instancia única para la ruta
-            const mapRoute = L.map("route-map").setView([coords[0].lat, coords[0].lng], 6);
+            const origin = [coords[0].lat, coords[0].lng];
+            const mapRoute = L.map("route-map").setView(origin, 6);
             L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png").addTo(mapRoute);
 
-            const path = coords.map(p => [p.lat, p.lng]);
-            const polyline = L.polyline(path, { color: "blue", weight: 5 }).addTo(mapRoute);
-            mapRoute.fitBounds(polyline.getBounds());
+            // Marcadores de Origen y Destino
+            coords.forEach(p => {
+                let color = p.type === 'origin' ? 'green' : (p.type === 'destination' ? 'red' : 'blue');
+                L.circleMarker([p.lat, p.lng], {radius: 7, color: color, fillOpacity: 1}).addTo(mapRoute);
+            });
+
+            // --- LLAMADA A OSRM PARA CARRETERA REAL ---
+            // Formato requerido: lng,lat;lng,lat
+            const osrmCoords = coords.map(p => p.lng + "," + p.lat).join(";");
+            
+            fetch(`https://router.project-osrm.org/route/v1/driving/${osrmCoords}?overview=full&geometries=geojson`)
+                .then(res => res.json())
+                .then(osrmData => {
+                    if (osrmData.routes && osrmData.routes.length > 0) {
+                        // Dibujamos la geometría de la carretera real
+                        const routeGeo = L.geoJSON(osrmData.routes[0].geometry, {
+                            style: { color: "blue", weight: 5, opacity: 0.7 }
+                        }).addTo(mapRoute);
+                        
+                        mapRoute.fitBounds(routeGeo.getBounds());
+
+                        // Actualizar etiquetas de distancia y tiempo (opcional si tienes los IDs en el HTML)
+                        const distElem = document.getElementById("route-distance");
+                        const durElem = document.getElementById("route-duration");
+                        if(distElem) distElem.innerText = (osrmData.routes[0].distance / 1000).toFixed(2) + " km";
+                        if(durElem) durElem.innerText = Math.round(osrmData.routes[0].duration / 60) + " min";
+                    } else {
+                        // Respaldo: Si falla OSRM, dibujamos línea recta
+                        const fallbackPath = coords.map(p => [p.lat, p.lng]);
+                        const poly = L.polyline(fallbackPath, {color: 'red', weight: 3, dashArray: '5, 10'}).addTo(mapRoute);
+                        mapRoute.fitBounds(poly.getBounds());
+                    }
+                });
             
             setTimeout(() => mapRoute.invalidateSize(), 200);
-        } catch (e) { console.error("Error en Mapa de Ruta:", e); }
+        } catch (e) { console.error("Error Ruta Planeada:", e); }
     }
 
     // --- 2. FUNCIÓN MAPA MONITOREO EN VIVO ---
