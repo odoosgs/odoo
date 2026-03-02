@@ -9,28 +9,75 @@
 
     // --- MAPA 1: RUTA PLANEADA (El código que te funcionó) ---
     async function initPlannedRouteMap() {
-        const container = document.getElementById("route-map");
-        if (!container || !container.dataset.rutaId) return;
+    const container = document.getElementById("route-map");
+    if (!container || !container.dataset.rutaId) return;
 
-        try {
-            const response = await fetch("/custodia/ruta/" + container.dataset.rutaId + "/coordinates", {
-                method: "POST", headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ params: {} })
-            });
-            const data = await response.json();
-            const coords = data.result;
-            if (!coords || coords.length < 2) return;
+    const rutaId = container.dataset.rutaId;
 
-            const mapRoute = L.map("route-map").setView([coords[0].lat, coords[0].lng], 6);
-            L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png").addTo(mapRoute);
+    try {
+        const response = await fetch("/custodia/ruta/" + rutaId + "/coordinates", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ params: {} })
+        });
 
-            const path = coords.map(p => [p.lat, p.lng]);
-            const polyline = L.polyline(path, { color: "blue", weight: 5 }).addTo(mapRoute);
-            mapRoute.fitBounds(polyline.getBounds());
-            
-            setTimeout(() => mapRoute.invalidateSize(), 200);
-        } catch (e) { console.error("Error Mapa Ruta:", e); }
+        const data = await response.json();
+        const coords = data.result;
+
+        if (!coords || coords.length < 2) return;
+
+        const origin = coords[0];
+        const destination = coords[coords.length - 1];
+
+        // 🔵 Llamada a OSRM
+        const osrmUrl = `https://router.project-osrm.org/route/v1/driving/${origin.lng},${origin.lat};${destination.lng},${destination.lat}?overview=full&geometries=geojson`;
+
+        const routeResponse = await fetch(osrmUrl);
+        const routeData = await routeResponse.json();
+
+        if (!routeData.routes || routeData.routes.length === 0) return;
+
+        const route = routeData.routes[0];
+        const routeGeo = route.geometry;
+
+        const mapRoute = L.map("route-map").setView([origin.lat, origin.lng], 6);
+        L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png").addTo(mapRoute);
+
+        const routeLayer = L.geoJSON(routeGeo, {
+            style: { color: "blue", weight: 5 }
+        }).addTo(mapRoute);
+
+        mapRoute.fitBounds(routeLayer.getBounds());
+
+        // 📏 DISTANCIA (metros → km)
+        const distanceKm = (route.distance / 1000).toFixed(1);
+
+        // ⏱ TIEMPO (segundos → horas/min)
+        const totalMinutes = Math.round(route.duration / 60);
+        const hours = Math.floor(totalMinutes / 60);
+        const minutes = totalMinutes % 60;
+
+        let durationText = "";
+        if (hours > 0) {
+            durationText = `${hours} h ${minutes} min`;
+        } else {
+            durationText = `${minutes} min`;
+        }
+
+        // 🖥 Mostrar resumen
+        const summaryDiv = document.getElementById("route-summary");
+        if (summaryDiv) {
+            document.getElementById("route-distance").textContent = distanceKm + " km";
+            document.getElementById("route-duration").textContent = durationText;
+            summaryDiv.style.display = "block";
+        }
+
+        setTimeout(() => mapRoute.invalidateSize(), 200);
+
+    } catch (e) {
+        console.error("Error en Mapa de Ruta:", e);
     }
+}
 
     // --- MAPA 2: MONITOREO EN VIVO (Misma estrategia robusta) ---
     async function initLiveTrackingMap() {
