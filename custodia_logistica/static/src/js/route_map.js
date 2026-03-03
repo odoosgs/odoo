@@ -108,4 +108,35 @@
             setInterval(update, 30000); // Actualiza cada 30 seg
         } catch (e) { console.error("Error Mapa Vivo:", e); }
     }
+    
+// --- LÓGICA DE FILTRADO EN CASCADA PARA EL FORMULARIO ---
+    const maestroSelect = document.getElementById("ruta_maestra_id");
+    if (maestroSelect) {
+        maestroSelect.addEventListener("change", async function() {
+            const maestraId = this.value;
+            const origenSelect = document.getElementById("nodo_origen_id");
+            const destinoSelect = document.getElementById("nodo_destino_id");
+
+            if (!maestraId) return;
+
+            // Petición al controlador para obtener nodos según la ruta maestra
+            const response = await fetch(`/get_nodos_by_maestra/${maestraId}`);
+            const data = await response.json();
+
+            // Llenar dropdown de Origen
+            origenSelect.innerHTML = '<option value="">Seleccione salida...</option>';
+            data.origenes.forEach(n => {
+                origenSelect.innerHTML += `<option value="${n.id}">${n.name}</option>`;
+            });
+
+            // Llenar dropdown de Destino
+            destinoSelect.innerHTML = '<option value="">Seleccione llegada...</option>';
+            data.destinos.forEach(n => {
+                destinoSelect.innerHTML += `<option value="${n.id}">${n.name}</option>`;
+            });
+            
+            origenSelect.disabled = false;
+            destinoSelect.disabled = false;
+        });
+    }    
 })();
