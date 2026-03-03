@@ -111,6 +111,31 @@ class CustodiaPortal(CustomerPortal):
         return request.make_response(json.dumps(data), headers=[('Content-Type', 'application/json')])
 
     # =========================================================
+    # FILTRADO DE NODOS (CASCADA)
+    # =========================================================
+    @http.route('/get_nodos_by_maestra/<int:maestra_id>', type='json', auth='user', website=True)
+    def get_nodos_by_maestra(self, maestra_id, **kwargs):
+        """Devuelve los nodos de origen y destino únicos de una Ruta Maestra"""
+        rutas_variantes = request.env['custodia.ruta'].sudo().search([
+            ('ruta_maestra_id', '=', maestra_id)
+        ])
+        
+        origenes = []
+        destinos = []
+        seen_orig = set()
+        seen_dest = set()
+
+        for r in rutas_variantes:
+            if r.nodo_origen_id and r.nodo_origen_id.id not in seen_orig:
+                origenes.append({'id': r.nodo_origen_id.id, 'name': r.nodo_origen_id.name})
+                seen_orig.add(r.nodo_origen_id.id)
+            if r.nodo_destino_id and r.nodo_destino_id.id not in seen_dest:
+                destinos.append({'id': r.nodo_destino_id.id, 'name': r.nodo_destino_id.name})
+                seen_dest.add(r.nodo_destino_id.id)
+
+        return {'origenes': origenes, 'destinos': destinos}
+
+    # =========================================================
     # FORMULARIO NUEVA SOLICITUD
     # =========================================================
     @http.route(['/solicitar-servicio'], type='http', auth='user', website=True)
