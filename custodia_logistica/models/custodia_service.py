@@ -86,6 +86,25 @@ class CustodiaService(models.Model):
         tracking=True
     )
 
+    # === NUEVOS CAMPOS PARA SELECCIÓN EN CASCADA ===
+    ruta_maestra_id = fields.Many2one(
+        'custodia.ruta.maestra', 
+        string='Ruta Principal (Origen - Destino)',
+        tracking=True
+    )
+    
+    nodo_origen_id = fields.Many2one(
+        'custodia.ruta.nodo', 
+        string='Punto de Salida Específico',
+        tracking=True
+    )
+    
+    nodo_destino_id = fields.Many2one(
+        'custodia.ruta.nodo', 
+        string='Punto de Llegada Específico',
+        tracking=True
+    )
+
     # =========================
     # DATOS OPERATIVOS
     # =========================
