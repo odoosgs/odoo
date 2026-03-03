@@ -87,6 +87,24 @@ class CustodiaRuta(models.Model):
         digits=(10, 6)
     )
 
+    ruta_maestra_id = fields.Many2one(
+        'custodia.ruta.maestra', 
+        string='Ruta Maestra',
+        ondelete='restrict'
+    )
+    clave_variante = fields.Char(string='Clave de Variante') # Ej: SOR-004/001
+    
+    nodo_origen_id = fields.Many2one(
+        'custodia.ruta.nodo', 
+        string='Nodo Origen',
+        ondelete='restrict'
+    )
+    nodo_destino_id = fields.Many2one(
+        'custodia.ruta.nodo', 
+        string='Nodo Destino',
+        ondelete='restrict'
+    )
+
     # =========================
     # RELACIONES
     # =========================
@@ -167,4 +185,5 @@ class CustodiaRutaNodo(models.Model):
     name = fields.Char(string='Referencia (Punto de parada)')
     latitude = fields.Float(string='Latitud', digits=(10, 6), required=True)
     longitude = fields.Float(string='Longitud', digits=(10, 6), required=True)
+
 
