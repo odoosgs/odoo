@@ -55,7 +55,7 @@
                                 </group>
                             </group>
 
-                            <group string="Coordenadas">
+                            <group string="Coordenadas" invisible="1">
                                 <group>
                                     <field name="origin_latitude"/>
                                     <field name="origin_longitude"/>
@@ -145,6 +145,7 @@
     </record>
 
 </odoo>
+
 
 
 
