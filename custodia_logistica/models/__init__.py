@@ -1,4 +1,5 @@
 from . import custodia_carrier
+from . import custodia_catalogos
 from . import custodia_ruta
 from . import custodia_service
 from . import custodia_asignacion
@@ -8,5 +9,3 @@ from . import planning_ext
 from . import service_tracking
 from . import custodia_ruta
 from . import custodia_ruta_nodo
-from . import custodia_catalogos
-
