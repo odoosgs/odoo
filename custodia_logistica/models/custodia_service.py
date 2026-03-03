@@ -66,6 +66,23 @@ class CustodiaService(models.Model):
         tracking=True
     )
 
+    # === CAMPOS PARA SELECCIÓN EN CASCADA (EXCEL) ===
+    ruta_maestra_id = fields.Many2one(
+        'custodia.ruta.maestra', 
+        string='Ruta Principal',
+        tracking=True
+    )
+    nodo_origen_id = fields.Many2one(
+        'custodia.ruta.nodo', 
+        string='Punto de Salida',
+        tracking=True
+    )
+    nodo_destino_id = fields.Many2one(
+        'custodia.ruta.nodo', 
+        string='Punto de Llegada',
+        tracking=True
+    )
+
    # ruta_tipo = fields.Selection(
    #     [('local', 'Local'), ('foraneo', 'Foráneo')],
    #     string='Tipo de ruta',
