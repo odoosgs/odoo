@@ -2,6 +2,14 @@
 <odoo>
   <!-- Menú raíz -->
   <menuitem id="menu_custodia_root" name="Custodia de Valores" sequence="10"/>
+  <menuitem id="menu_custodia_config" name="Configuración" 
+              parent="menu_custodia_root" sequence="100"/>
+
+  <menuitem id="menu_custodia_ruta_maestra" name="Rutas Maestras" 
+              parent="menu_custodia_config" action="action_custodia_ruta_maestra" sequence="10"/>
+
+  <menuitem id="menu_custodia_ruta_nodo" name="Nodos (Bodegas)" 
+              parent="menu_custodia_config" action="action_custodia_ruta_nodo" sequence="20"/>
 
   <!-- Servicios -->
   <record id="action_custodia_service" model="ir.actions.act_window">
@@ -51,3 +59,4 @@
             action="action_custodia_ruta"
             sequence="50"/>
 </odoo>
+
