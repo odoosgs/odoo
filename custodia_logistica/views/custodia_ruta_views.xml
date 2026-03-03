@@ -41,15 +41,17 @@
                              TRAYECTO
                         ========================== -->
                         <page string="Trayecto">
-                            <group string="Información General">
-                                <group>
+                            <group>
+                                <group string="Clasificación Operativa">
+                                    <field name="ruta_maestra_id" options="{'no_create': True}"/>
+                                    <field name="clave_variante"/>
                                     <field name="tipo"/>
+                                </group>
+                                <group string="Puntos Específicos (Nodos)">
+                                    <field name="nodo_origen_id" options="{'no_create': True}"/>
+                                    <field name="nodo_destino_id" options="{'no_create': True}"/>
                                     <field name="distancia_km"/>
                                     <field name="tiempo_estimado" widget="float_time"/>
-                                </group>
-                                <group>
-                                    <field name="origen"/>
-                                    <field name="destino"/>
                                 </group>
                             </group>
 
@@ -143,6 +145,7 @@
     </record>
 
 </odoo>
+
 
 
 
