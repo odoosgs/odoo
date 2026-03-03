@@ -124,13 +124,13 @@
         <field name="model">custodia.ruta</field>
         <field name="arch" type="xml">
             <list string="Rutas">
-                <field name="name"/>
+                <field name="clave_variante"/>
+                <field name="ruta_maestra_id"/>
+                <field name="nodo_origen_id"/>
+                <field name="nodo_destino_id"/>
                 <field name="tipo"/>
-                <field name="origen"/>
-                <field name="destino"/>
                 <field name="distancia_km"/>
-                <field name="costo_peaje_estimado"/>
-                <field name="active"/>
+                <field name="active" widget="boolean_toggle"/>
             </list>
         </field>
     </record>
@@ -145,6 +145,7 @@
     </record>
 
 </odoo>
+
 
 
 
