@@ -2,14 +2,14 @@
 from odoo import models, fields
 
 class CustodiaRutaMaestra(models.Model):
-    _name = 'custodia.ruta.maestra'
-    _description = 'Ruta Maestra (Agrupador del Excel)'
+    _name = 'custodia.ruta.maestra'  # <--- Este nombre DEBE ser idéntico al error
+    _description = 'Ruta Maestra'
     
     name = fields.Char(string="Nombre de Ruta", required=True)
 
 class CustodiaRutaNodo(models.Model):
     _name = 'custodia.ruta.nodo'
-    _description = 'Nodos de Carga/Descarga (Bodegas)'
+    _description = 'Nodos de Ruta'
     
     name = fields.Char(string="Nombre del Punto", required=True)
     latitude = fields.Float(string="Latitud")
