@@ -143,7 +143,7 @@ class CustodiaPortal(CustomerPortal):
         partner = request.env.user.partner_id.commercial_partner_id
         return request.render('custodia_logistica.portal_service_form', {
             'carriers': request.env['custodia.carrier'].sudo().search([]),
-            'rutas': request.env['custodia.ruta'].sudo().search([]),
+            'rutas_maestras': request.env['custodia.ruta.maestra'].sudo().search([]), # Carga rutas maestras
             'contacts': request.env['res.partner'].sudo().search([('parent_id', '=', partner.id)]),
             'cliente': partner,
         })
