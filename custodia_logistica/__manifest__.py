@@ -28,6 +28,7 @@
         'security/ir_rule.xml',
 
         # Catálogos
+        'views/custodia_catalogos_views.xml', # <--- Nuevo        
         'views/custodia_carrier_views.xml',
         'views/custodia_ruta_views.xml',
 
@@ -39,7 +40,6 @@
         'views/custodia_asignacion_views.xml',
 
         # Menús
-        'views/custodia_catalogos_views.xml', # <--- Nuevo
         'views/custodia_menus.xml',
 
         # Portal
@@ -58,6 +58,7 @@
     'application': True,
     'installable': True,
 }
+
 
 
 
