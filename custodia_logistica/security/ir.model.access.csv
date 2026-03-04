@@ -14,7 +14,8 @@ access_custodia_carrier_portal,custodia.carrier.portal,model_custodia_carrier,ba
 access_custodia_service_tracking_user,custodia.service.tracking,model_custodia_service_tracking,base.group_user,1,1,1,1
 access_custodia_service_tracking_portal,custodia.service.tracking.portal,model_custodia_service_tracking,base.group_portal,1,0,0,0
 access_custodia_ruta_maestra_user,access_custodia_ruta_maestra_user,model_custodia_ruta_maestra,base.group_user,1,1,1,1
-access_custodia_ruta_nodo_user,access_custodia_ruta_nodo_user,model_custodia_ruta_nodo,base.group_user,1,1,1,1
+access_custodia_punto_operativo_user,access_custodia_punto_operativo,model_custodia_punto_operativo,base.group_user,1,1,1,1
+
 
 
 
