@@ -16,3 +16,12 @@ class CustodiaPuntoOperativo(models.Model):
     latitude = fields.Float(string="Latitud")
     longitude = fields.Float(string="Longitud")
     sequence = fields.Integer(string="Secuencia", default=10) # <--- AGREGAR ESTA LÍNEA
+
+    latitude = fields.Float(
+        string="Latitud", 
+        digits=(16, 6) # El primer número es el total de dígitos, el segundo los decimales
+    )
+    longitude = fields.Float(
+        string="Longitud", 
+        digits=(16, 6)
+    )
