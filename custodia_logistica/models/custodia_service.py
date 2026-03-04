@@ -72,15 +72,14 @@ class CustodiaService(models.Model):
         string='Ruta Principal',
         tracking=True
     )
+    
     nodo_origen_id = fields.Many2one(
-        'custodia.ruta.nodo', 
-        string='Punto de Salida',
-        tracking=True
+        'custodia.punto.operativo', # <--- Nuevo nombre
+        string='Punto de Salida'
     )
     nodo_destino_id = fields.Many2one(
-        'custodia.ruta.nodo', 
-        string='Punto de Llegada',
-        tracking=True
+        'custodia.punto.operativo', # <--- Nuevo nombre
+        string='Punto de Llegada'
     )
 
    # ruta_tipo = fields.Selection(
