@@ -11,6 +11,12 @@
   <menuitem id="menu_custodia_ruta_nodo" name="Nodos (Bodegas)" 
               parent="menu_custodia_config" action="action_custodia_ruta_nodo" sequence="20"/>
 
+  <menuitem id="menu_custodia_punto_operativo" 
+              name="Nodos (Bodegas)" 
+              parent="menu_custodia_config" 
+              action="action_custodia_punto_operativo" 
+              sequence="20"/>
+
   <!-- Servicios -->
   <record id="action_custodia_service" model="ir.actions.act_window">
     <field name="name">Servicios de Custodia</field>
@@ -58,5 +64,16 @@
             parent="menu_custodia_root"
             action="action_custodia_ruta"
             sequence="50"/>
+
+  <record id="action_custodia_punto_operativo" model="ir.actions.act_window">
+        <field name="name">Nodos (Bodegas)</field>
+        <field name="res_model">custodia.punto.operativo</field> <field name="view_mode">list,form</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Crea el primer punto operativo (Bodega)
+            </p>
+        </field>
+    </record>
 </odoo>
+
 
