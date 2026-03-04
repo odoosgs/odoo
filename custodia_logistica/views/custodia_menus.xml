@@ -8,8 +8,10 @@
   <menuitem id="menu_custodia_ruta_maestra" name="Rutas Maestras" 
               parent="menu_custodia_config" action="action_custodia_ruta_maestra" sequence="10"/>
 
-  <menuitem id="menu_custodia_ruta_nodo" name="Nodos (Bodegas)" 
-              parent="menu_custodia_config" action="action_custodia_ruta_nodo" sequence="20"/>
+  <!--<menuitem id="menu_custodia_ruta_nodo" name="Nodos (Bodegas)" -->
+  <menuitem id="menu_custodia_punto_operativo" name="Nodos (Bodegas)" 
+              parent="menu_custodia_config" action="action_custodia_punto_operativo" sequence="20"/>
+            <!--  parent="menu_custodia_config" action="action_custodia_ruta_nodo" sequence="20"/> -->
 
   <menuitem id="menu_custodia_punto_operativo" 
               name="Nodos (Bodegas)" 
@@ -75,5 +77,6 @@
         </field>
     </record>
 </odoo>
+
 
 
