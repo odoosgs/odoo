@@ -7,9 +7,9 @@ class CustodiaRutaMaestra(models.Model):
     
     name = fields.Char(string="Nombre de Ruta", required=True)
 
-class CustodiaRutaNodo(models.Model):
-    _name = 'custodia.ruta.nodo'
-    _description = 'Nodos de Ruta'
+class CustodiaPuntoOperativo(models.Model):
+    _name = 'custodia.punto.operativo' # <--- Cambio de nombre técnico
+    _description = 'Puntos Operativos (Bodegas del Excel)'
     
     name = fields.Char(string="Nombre del Punto", required=True)
     latitude = fields.Float(string="Latitud")
