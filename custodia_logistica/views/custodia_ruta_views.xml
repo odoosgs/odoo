@@ -4,7 +4,7 @@
     <!-- =========================
          LIST VIEW NODOS
     ========================== -->
-    <record id="view_custodia_ruta_nodo_list" model="ir.ui.view">
+    <!-- <record id="view_custodia_ruta_nodo_list" model="ir.ui.view">
         <field name="name">custodia.punto.operativo.list</field>
         <field name="model">custodia.punto.operativo</field>
         <field name="arch" type="xml">
@@ -15,7 +15,7 @@
                 <field name="longitude"/>
             </list>
         </field>
-    </record>
+    </record> -->
 
 
     <!-- =========================
@@ -145,6 +145,7 @@
     </record>
 
 </odoo>
+
 
 
 
