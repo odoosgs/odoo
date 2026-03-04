@@ -134,40 +134,41 @@ class CustodiaRuta(models.Model):
     )
 
     # =========================
-    # MÉTODOS
+    # MÉTODOS Y AUTOMATIZACIÓN
     # =========================
+
+    from odoo import api # Asegúrate de que 'api' esté en los imports al inicio del archivo
+
+    @api.onchange('ruta_maestra_id', 'nodo_origen_id', 'nodo_destino_id')
+    def _onchange_compute_name(self):
+        """Genera el nombre automáticamente basado en la jerarquía del Excel"""
+        if self.ruta_maestra_id and self.nodo_origen_id and self.nodo_destino_id:
+            self.name = f"{self.ruta_maestra_id.name} ({self.nodo_origen_id.name} > {self.nodo_destino_id.name})"
 
     def get_route_coordinates(self):
         """
-        Devuelve la ruta completa ordenada:
-        Origen -> Nodos (sequence) -> Destino
+        MODIFICADO: Extrae las coordenadas de los Puntos Operativos (Bodegas)
+        en lugar de los campos de texto locales.
         """
         self.ensure_one()
         points = []
 
-        # Origen
-        if self.origin_latitude and self.origin_longitude:
+        # Origen (Desde el catálogo de Puntos Operativos)
+        if self.nodo_origen_id and self.nodo_origen_id.latitude:
             points.append({
-                'lat': self.origin_latitude,
-                'lng': self.origin_longitude,
-                'type': 'origin'
+                'lat': self.nodo_origen_id.latitude,
+                'lng': self.nodo_origen_id.longitude,
+                'type': 'origin',
+                'name': self.nodo_origen_id.name
             })
 
-        # Nodos ordenados por sequence
-        for node in self.node_ids.sorted(key=lambda n: n.sequence):
-            if node.latitude and node.longitude:
-                points.append({
-                    'lat': node.latitude,
-                    'lng': node.longitude,
-                    'type': 'node'
-                })
-
-        # Destino
-        if self.destination_latitude and self.destination_longitude:
+        # Destino (Desde el catálogo de Puntos Operativos)
+        if self.nodo_destino_id and self.nodo_destino_id.latitude:
             points.append({
-                'lat': self.destination_latitude,
-                'lng': self.destination_longitude,
-                'type': 'destination'
+                'lat': self.nodo_destino_id.latitude,
+                'lng': self.nodo_destino_id.longitude,
+                'type': 'destination',
+                'name': self.nodo_destino_id.name
             })
 
         return points
@@ -182,6 +183,7 @@ class CustodiaRutaNodo(models.Model):
     name = fields.Char(string='Referencia (Punto de parada)')
     latitude = fields.Float(string='Latitud', digits=(10, 6), required=True)
     longitude = fields.Float(string='Longitud', digits=(10, 6), required=True)
+
 
 
 
