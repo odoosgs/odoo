@@ -5,8 +5,8 @@
          LIST VIEW NODOS
     ========================== -->
     <record id="view_custodia_ruta_nodo_list" model="ir.ui.view">
-        <field name="name">custodia.ruta.nodo.list</field>
-        <field name="model">custodia.ruta.nodo</field>
+        <field name="name">custodia.punto.operativo.list</field>
+        <field name="model">custodia.punto.operativo</field>
         <field name="arch" type="xml">
             <list editable="bottom">
                 <field name="sequence"/>
@@ -145,6 +145,7 @@
     </record>
 
 </odoo>
+
 
 
 
