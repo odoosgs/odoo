@@ -109,7 +109,7 @@
         } catch (e) { console.error("Error Mapa Vivo:", e); }
     }
     
-// --- LÓGICA DE FILTRADO EN CASCADA PARA EL FORMULARIO (CORREGIDA) ---
+// --- LÓGICA DE FILTRADO EN CASCADA PARA EL FORMULARIO ---
 const maestroSelect = document.getElementById("ruta_maestra_id");
 const origenSelect = document.getElementById("nodo_origen_id");
 const destinoSelect = document.getElementById("nodo_destino_id");
@@ -121,24 +121,25 @@ if (maestroSelect) {
         if (!maestraId) {
             origenSelect.disabled = true;
             destinoSelect.disabled = true;
+            origenSelect.innerHTML = '<option value="">Primero seleccione ruta...</option>';
             return;
         }
 
         try {
-            // 🔴 CORRECCIÓN: Petición compatible con Odoo JSON-RPC
+            // Petición al controlador (Asegúrate de que la URL sea correcta)
             const response = await fetch(`/get_nodos_by_maestra/${maestraId}`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ params: {} }) // Odoo requiere params para type='json'
+                body: JSON.stringify({ params: {} }) // Odoo requiere 'params'
             });
 
             const data = await response.json();
             
-            // Odoo devuelve los datos dentro de .result
+            // Odoo devuelve los datos dentro de 'result'
             if (data.result) {
                 const result = data.result;
 
-                // Llenar dropdown de Origen
+                // 1. Llenar dropdown de Origen
                 origenSelect.innerHTML = '<option value="">Seleccione salida...</option>';
                 result.origenes.forEach(n => {
                     let opt = document.createElement('option');
@@ -147,7 +148,7 @@ if (maestroSelect) {
                     origenSelect.appendChild(opt);
                 });
 
-                // Llenar dropdown de Destino
+                // 2. Llenar dropdown de Destino
                 destinoSelect.innerHTML = '<option value="">Seleccione llegada...</option>';
                 result.destinos.forEach(n => {
                     let opt = document.createElement('option');
@@ -156,14 +157,16 @@ if (maestroSelect) {
                     destinoSelect.appendChild(opt);
                 });
                 
+                // 3. Habilitar los campos
                 origenSelect.disabled = false;
                 destinoSelect.disabled = false;
             }
         } catch (e) {
-            console.error("Error al cargar nodos:", e);
+            console.error("Error al cargar los nodos del formulario:", e);
         }
     });
 }
+    
 
     
 })();
