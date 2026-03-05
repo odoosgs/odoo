@@ -109,34 +109,61 @@
         } catch (e) { console.error("Error Mapa Vivo:", e); }
     }
     
-// --- LÓGICA DE FILTRADO EN CASCADA PARA EL FORMULARIO ---
-    const maestroSelect = document.getElementById("ruta_maestra_id");
-    if (maestroSelect) {
-        maestroSelect.addEventListener("change", async function() {
-            const maestraId = this.value;
-            const origenSelect = document.getElementById("nodo_origen_id");
-            const destinoSelect = document.getElementById("nodo_destino_id");
+// --- LÓGICA DE FILTRADO EN CASCADA PARA EL FORMULARIO (CORREGIDA) ---
+const maestroSelect = document.getElementById("ruta_maestra_id");
+const origenSelect = document.getElementById("nodo_origen_id");
+const destinoSelect = document.getElementById("nodo_destino_id");
 
-            if (!maestraId) return;
+if (maestroSelect) {
+    maestroSelect.addEventListener("change", async function() {
+        const maestraId = this.value;
 
-            // Petición al controlador para obtener nodos según la ruta maestra
-            const response = await fetch(`/get_nodos_by_maestra/${maestraId}`);
+        if (!maestraId) {
+            origenSelect.disabled = true;
+            destinoSelect.disabled = true;
+            return;
+        }
+
+        try {
+            // 🔴 CORRECCIÓN: Petición compatible con Odoo JSON-RPC
+            const response = await fetch(`/get_nodos_by_maestra/${maestraId}`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ params: {} }) // Odoo requiere params para type='json'
+            });
+
             const data = await response.json();
-
-            // Llenar dropdown de Origen
-            origenSelect.innerHTML = '<option value="">Seleccione salida...</option>';
-            data.origenes.forEach(n => {
-                origenSelect.innerHTML += `<option value="${n.id}">${n.name}</option>`;
-            });
-
-            // Llenar dropdown de Destino
-            destinoSelect.innerHTML = '<option value="">Seleccione llegada...</option>';
-            data.destinos.forEach(n => {
-                destinoSelect.innerHTML += `<option value="${n.id}">${n.name}</option>`;
-            });
             
-            origenSelect.disabled = false;
-            destinoSelect.disabled = false;
-        });
-    }    
+            // Odoo devuelve los datos dentro de .result
+            if (data.result) {
+                const result = data.result;
+
+                // Llenar dropdown de Origen
+                origenSelect.innerHTML = '<option value="">Seleccione salida...</option>';
+                result.origenes.forEach(n => {
+                    let opt = document.createElement('option');
+                    opt.value = n.id;
+                    opt.textContent = n.name;
+                    origenSelect.appendChild(opt);
+                });
+
+                // Llenar dropdown de Destino
+                destinoSelect.innerHTML = '<option value="">Seleccione llegada...</option>';
+                result.destinos.forEach(n => {
+                    let opt = document.createElement('option');
+                    opt.value = n.id;
+                    opt.textContent = n.name;
+                    destinoSelect.appendChild(opt);
+                });
+                
+                origenSelect.disabled = false;
+                destinoSelect.disabled = false;
+            }
+        } catch (e) {
+            console.error("Error al cargar nodos:", e);
+        }
+    });
+}
+
+    
 })();
