@@ -115,31 +115,32 @@ const origenSelect = document.getElementById("nodo_origen_id");
 const destinoSelect = document.getElementById("nodo_destino_id");
 
 if (maestroSelect) {
+    console.log("Script de filtrado detectado y listo."); // Esto debe aparecer al cargar la página
+
     maestroSelect.addEventListener("change", async function() {
         const maestraId = this.value;
+        console.log("Ruta Maestra cambiada a ID:", maestraId);
 
         if (!maestraId) {
             origenSelect.disabled = true;
             destinoSelect.disabled = true;
-            origenSelect.innerHTML = '<option value="">Primero seleccione ruta...</option>';
             return;
         }
 
         try {
-            // Petición al controlador (Asegúrate de que la URL sea correcta)
             const response = await fetch(`/get_nodos_by_maestra/${maestraId}`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ params: {} }) // Odoo requiere 'params'
+                body: JSON.stringify({ params: {} }) 
             });
 
             const data = await response.json();
-            
-            // Odoo devuelve los datos dentro de 'result'
+            console.log("Datos recibidos del servidor:", data);
+
             if (data.result) {
                 const result = data.result;
 
-                // 1. Llenar dropdown de Origen
+                // Llenar Origen
                 origenSelect.innerHTML = '<option value="">Seleccione salida...</option>';
                 result.origenes.forEach(n => {
                     let opt = document.createElement('option');
@@ -148,7 +149,7 @@ if (maestroSelect) {
                     origenSelect.appendChild(opt);
                 });
 
-                // 2. Llenar dropdown de Destino
+                // Llenar Destino
                 destinoSelect.innerHTML = '<option value="">Seleccione llegada...</option>';
                 result.destinos.forEach(n => {
                     let opt = document.createElement('option');
@@ -157,12 +158,12 @@ if (maestroSelect) {
                     destinoSelect.appendChild(opt);
                 });
                 
-                // 3. Habilitar los campos
                 origenSelect.disabled = false;
                 destinoSelect.disabled = false;
+                console.log("Selectores actualizados y habilitados.");
             }
         } catch (e) {
-            console.error("Error al cargar los nodos del formulario:", e);
+            console.error("Error en el filtrado:", e);
         }
     });
 }
