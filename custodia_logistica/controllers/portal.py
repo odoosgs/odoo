@@ -115,23 +115,28 @@ class CustodiaPortal(CustomerPortal):
     # =========================================================
     @http.route('/get_nodos_by_maestra/<int:maestra_id>', type='json', auth='user', website=True)
     def get_nodos_by_maestra(self, maestra_id, **kwargs):
-        """Devuelve los nodos de origen y destino únicos de una Ruta Maestra"""
-        rutas_variantes = request.env['custodia.ruta'].sudo().search([
+        """Devuelve los nodos de origen disponibles para una Maestra y sus destinos posibles"""
+        rutas = request.env['custodia.ruta'].sudo().search([
             ('ruta_maestra_id', '=', maestra_id)
         ])
         
+        # Obtenemos objetos únicos para evitar duplicados en los selects
         origenes = []
         destinos = []
         seen_orig = set()
         seen_dest = set()
 
-        for r in rutas_variantes:
+        for r in rutas:
             if r.nodo_origen_id and r.nodo_origen_id.id not in seen_orig:
                 origenes.append({'id': r.nodo_origen_id.id, 'name': r.nodo_origen_id.name})
                 seen_orig.add(r.nodo_origen_id.id)
             if r.nodo_destino_id and r.nodo_destino_id.id not in seen_dest:
                 destinos.append({'id': r.nodo_destino_id.id, 'name': r.nodo_destino_id.name})
                 seen_dest.add(r.nodo_destino_id.id)
+
+        # Ordenar alfabéticamente para mejor experiencia de usuario
+        origenes = sorted(origenes, key=lambda x: x['name'])
+        destinos = sorted(destinos, key=lambda x: x['name'])
 
         return {'origenes': origenes, 'destinos': destinos}
 
