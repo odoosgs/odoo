@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 {
     'name': 'Custodia Logística',
-    'version': '19.0.1.2',
+    'version': '19.0.1.1',
     'summary': 'Gestión de servicios de custodia con portal, asignaciones y seguimiento',
     'category': 'Operations',
     'author': 'Xentinell',
@@ -58,6 +58,7 @@
     'application': True,
     'installable': True,
 }
+
 
 
 
