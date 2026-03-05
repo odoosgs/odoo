@@ -41,7 +41,7 @@
                                             <label class="form-label text-primary" for="ruta_maestra_id">
                                                 <i class="fa fa-map-signs me-1"/> 1. Seleccione Ruta Principal (Origen - Destino)
                                             </label>
-                                            <select name="ruta_maestra_id" id="ruta_maestra_id" class="form-select border-primary" required="1">
+                                            <select name="ruta_maestra_id" id="ruta_maestra_id" class="form-control">
                                                 <option value="">-- Seleccione una Ruta General --</option>
                                                 <t t-foreach="rutas_maestras" t-as="rm">
                                                     <option t-att-value="rm.id"><t t-esc="rm.name"/></option>
@@ -51,14 +51,14 @@
                                         
                                         <div class="col-md-6 mb-3">
                                             <label class="form-label" for="nodo_origen_id">2. Punto de Salida Específico</label>
-                                            <select name="nodo_origen_id" id="nodo_origen_id" class="form-select" required="1" disabled="disabled">
+                                            <select name="nodo_origen_id" id="nodo_origen_id" class="form-control" disabled="1">
                                                 <option value="">-- Primero elija la ruta --</option>
                                             </select>
                                         </div>
                                         
                                         <div class="col-md-6 mb-3">
                                             <label class="form-label" for="nodo_destino_id">3. Punto de Llegada Específico</label>
-                                            <select name="nodo_destino_id" id="nodo_destino_id" class="form-select" required="1" disabled="disabled">
+                                            <select name="nodo_destino_id" id="nodo_destino_id" class="form-control" disabled="1">
                                                 <option value="">-- Primero elija la ruta --</option>
                                             </select>
                                         </div>
