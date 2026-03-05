@@ -149,23 +149,41 @@ class CustodiaPortal(CustomerPortal):
         })
 
     # =========================================================
-    # SUBMIT NUEVA SOLICITUD (Corregido para nivel_seguridad)
+    # =========================================================
+    # SUBMIT NUEVA SOLICITUD (Corregido para Rutas Relacionales)
     # =========================================================
     @http.route(['/solicitar-servicio/submit'], type='http', auth='user', website=True, csrf=True)
     def solicitar_submit(self, **post):
         partner = request.env.user.partner_id.commercial_partner_id
         try:
+            # 1. Procesar Fecha
             start_dt = False
             if post.get('start_datetime'):
                 start_dt = datetime.strptime(post['start_datetime'], "%Y-%m-%dT%H:%M")
 
+            # 2. BUSCAR LA VARIANTE DE RUTA (CRÍTICO)
+            # Buscamos la 'custodia.ruta' que coincida con Maestra + Origen + Destino
+            maestra_id = int(post.get('ruta_maestra_id', 0))
+            origen_id = int(post.get('nodo_origen_id', 0))
+            destino_id = int(post.get('nodo_destino_id', 0))
+
+            ruta_variante = request.env['custodia.ruta'].sudo().search([
+                ('ruta_maestra_id', '=', maestra_id),
+                ('nodo_origen_id', '=', origen_id),
+                ('nodo_destino_id', '=', destino_id)
+            ], limit=1)
+
+            if not ruta_variante:
+                raise Exception("La combinación de ruta y puntos seleccionada no es válida.")
+
+            # 3. Preparar Valores para el registro
             vals = {
                 'partner_id': partner.id,
                 'contact_id': int(post.get('contact_id')) if post.get('contact_id') else False,
                 'carrier_id': int(post.get('carrier_id')) if post.get('carrier_id') else False,
-                'ruta_id': int(post.get('ruta_id')) if post.get('ruta_id') else False,
+                'ruta_id': ruta_variante.id, # Aquí se asigna el ID que faltaba
                 'start_datetime': start_dt,
-                'nivel_seguridad': post.get('nivel_seguridad'), # Dato obligatorio
+                'nivel_seguridad': post.get('nivel_seguridad'),
                 'load_id': post.get('load_id'),
                 'tipo_unidad': post.get('tipo_unidad'),
                 'placas': post.get('placas'),
@@ -181,14 +199,15 @@ class CustodiaPortal(CustomerPortal):
             return request.redirect(f'/mis-servicios/{service.id}?access_token={service.access_token}')
 
         except Exception as e:
+            # Si hay error, recargamos el formulario con los datos necesarios
             return request.render('custodia_logistica.portal_service_form', {
                 'carriers': request.env['custodia.carrier'].sudo().search([]),
-                'rutas': request.env['custodia.ruta'].sudo().search([]),
+                'rutas_maestras': request.env['custodia.ruta.maestra'].sudo().search([]),
                 'contacts': request.env['res.partner'].sudo().search([('parent_id', '=', partner.id)]),
                 'cliente': partner,
                 'error': str(e),
             })
-
+            
     # =========================================================
     # ACCIONES DEL CUSTODIO
     # =========================================================
