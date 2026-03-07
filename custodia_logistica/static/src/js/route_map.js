@@ -1,17 +1,41 @@
 (function () {
     "use strict";
 
-    console.log("Archivo route_map.js detectado por el navegador");
+    console.log("Archivo route_map.js cargado exitosamente.");
 
-// --- LÓGICA DE FILTRADO DE ALTA DISPONIBILIDAD ---
+    // =========================================================
+    // 1. ARRANCAR MAPAS AL CARGAR LA PÁGINA
+    // =========================================================
+    document.addEventListener("DOMContentLoaded", function () {
+        console.log("DOM listo - Verificando existencia de mapas...");
+
+        // Pequeño retraso para asegurar que los elementos del portal estén renderizados
+        setTimeout(() => {
+            const routeMapContainer = document.getElementById("route-map");
+            const liveMapContainer = document.getElementById("live-map");
+
+            if (routeMapContainer) {
+                console.log("Iniciando Mapa de Ruta Planeada...");
+                initPlannedRouteMap();
+            }
+
+            if (liveMapContainer) {
+                console.log("Iniciando Mapa de Monitoreo en Vivo...");
+                initLiveTrackingMap();
+            }
+        }, 500);
+    });
+
+    // =========================================================
+    // 2. LÓGICA DE FILTRADO DE SELECTORES (DELEGACIÓN)
+    // =========================================================
     document.addEventListener("change", async function (e) {
-        // Verificamos si el elemento que cambió es nuestro selector de ruta
         if (e.target && e.target.id === "ruta_maestra_id") {
             const maestraId = e.target.value;
             const origenSelect = document.getElementById("nodo_origen_id");
             const destinoSelect = document.getElementById("nodo_destino_id");
 
-            console.log("Detectado cambio en Ruta Maestra (Delegado). ID:", maestraId);
+            console.log("Cambio en Ruta Maestra detectado. ID:", maestraId);
 
             if (!maestraId || !origenSelect || !destinoSelect) return;
 
@@ -20,7 +44,6 @@
                 if (!response.ok) return;
 
                 const result = await response.json();
-                console.log("Datos para llenar selectores:", result);
 
                 // Llenar Origen
                 origenSelect.innerHTML = '<option value="">-- Seleccione salida --</option>';
@@ -40,21 +63,23 @@
                     destinoSelect.appendChild(opt);
                 });
 
-                // ACTIVACIÓN FÍSICA
+                // Desbloqueo de campos
                 origenSelect.disabled = false;
                 destinoSelect.disabled = false;
                 origenSelect.removeAttribute('disabled');
                 destinoSelect.removeAttribute('disabled');
                 
-                console.log("Selectores habilitados y con datos.");
+                console.log("Selectores de nodos actualizados y habilitados.");
 
             } catch (err) {
-                console.error("Error en cascada:", err);
+                console.error("Error en el filtrado de nodos:", err);
             }
         }
     });
-    
-    // --- MAPA 1: RUTA PLANEADA ---
+
+    // =========================================================
+    // 3. FUNCIÓN: MAPA 1 - RUTA PLANEADA
+    // =========================================================
     async function initPlannedRouteMap() {
         const container = document.getElementById("route-map");
         if (!container || !container.dataset.rutaId) return;
@@ -76,6 +101,7 @@
             const origin = coords[0];
             const destination = coords[coords.length - 1];
 
+            // Petición a OSRM para dibujo de polilínea por carretera
             const osrmUrl = `https://router.project-osrm.org/route/v1/driving/${origin.lng},${origin.lat};${destination.lng},${destination.lat}?overview=full&geometries=geojson`;
 
             const routeResponse = await fetch(osrmUrl);
@@ -95,6 +121,7 @@
 
             mapRoute.fitBounds(routeLayer.getBounds());
 
+            // Resumen de ruta (Distancia y Tiempo)
             const distanceKm = (route.distance / 1000).toFixed(1);
             const totalMinutes = Math.round(route.duration / 60);
             const hours = Math.floor(totalMinutes / 60);
@@ -108,11 +135,13 @@
             }
             setTimeout(() => mapRoute.invalidateSize(), 200);
         } catch (e) {
-            console.error("Error en Mapa de Ruta:", e);
+            console.error("Error al inicializar Mapa de Ruta:", e);
         }
     }
 
-    // --- MAPA 2: MONITOREO EN VIVO ---
+    // =========================================================
+    // 4. FUNCIÓN: MAPA 2 - MONITOREO EN VIVO
+    // =========================================================
     async function initLiveTrackingMap() {
         const container = document.getElementById("live-map");
         if (!container) return;
@@ -121,6 +150,7 @@
         const token = container.dataset.token;
 
         try {
+            // Ciudad de México como punto de partida por defecto
             const mapLive = L.map("live-map").setView([19.4326, -99.1332], 5);
             L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png").addTo(mapLive);
             const marker = L.marker([19.4326, -99.1332]).addTo(mapLive);
@@ -134,8 +164,16 @@
                     mapLive.panTo(pos);
                 }
             }
-            setTimeout(() => { mapLive.invalidateSize(); update(); }, 200);
+
+            setTimeout(() => { 
+                mapLive.invalidateSize(); 
+                update(); 
+            }, 200);
+
+            // Actualización automática cada 30 segundos
             setInterval(update, 30000);
-        } catch (e) { console.error("Error Mapa Vivo:", e); }
+        } catch (e) { 
+            console.error("Error al inicializar Mapa en Vivo:", e); 
+        }
     }
 })();
