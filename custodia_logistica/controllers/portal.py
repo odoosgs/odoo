@@ -115,7 +115,7 @@ class CustodiaPortal(CustomerPortal):
     # =========================================================
     @http.route('/get_nodos_by_maestra/<int:maestra_id>', type='http', auth='user', website=True, csrf=False)
     def get_nodos_by_maestra(self, maestra_id, **kwargs):
-        """Devuelve los nodos de origen y destino únicos de una Ruta Maestra"""
+        # Buscamos las variantes de ruta para esa maestra
         rutas = request.env['custodia.ruta'].sudo().search([
             ('ruta_maestra_id', '=', maestra_id)
         ])
@@ -133,15 +133,15 @@ class CustodiaPortal(CustomerPortal):
                 destinos.append({'id': r.nodo_destino_id.id, 'name': r.nodo_destino_id.name})
                 seen_dest.add(r.nodo_destino_id.id)
 
-        # DEVOLVER RESPUESTA HTTP CON JSON MANUAL
+        # Respuesta JSON manual para que sea compatible con fetch estándar
+        data = {
+            'origenes': sorted(origenes, key=lambda x: x['name']),
+            'destinos': sorted(destinos, key=lambda x: x['name'])
+        }
         return request.make_response(
-            json.dumps({
-                'origenes': sorted(origenes, key=lambda x: x['name']),
-                'destinos': sorted(destinos, key=lambda x: x['name'])
-            }),
+            json.dumps(data),
             headers=[('Content-Type', 'application/json')]
         )
-
     # =========================================================
     # FORMULARIO NUEVA SOLICITUD
     # =========================================================
