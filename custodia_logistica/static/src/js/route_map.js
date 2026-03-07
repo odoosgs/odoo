@@ -3,69 +3,54 @@
 
     console.log("Archivo route_map.js detectado por el navegador");
 
-document.addEventListener("DOMContentLoaded", function () {
-        console.log("Archivo route_map.js activo en el Portal");
+// --- LÓGICA DE FILTRADO DE ALTA DISPONIBILIDAD ---
+    document.addEventListener("change", async function (e) {
+        // Verificamos si el elemento que cambió es nuestro selector de ruta
+        if (e.target && e.target.id === "ruta_maestra_id") {
+            const maestraId = e.target.value;
+            const origenSelect = document.getElementById("nodo_origen_id");
+            const destinoSelect = document.getElementById("nodo_destino_id");
 
-        const maestroSelect = document.getElementById("ruta_maestra_id");
-        const origenSelect = document.getElementById("nodo_origen_id");
-        const destinoSelect = document.getElementById("nodo_destino_id");
+            console.log("Detectado cambio en Ruta Maestra (Delegado). ID:", maestraId);
 
-        if (maestroSelect) {
-            console.log("Formulario de solicitud detectado");
+            if (!maestraId || !origenSelect || !destinoSelect) return;
 
-            // Forzamos el reset de los campos al cargar por si acaso
-            origenSelect.disabled = true;
-            destinoSelect.disabled = true;
+            try {
+                const response = await fetch(`/get_nodos_by_maestra/${maestraId}`);
+                if (!response.ok) return;
 
-            maestroSelect.addEventListener("change", async function(e) {
-                const maestraId = e.target.value; // Usamos e.target para mayor precisión
-                console.log("Evento change disparado. ID:", maestraId);
+                const result = await response.json();
+                console.log("Datos para llenar selectores:", result);
 
-                if (!maestraId) {
-                    origenSelect.disabled = true;
-                    destinoSelect.disabled = true;
-                    return;
-                }
+                // Llenar Origen
+                origenSelect.innerHTML = '<option value="">-- Seleccione salida --</option>';
+                result.origenes.forEach(n => {
+                    let opt = document.createElement('option');
+                    opt.value = n.id;
+                    opt.textContent = n.name;
+                    origenSelect.appendChild(opt);
+                });
 
-                try {
-                    // Petición HTTP estándar (GET)
-                    const response = await fetch(`/get_nodos_by_maestra/${maestraId}`);
-                    
-                    if (!response.ok) {
-                        console.error("Error en respuesta del servidor:", response.status);
-                        return;
-                    }
+                // Llenar Destino
+                destinoSelect.innerHTML = '<option value="">-- Seleccione llegada --</option>';
+                result.destinos.forEach(n => {
+                    let opt = document.createElement('option');
+                    opt.value = n.id;
+                    opt.textContent = n.name;
+                    destinoSelect.appendChild(opt);
+                });
 
-                    const result = await response.json();
-                    console.log("Nodos recibidos:", result);
+                // ACTIVACIÓN FÍSICA
+                origenSelect.disabled = false;
+                destinoSelect.disabled = false;
+                origenSelect.removeAttribute('disabled');
+                destinoSelect.removeAttribute('disabled');
+                
+                console.log("Selectores habilitados y con datos.");
 
-                    // Limpiar y llenar Origen
-                    origenSelect.innerHTML = '<option value="">-- Seleccione salida --</option>';
-                    result.origenes.forEach(n => {
-                        let opt = document.createElement('option');
-                        opt.value = n.id;
-                        opt.textContent = n.name;
-                        origenSelect.appendChild(opt);
-                    });
-
-                    // Limpiar y llenar Destino
-                    destinoSelect.innerHTML = '<option value="">-- Seleccione llegada --</option>';
-                    result.destinos.forEach(n => {
-                        let opt = document.createElement('option');
-                        opt.value = n.id;
-                        opt.textContent = n.name;
-                        destinoSelect.appendChild(opt);
-                    });
-
-                    // HABILITAR LOS CAMPOS
-                    origenSelect.disabled = false;
-                    destinoSelect.disabled = false;
-                    console.log("Campos de nodos habilitados");
-
-                } catch (err) {
-                    console.error("Error al procesar el filtrado:", err);
-                }
-            });
+            } catch (err) {
+                console.error("Error en cascada:", err);
+            }
         }
     });
     
