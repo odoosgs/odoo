@@ -3,53 +3,40 @@
 
     console.log("Archivo route_map.js detectado por el navegador");
 
-    document.addEventListener("DOMContentLoaded", function () {
-        console.log("DOM completamente cargado - Iniciando lógica de Custodia");
+document.addEventListener("DOMContentLoaded", function () {
+        console.log("Archivo route_map.js activo en el Portal");
 
-        // 1. Inicializar mapas si existen los contenedores
-        setTimeout(() => { 
-            if (document.getElementById("route-map")) initPlannedRouteMap(); 
-        }, 200);
-        
-        setTimeout(() => { 
-            if (document.getElementById("live-map")) initLiveTrackingMap(); 
-        }, 600);
-
-        // 2. Lógica de Filtrado en Cascada (Selectores del Formulario)
         const maestroSelect = document.getElementById("ruta_maestra_id");
         const origenSelect = document.getElementById("nodo_origen_id");
         const destinoSelect = document.getElementById("nodo_destino_id");
 
         if (maestroSelect) {
-            console.log("Selector de Ruta Maestra encontrado");
+            console.log("Formulario de solicitud detectado");
 
             maestroSelect.addEventListener("change", async function() {
                 const maestraId = this.value;
-                console.log("Cambio detectado en Ruta Maestra. ID seleccionado:", maestraId);
+                console.log("Ruta Maestra seleccionada, ID:", maestraId);
 
                 if (!maestraId) {
                     origenSelect.disabled = true;
                     destinoSelect.disabled = true;
-                    origenSelect.innerHTML = '<option value="">Primero seleccione ruta...</option>';
                     return;
                 }
 
                 try {
-                    console.log("Enviando petición FETCH (Standard HTTP) a Odoo...");
-                    // Cambiamos a GET para mayor simplicidad en endpoints type='http'
-                    const response = await fetch(`/get_nodos_by_maestra/${maestraId}`, {
-                        method: "GET",
-                        headers: { "Content-Type": "application/json" }
-                    });
+                    // Petición HTTP estándar (GET)
+                    const response = await fetch(`/get_nodos_by_maestra/${maestraId}`);
+                    
+                    if (!response.ok) {
+                        console.error("Error en respuesta del servidor:", response.status);
+                        return;
+                    }
 
-                    if (!response.ok) throw new Error("Error en la respuesta del servidor");
+                    const result = await response.json();
+                    console.log("Nodos recibidos:", result);
 
-                    // Ahora el resultado ya NO viene envuelto en .result
-                    const result = await response.json(); 
-                    console.log("Datos procesados exitosamente:", result);
-
-                    // Llenar Origen
-                    origenSelect.innerHTML = '<option value="">Seleccione salida...</option>';
+                    // Limpiar y llenar Origen
+                    origenSelect.innerHTML = '<option value="">-- Seleccione salida --</option>';
                     result.origenes.forEach(n => {
                         let opt = document.createElement('option');
                         opt.value = n.id;
@@ -57,26 +44,27 @@
                         origenSelect.appendChild(opt);
                     });
 
-                    // Llenar Destino
-                    destinoSelect.innerHTML = '<option value="">Seleccione llegada...</option>';
+                    // Limpiar y llenar Destino
+                    destinoSelect.innerHTML = '<option value="">-- Seleccione llegada --</option>';
                     result.destinos.forEach(n => {
                         let opt = document.createElement('option');
                         opt.value = n.id;
                         opt.textContent = n.name;
                         destinoSelect.appendChild(opt);
                     });
-                    
+
+                    // HABILITAR LOS CAMPOS
                     origenSelect.disabled = false;
                     destinoSelect.disabled = false;
-                    console.log("Selectores de origen y destino habilitados y actualizados.");
+                    console.log("Campos de nodos habilitados");
 
-                } catch (e) {
-                    console.error("Error en el proceso de filtrado:", e);
+                } catch (err) {
+                    console.error("Error al procesar el filtrado:", err);
                 }
             });
         }
     });
-
+    
     // --- MAPA 1: RUTA PLANEADA ---
     async function initPlannedRouteMap() {
         const container = document.getElementById("route-map");
