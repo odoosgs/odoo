@@ -13,9 +13,13 @@ document.addEventListener("DOMContentLoaded", function () {
         if (maestroSelect) {
             console.log("Formulario de solicitud detectado");
 
-            maestroSelect.addEventListener("change", async function() {
-                const maestraId = this.value;
-                console.log("Ruta Maestra seleccionada, ID:", maestraId);
+            // Forzamos el reset de los campos al cargar por si acaso
+            origenSelect.disabled = true;
+            destinoSelect.disabled = true;
+
+            maestroSelect.addEventListener("change", async function(e) {
+                const maestraId = e.target.value; // Usamos e.target para mayor precisión
+                console.log("Evento change disparado. ID:", maestraId);
 
                 if (!maestraId) {
                     origenSelect.disabled = true;
