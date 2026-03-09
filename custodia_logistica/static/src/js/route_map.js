@@ -1,33 +1,30 @@
 (function () {
     "use strict";
 
-    console.log("Archivo route_map.js cargado exitosamente.");
-
     // =========================================================
     // 1. ARRANCAR MAPAS AL CARGAR LA PÁGINA
     // =========================================================
     document.addEventListener("DOMContentLoaded", function () {
         console.log("DOM listo - Verificando existencia de mapas...");
 
-        // Pequeño retraso para asegurar que los elementos del portal estén renderizados
         setTimeout(() => {
             const routeMapContainer = document.getElementById("route-map");
             const liveMapContainer = document.getElementById("live-map");
 
             if (routeMapContainer) {
                 console.log("Iniciando Mapa de Ruta Planeada...");
-                initPlannedRouteMap();
+                initPlannedRouteMap(routeMapContainer);
             }
 
             if (liveMapContainer) {
                 console.log("Iniciando Mapa de Monitoreo en Vivo...");
-                initLiveTrackingMap();
+                initLiveTrackingMap(liveMapContainer);
             }
         }, 500);
     });
 
     // =========================================================
-    // 2. LÓGICA DE FILTRADO DE SELECTORES (DELEGACIÓN)
+    // 2. LÓGICA DE FILTRADO DE SELECTORES (FORMULARIO)
     // =========================================================
     document.addEventListener("change", async function (e) {
         if (e.target && e.target.id === "ruta_maestra_id") {
@@ -35,44 +32,33 @@
             const origenSelect = document.getElementById("nodo_origen_id");
             const destinoSelect = document.getElementById("nodo_destino_id");
 
-            console.log("Cambio en Ruta Maestra detectado. ID:", maestraId);
-
             if (!maestraId || !origenSelect || !destinoSelect) return;
 
             try {
                 const response = await fetch(`/get_nodos_by_maestra/${maestraId}`);
                 if (!response.ok) return;
-
                 const result = await response.json();
 
-                // Llenar Origen
                 origenSelect.innerHTML = '<option value="">-- Seleccione salida --</option>';
                 result.origenes.forEach(n => {
                     let opt = document.createElement('option');
-                    opt.value = n.id;
-                    opt.textContent = n.name;
+                    opt.value = n.id; opt.textContent = n.name;
                     origenSelect.appendChild(opt);
                 });
 
-                // Llenar Destino
                 destinoSelect.innerHTML = '<option value="">-- Seleccione llegada --</option>';
                 result.destinos.forEach(n => {
                     let opt = document.createElement('option');
-                    opt.value = n.id;
-                    opt.textContent = n.name;
+                    opt.value = n.id; opt.textContent = n.name;
                     destinoSelect.appendChild(opt);
                 });
 
-                // Desbloqueo de campos
                 origenSelect.disabled = false;
                 destinoSelect.disabled = false;
                 origenSelect.removeAttribute('disabled');
                 destinoSelect.removeAttribute('disabled');
-                
-                console.log("Selectores de nodos actualizados y habilitados.");
-
             } catch (err) {
-                console.error("Error en el filtrado de nodos:", err);
+                console.error("Error en el filtrado:", err);
             }
         }
     });
@@ -80,11 +66,9 @@
     // =========================================================
     // 3. FUNCIÓN: MAPA 1 - RUTA PLANEADA
     // =========================================================
-    async function initPlannedRouteMap() {
-        const container = document.getElementById("route-map");
-        if (!container || !container.dataset.rutaId) return;
-
+    async function initPlannedRouteMap(container) {
         const rutaId = container.dataset.rutaId;
+        if (!rutaId) return;
 
         try {
             const response = await fetch("/custodia/ruta/" + rutaId + "/coordinates", {
@@ -101,79 +85,54 @@
             const origin = coords[0];
             const destination = coords[coords.length - 1];
 
-            // Petición a OSRM para dibujo de polilínea por carretera
-            const osrmUrl = `https://router.project-osrm.org/route/v1/driving/${origin.lng},${origin.lat};${destination.lng},${destination.lat}?overview=full&geometries=geojson`;
-
-            const routeResponse = await fetch(osrmUrl);
-            const routeData = await routeResponse.json();
-
-            if (!routeData.routes || routeData.routes.length === 0) return;
-
-            const route = routeData.routes[0];
-            const routeGeo = route.geometry;
-
             const mapRoute = L.map("route-map").setView([origin.lat, origin.lng], 6);
             L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png").addTo(mapRoute);
 
-            const routeLayer = L.geoJSON(routeGeo, {
-                style: { color: "blue", weight: 5 }
-            }).addTo(mapRoute);
+            // Dibujo de ruta por carretera vía OSRM
+            const osrmUrl = `https://router.project-osrm.org/route/v1/driving/${origin.lng},${origin.lat};${destination.lng},${destination.lat}?overview=full&geometries=geojson`;
+            const routeResponse = await fetch(osrmUrl);
+            const routeData = await routeResponse.json();
 
-            mapRoute.fitBounds(routeLayer.getBounds());
-
-            // Resumen de ruta (Distancia y Tiempo)
-            const distanceKm = (route.distance / 1000).toFixed(1);
-            const totalMinutes = Math.round(route.duration / 60);
-            const hours = Math.floor(totalMinutes / 60);
-            const minutes = totalMinutes % 60;
-
-            const summaryDiv = document.getElementById("route-summary");
-            if (summaryDiv) {
-                document.getElementById("route-distance").textContent = distanceKm + " km";
-                document.getElementById("route-duration").textContent = (hours > 0) ? `${hours} h ${minutes} min` : `${minutes} min`;
-                summaryDiv.style.display = "block";
+            if (routeData.routes && routeData.routes.length > 0) {
+                const routeLayer = L.geoJSON(routeData.routes[0].geometry, {
+                    style: { color: "blue", weight: 5 }
+                }).addTo(mapRoute);
+                mapRoute.fitBounds(routeLayer.getBounds());
+                
+                // Actualizar resumen
+                const distanceKm = (routeData.routes[0].distance / 1000).toFixed(1);
+                if (document.getElementById("route-distance")) {
+                    document.getElementById("route-distance").textContent = distanceKm + " km";
+                }
             }
-            setTimeout(() => mapRoute.invalidateSize(), 200);
-        } catch (e) {
-            console.error("Error al inicializar Mapa de Ruta:", e);
-        }
+        } catch (e) { console.error("Error Mapa Ruta:", e); }
     }
 
     // =========================================================
     // 4. FUNCIÓN: MAPA 2 - MONITOREO EN VIVO
     // =========================================================
-    async function initLiveTrackingMap() {
-        const container = document.getElementById("live-map");
-        if (!container) return;
-
+    async function initLiveTrackingMap(container) {
         const serviceId = container.dataset.serviceId;
         const token = container.dataset.token;
 
         try {
-            // Ciudad de México como punto de partida por defecto
-            const mapLive = L.map("live-map").setView([19.4326, -99.1332], 5);
+            // Inicializamos el mapa. Leaflet necesita un centro inicial.
+            const mapLive = L.map("live-map").setView([23.6345, -102.5528], 5); // Centro de México
             L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png").addTo(mapLive);
-            const marker = L.marker([19.4326, -99.1332]).addTo(mapLive);
+            const marker = L.marker([23.6345, -102.5528]).addTo(mapLive);
 
             async function update() {
                 const res = await fetch(`/mis-servicios/${serviceId}/tracking?access_token=${token}`);
                 const data = await res.json();
                 if (data.lat && data.lng) {
                     const pos = [data.lat, data.lng];
-                    marker.setLatLng(pos).bindPopup("Última actualización: " + data.last_update).openPopup();
+                    marker.setLatLng(pos);
                     mapLive.panTo(pos);
+                    if (mapLive.getZoom() < 10) mapLive.setZoom(13);
                 }
             }
-
-            setTimeout(() => { 
-                mapLive.invalidateSize(); 
-                update(); 
-            }, 200);
-
-            // Actualización automática cada 30 segundos
+            update();
             setInterval(update, 30000);
-        } catch (e) { 
-            console.error("Error al inicializar Mapa en Vivo:", e); 
-        }
+        } catch (e) { console.error("Error Mapa Vivo:", e); }
     }
 })();
