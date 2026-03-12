@@ -1,73 +1,123 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
-  <!-- Vista formulario del padre -->
-  <record id="view_custodia_service_form" model="ir.ui.view">
-    <field name="name">custodia.service.form</field>
-    <field name="model">custodia.service</field>
-    <field name="arch" type="xml">
-      <form string="Servicio de Custodia">
-        <header>
-          <button name="action_aprobar" type="object" string="Aprobar" class="btn-primary"
-                  invisible="state != 'solicitado'"/>
-          <button name="action_asignar" type="object" string="Asignar" class="btn-secondary"
-                  invisible="state != 'aprobado'"/>
-          <button name="action_ejecutar" type="object" string="Ejecutar" class="btn-secondary"
-                  invisible="state != 'asignado'"/>
-          <button name="action_finalizar" type="object" string="Finalizar" class="btn-success"
-                  invisible="state != 'en_ejecucion'"/>
-          <button name="action_cancelar" type="object" string="Cancelar" class="btn-danger"
-                  invisible="state == 'finalizado'"/>
-          <field name="state" widget="statusbar"
-                 statusbar_visible="solicitado,aprobado,asignado,en_ejecucion,finalizado,cancelado"/>
-        </header>
 
-        <sheet>
-          <group>
-            <field name="sequence"/>
-            <field name="partner_id"/>
-            <field name="contact_id"/>
-            <field name="carrier_id"/>
-            <field name="ruta_id"/>
-            <field name="ruta_tipo"/>
-            <field name="nivel_seguridad"/>
-            <field name="start_datetime"/>
-            <field name="load_id"/>
-          </group>
+    <record id="view_custodia_service_list" model="ir.ui.view">
+        <field name="name">custodia.service.list</field>
+        <field name="model">custodia.service</field>
+        <field name="arch" type="xml">
+            <list string="Servicios de Custodia" decoration-info="state == 'solicitado'" decoration-success="state == 'aprobado'">
+                <field name="sequence"/>
+                <field name="start_datetime"/>
+                <field name="partner_id"/>
+                <field name="ruta_maestra_id"/>
+                <field name="load_id"/>
+                <field name="state" widget="badge" 
+                       decoration-info="state == 'solicitado'" 
+                       decoration-success="state == 'aprobado'"
+                       decoration-warning="state == 'asignado'"
+                       decoration-primary="state == 'en_ejecucion'"/>
+            </list>
+        </field>
+    </record>
 
-          <notebook>
-            <page string="Asignaciones">
-              <field name="asignacion_ids" mode="list,form"/>
-            </page>
-          </notebook>
-        </sheet>
-        <!-- Chatter -->
-        <chatter/>
-      </form>
-    </field>
-  </record>
+    <record id="view_custodia_service_calendar" model="ir.ui.view">
+        <field name="name">custodia.service.calendar</field>
+        <field name="model">custodia.service</field>
+        <field name="arch" type="xml">
+            <calendar string="Planeación de Custodias" 
+                      date_start="start_datetime" 
+                      color="state" 
+                      mode="month"
+                      event_open_popup="True">
+                <field name="partner_id"/>
+                <field name="ruta_maestra_id"/>
+                <field name="load_id"/>
+                <field name="state" filters="1"/>
+            </calendar>
+        </field>
+    </record>
 
-  <record id="action_custodia_service" model="ir.actions.act_window">
-      <field name="name">Servicios de Custodia</field>
-      <field name="res_model">custodia.service</field>
-      <field name="view_mode">list,calendar,form,kanban</field> <field name="help" type="html">
-          <p class="o_view_nocontent_smiling_face">
-              Crea tu primera alerta o servicio de custodia.
-          </p>
-      </field>
-  </record>
+    <record id="view_custodia_service_form" model="ir.ui.view">
+        <field name="name">custodia.service.form</field>
+        <field name="model">custodia.service</field>
+        <field name="arch" type="xml">
+            <form string="Servicio de Custodia">
+                <header>
+                    <button name="action_aprobar" type="object" string="Aprobar / Confirmar" class="btn-primary"
+                            invisible="state != 'solicitado'"/>
+                    <button name="action_asignar" type="object" string="Asignar" class="btn-secondary"
+                            invisible="state != 'aprobado'"/>
+                    <button name="action_ejecutar" type="object" string="Ejecutar" class="btn-secondary"
+                            invisible="state != 'asignado'"/>
+                    <button name="action_finalizar" type="object" string="Finalizar" class="btn-success"
+                            invisible="state != 'en_ejecucion'"/>
+                    <button name="action_cancelar" type="object" string="Cancelar" class="btn-danger"
+                            invisible="state == 'finalizado'"/>
+                    <field name="state" widget="statusbar"
+                           statusbar_visible="solicitado,aprobado,asignado,en_ejecucion,finalizado"/>
+                </header>
+                <sheet>
+                    <div class="oe_title">
+                        <h1><field name="sequence"/></h1>
+                    </div>
+                    <group>
+                        <group string="Cliente y Contacto">
+                            <field name="partner_id"/>
+                            <field name="contact_id" domain="[('parent_id','=',partner_id)]"/>
+                            <field name="load_id" placeholder="Ej. L-99823"/>
+                        </group>
+                        <group string="Programación">
+                            <field name="start_datetime"/>
+                            <field name="nivel_seguridad"/>
+                            <field name="ruta_maestra_id"/>
+                            <field name="ruta_id" domain="[('ruta_maestra_id','=',ruta_maestra_id)]"/>
+                        </group>
+                    </group>
+                    <notebook>
+                        <page string="Logística de Unidad" name="logistica">
+                            <group>
+                                <group>
+                                    <field name="carrier_id"/>
+                                    <field name="transporte"/>
+                                    <field name="tipo_unidad"/>
+                                </group>
+                                <group>
+                                    <field name="placas"/>
+                                    <field name="operador1_nombre"/>
+                                    <field name="tel_monitoreo_1"/>
+                                </group>
+                            </group>
+                        </page>
+                        <page string="Asignaciones" name="asignaciones">
+                            <field name="asignacion_ids"/>
+                        </page>
+                    </notebook>
+                </sheet>
+                <div class="oe_chatter">
+                    <field name="message_follower_ids"/>
+                    <field name="activity_ids"/>
+                    <field name="message_ids"/>
+                </div>
+            </form>
+        </field>
+    </record>
 
-  <!-- Acción y menú para servicios -->
+    <record id="action_custodia_service" model="ir.actions.act_window">
+        <field name="name">Servicios de Custodia</field>
+        <field name="res_model">custodia.service</field>
+        <field name="view_mode">list,calendar,form,kanban</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Crea tu primera alerta o servicio de custodia.
+            </p>
+        </field>
+    </record>
 
-  <record id="action_custodia_service" model="ir.actions.act_window">
-    <field name="name">Servicios de Custodia</field>
-    <field name="res_model">custodia.service</field>
-    <field name="view_mode">tree,calendar,form,kanban</field> <field name="help" type="html">
-        <p class="o_view_nocontent_smiling_face">
-            Crea tu primera alerta o servicio de custodia.
-        </p>
-    </field>
-  </record>
+    <menuitem id="menu_custodia_root" name="Custodia de Valores" sequence="10"/>
+    <menuitem id="menu_custodia_service" 
+              name="Servicios" 
+              parent="menu_custodia_root" 
+              action="action_custodia_service" 
+              sequence="10"/>
 
-  <menuitem id="menu_custodia_root" name="Custodia de Valores"/>
-  <menuitem id="menu_custodia_service" name="Servicios" parent="menu_custodia_root" action="action_custodia_service"/>
 </odoo>
