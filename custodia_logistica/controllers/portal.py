@@ -163,37 +163,47 @@ class CustodiaPortal(CustomerPortal):
     def solicitar_submit(self, **post):
         partner = request.env.user.partner_id.commercial_partner_id
         try:
-            # 1. La fecha sigue siendo obligatoria
+            # 1. Validación básica de fecha
             start_dt = False
             if post.get('start_datetime'):
                 start_dt = datetime.strptime(post['start_datetime'], "%Y-%m-%dT%H:%M")
             else:
-                raise Exception("La fecha de inicio es obligatoria para programar la alerta.")
+                raise Exception("La fecha de inicio es obligatoria.")
 
-            # 2. Intentar buscar la ruta variante (ahora es opcional)
-            maestra_id = int(post.get('ruta_maestra_id', 0))
-            origen_id = int(post.get('nodo_origen_id', 0))
-            destino_id = int(post.get('nodo_destino_id', 0))
-            
+            # 2. Limpieza de IDs (Evita el ForeignKeyViolation)
+            # Solo asignamos el ID si es un número mayor a 0, de lo contrario False
+            def clean_id(field_name):
+                val = post.get(field_name)
+                try:
+                    return int(val) if val and int(val) > 0 else False
+                except:
+                    return False
+
+            maestra_id = clean_id('ruta_maestra_id')
+            origen_id = clean_id('nodo_origen_id')
+            destino_id = clean_id('nodo_destino_id')
+            carrier_id = clean_id('carrier_id')
+
+            # 3. Buscar variante de ruta
             ruta_variante = request.env['custodia.ruta'].sudo().search([
                 ('ruta_maestra_id', '=', maestra_id),
                 ('nodo_origen_id', '=', origen_id),
                 ('nodo_destino_id', '=', destino_id)
             ], limit=1)
 
-            # 3. Mapeo de valores (Si no vienen, se van como False/None)
+            # 4. Preparar valores
             vals = {
                 'partner_id': partner.id,
-                'contact_id': int(post.get('contact_id')) if post.get('contact_id') else False,
+                'contact_id': clean_id('contact_id'),
                 'start_datetime': start_dt,
-                'state': 'solicitado', # Se guarda como ALERTA
+                'state': 'solicitado',
+                'ruta_maestra_id': maestra_id,
+                'nodo_origen_id': origen_id,
+                'nodo_destino_id': destino_id,
                 'ruta_id': ruta_variante.id if ruta_variante else False,
-                'ruta_maestra_id': maestra_id if maestra_id else False,
-                'nodo_origen_id': origen_id if origen_id else False,
-                'nodo_destino_id': destino_id if destino_id else False,
-                'carrier_id': int(post.get('carrier_id')) if post.get('carrier_id') else False,
-                'nivel_seguridad': post.get('nivel_seguridad') if post.get('nivel_seguridad') else False,
-                'load_id': post.get('load_id') if post.get('load_id') else "PENDIENTE",
+                'carrier_id': carrier_id,
+                'nivel_seguridad': post.get('nivel_seguridad'),
+                'load_id': post.get('load_id') or "PENDIENTE",
                 'tipo_unidad': post.get('tipo_unidad'),
                 'placas': post.get('placas'),
                 'transporte': post.get('transporte'),
@@ -201,20 +211,18 @@ class CustodiaPortal(CustomerPortal):
                 'tel_monitoreo_1': post.get('tel_monitoreo_1'),
             }
 
+            # 5. Crear el registro (Sudo para evitar problemas de permisos en portal)
             service = request.env['custodia.service'].sudo().create(vals)
             return request.redirect(f'/mis-servicios/{service.id}?access_token={service.access_token}')
 
         except Exception as e:
-            # Manejo de error de duplicidad de Load ID específicamente
-            error_msg = str(e)
-            if 'load_id_unique' in error_msg:
-                error_msg = "El Load ID ya existe en otro servicio. Por favor verifique."
-            
+            # IMPORTANTE: No hacemos búsquedas en la BD aquí si falló el create, 
+            # porque la transacción está abortada. Usamos una respuesta simple.
             return request.render('custodia_logistica.portal_service_form', {
-                'error': error_msg,
-                'carriers': request.env['custodia.carrier'].sudo().search([]),
-                'rutas_maestras': request.env['custodia.ruta.maestra'].sudo().search([]),
+                'error': f"Error al guardar: {str(e)}. Verifique que los puntos de origen/destino sean válidos.",
                 'contacts': request.env['res.partner'].sudo().search([('parent_id', '=', partner.id)]),
+                'rutas_maestras': request.env['custodia.ruta.maestra'].sudo().search([]),
+                'carriers': request.env['custodia.carrier'].sudo().search([]),
                 'cliente': partner,
             })
             
