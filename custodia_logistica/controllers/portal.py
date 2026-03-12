@@ -163,56 +163,59 @@ class CustodiaPortal(CustomerPortal):
     def solicitar_submit(self, **post):
         partner = request.env.user.partner_id.commercial_partner_id
         try:
-            # 1. Procesar Fecha
+            # 1. La fecha sigue siendo obligatoria
             start_dt = False
             if post.get('start_datetime'):
                 start_dt = datetime.strptime(post['start_datetime'], "%Y-%m-%dT%H:%M")
+            else:
+                raise Exception("La fecha de inicio es obligatoria para programar la alerta.")
 
-            # 2. BUSCAR LA VARIANTE DE RUTA (CRÍTICO)
-            # Buscamos la 'custodia.ruta' que coincida con Maestra + Origen + Destino
+            # 2. Intentar buscar la ruta variante (ahora es opcional)
             maestra_id = int(post.get('ruta_maestra_id', 0))
             origen_id = int(post.get('nodo_origen_id', 0))
             destino_id = int(post.get('nodo_destino_id', 0))
-
+            
             ruta_variante = request.env['custodia.ruta'].sudo().search([
                 ('ruta_maestra_id', '=', maestra_id),
                 ('nodo_origen_id', '=', origen_id),
                 ('nodo_destino_id', '=', destino_id)
             ], limit=1)
 
-            if not ruta_variante:
-                raise Exception("La combinación de ruta y puntos seleccionada no es válida.")
-
-            # 3. Preparar Valores para el registro
+            # 3. Mapeo de valores (Si no vienen, se van como False/None)
             vals = {
                 'partner_id': partner.id,
                 'contact_id': int(post.get('contact_id')) if post.get('contact_id') else False,
-                'carrier_id': int(post.get('carrier_id')) if post.get('carrier_id') else False,
-                'ruta_id': ruta_variante.id, # Aquí se asigna el ID que faltaba
                 'start_datetime': start_dt,
-                'nivel_seguridad': post.get('nivel_seguridad'),
-                'load_id': post.get('load_id'),
+                'state': 'solicitado', # Se guarda como ALERTA
+                'ruta_id': ruta_variante.id if ruta_variante else False,
+                'ruta_maestra_id': maestra_id if maestra_id else False,
+                'nodo_origen_id': origen_id if origen_id else False,
+                'nodo_destino_id': destino_id if destino_id else False,
+                'carrier_id': int(post.get('carrier_id')) if post.get('carrier_id') else False,
+                'nivel_seguridad': post.get('nivel_seguridad') if post.get('nivel_seguridad') else False,
+                'load_id': post.get('load_id') if post.get('load_id') else "PENDIENTE",
                 'tipo_unidad': post.get('tipo_unidad'),
                 'placas': post.get('placas'),
                 'transporte': post.get('transporte'),
                 'operador1_nombre': post.get('operador1_nombre'),
                 'tel_monitoreo_1': post.get('tel_monitoreo_1'),
-                'state': 'solicitado',
             }
 
             service = request.env['custodia.service'].sudo().create(vals)
-            service._portal_ensure_token()
-
             return request.redirect(f'/mis-servicios/{service.id}?access_token={service.access_token}')
 
         except Exception as e:
-            # Si hay error, recargamos el formulario con los datos necesarios
+            # Manejo de error de duplicidad de Load ID específicamente
+            error_msg = str(e)
+            if 'load_id_unique' in error_msg:
+                error_msg = "El Load ID ya existe en otro servicio. Por favor verifique."
+            
             return request.render('custodia_logistica.portal_service_form', {
+                'error': error_msg,
                 'carriers': request.env['custodia.carrier'].sudo().search([]),
                 'rutas_maestras': request.env['custodia.ruta.maestra'].sudo().search([]),
                 'contacts': request.env['res.partner'].sudo().search([('parent_id', '=', partner.id)]),
                 'cliente': partner,
-                'error': str(e),
             })
             
     # =========================================================
