@@ -46,6 +46,28 @@
     </field>
   </record>
 
+  <record id="view_custodia_service_calendar" model="ir.ui.view">
+    <field name="name">custodia.service.calendar</field>
+    <field name="model">custodia.service</field>
+    <field name="arch" type="xml">
+        <calendar string="Planeación de Custodias" 
+                  date_start="start_datetime" 
+                  color="state" 
+                  quick_add="False"
+                  mode="month"
+                  event_open_popup="True">
+            
+            <field name="partner_id" avatar_field="image_128"/>
+            <field name="ruta_maestra_id"/>
+            <field name="load_id"/>
+            <field name="nivel_seguridad"/>
+            
+            <field name="state" filters="1"/>
+        </calendar>
+    </field>
+</record>
+  
+
   <!-- Acción y menú para servicios -->
   <record id="action_custodia_service" model="ir.actions.act_window">
     <field name="name">Servicios de Custodia</field>
