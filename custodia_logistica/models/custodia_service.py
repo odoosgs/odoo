@@ -16,6 +16,8 @@ class CustodiaService(models.Model):
     partner_id = fields.Many2one('res.partner', string='Cliente', required=True, tracking=True)
     contact_id = fields.Many2one('res.partner', string='Persona solicitante', required=True, tracking=True)
 
+    planner_id = fields.Many2one('res.users', string='Planeador', tracking=True)
+
     carrier_id = fields.Many2one('custodia.carrier', string='Carrier', tracking=True)
     ruta_id = fields.Many2one('custodia.ruta', string='Ruta', tracking=True)
 
