@@ -162,48 +162,46 @@ class CustodiaPortal(CustomerPortal):
     @http.route(['/solicitar-servicio/submit'], type='http', auth='user', website=True, csrf=True)
     def solicitar_submit(self, **post):
         partner = request.env.user.partner_id.commercial_partner_id
-        try:
-            # 1. Procesar Fecha
-            start_dt = False
-            if post.get('start_datetime'):
-                start_dt = datetime.strptime(post['start_datetime'], "%Y-%m-%dT%H:%M")
 
-            # 2. BUSCAR LA VARIANTE DE RUTA (CRÍTICO)
-            # Buscamos la 'custodia.ruta' que coincida con Maestra + Origen + Destino
-            maestra_id = int(post.get('ruta_maestra_id', 0))
-            origen_id = int(post.get('nodo_origen_id', 0))
-            destino_id = int(post.get('nodo_destino_id', 0))
+        start_dt = False
+        if post.get('start_datetime'):
+            start_dt = datetime.strptime(post['start_datetime'], "%Y-%m-%dT%H:%M")
 
-            ruta_variante = request.env['custodia.ruta'].sudo().search([
-                ('ruta_maestra_id', '=', maestra_id),
-                ('nodo_origen_id', '=', origen_id),
-                ('nodo_destino_id', '=', destino_id)
-            ], limit=1)
+        if not post.get('contact_id') or not start_dt:
+            return request.redirect('/solicitar-servicio?error=missing_required')
 
-            if not ruta_variante:
-                raise Exception("La combinación de ruta y puntos seleccionada no es válida.")
+        vals = {
+            'partner_id': partner.id,
+            'contact_id': int(post.get('contact_id')),
+            'start_datetime': start_dt,
+            'carrier_id': int(post['carrier_id']) if post.get('carrier_id') else False,
+            'nivel_seguridad': post.get('nivel_seguridad') or False,
+            'load_id': post.get('load_id') or False,
+        }
 
-            # 3. Preparar Valores para el registro
-            vals = {
-                'partner_id': partner.id,
-                'contact_id': int(post.get('contact_id')) if post.get('contact_id') else False,
-                'carrier_id': int(post.get('carrier_id')) if post.get('carrier_id') else False,
-                'ruta_id': ruta_variante.id, # Aquí se asigna el ID que faltaba
-                'start_datetime': start_dt,
-                'nivel_seguridad': post.get('nivel_seguridad'),
-                'load_id': post.get('load_id'),
-                'tipo_unidad': post.get('tipo_unidad'),
-                'placas': post.get('placas'),
-                'transporte': post.get('transporte'),
-                'operador1_nombre': post.get('operador1_nombre'),
-                'tel_monitoreo_1': post.get('tel_monitoreo_1'),
-                'state': 'solicitado',
-            }
+        if post.get('ruta_id'):
+            vals['ruta_id'] = int(post['ruta_id'])
 
-            service = request.env['custodia.service'].sudo().create(vals)
-            service._portal_ensure_token()
+        required_for_service = all([
+            vals.get('carrier_id'),
+            vals.get('ruta_id'),
+            vals.get('nivel_seguridad'),
+            vals.get('load_id'),
+        ])
 
-            return request.redirect(f'/mis-servicios/{service.id}?access_token={service.access_token}')
+        vals['request_type'] = 'servicio' if required_for_service else 'alerta'
+        vals['state'] = 'solicitado' if required_for_service else 'alerta'
+
+        service = request.env['custodia.service'].sudo().create(vals)
+        service._portal_ensure_token()
+        service.message_post(
+            body='Registro creado desde portal como %s el %s.' % (
+                service.request_type,
+                fields.Datetime.to_string(fields.Datetime.now()),
+            )
+        )
+
+        return request.redirect('/mis-servicios/%s?access_token=%s' % (service.id, service.access_token))
 
         except Exception as e:
             # Si hay error, recargamos el formulario con los datos necesarios
