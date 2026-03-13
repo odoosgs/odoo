@@ -9,9 +9,11 @@ class CustodiaService(models.Model):
     _name = 'custodia.service'
     _description = 'Servicio de Custodia'
     _inherit = ['mail.thread', 'mail.activity.mixin', 'portal.mixin']
-    _order = 'start_datetime desc, id desc'
+    _order = 'sequence desc, start_datetime desc, id desc'
 
     name = fields.Char(string='Folio del Servicio', required=True, copy=False, default='Nuevo', tracking=True)
+
+    sequence = fields.Char(string='Consecutivo', copy=False, readonly=True, default='Nuevo', index=True)
 
     partner_id = fields.Many2one('res.partner', string='Cliente', required=True, tracking=True)
     contact_id = fields.Many2one('res.partner', string='Persona solicitante', required=True, tracking=True)
@@ -20,6 +22,12 @@ class CustodiaService(models.Model):
 
     carrier_id = fields.Many2one('custodia.carrier', string='Carrier', tracking=True)
     ruta_id = fields.Many2one('custodia.ruta', string='Ruta', tracking=True)
+
+    # Compatibilidad con vistas/catálogos existentes
+    ruta_maestra_id = fields.Many2one('custodia.ruta.maestra', string='Ruta Principal', tracking=True)
+    nodo_origen_id = fields.Many2one('custodia.punto.operativo', string='Punto de Salida', tracking=True)
+    nodo_destino_id = fields.Many2one('custodia.punto.operativo', string='Punto de Llegada', tracking=True)
+    ruta_tipo = fields.Selection(related='ruta_id.tipo', string='Tipo de ruta', store=True, readonly=True)
 
     start_datetime = fields.Datetime(string='Fecha programada', required=True, tracking=True)
     nivel_seguridad = fields.Selection(
@@ -49,6 +57,16 @@ class CustodiaService(models.Model):
     transporte = fields.Char(string='Transporte', tracking=True)
     operador1_nombre = fields.Char(string='Operador 1', tracking=True)
     tel_monitoreo_1 = fields.Char(string='Teléfono Monitoreo 1', tracking=True)
+    tel_monitoreo_2 = fields.Char(string='Teléfono Monitoreo 2', tracking=True)
+    operador2_nombre = fields.Char(string='Operador 2', tracking=True)
+    operador1_licencia = fields.Char(string='Licencia Operador 1', tracking=True)
+    operador2_licencia = fields.Char(string='Licencia Operador 2', tracking=True)
+    start_coords = fields.Char(string='Coordenadas de inicio', tracking=True)
+    end_coords = fields.Char(string='Coordenadas de llegada', tracking=True)
+    comentarios_cliente = fields.Text(string='Comentarios del Cliente', tracking=True)
+
+    asignacion_ids = fields.One2many('custodia.asignacion', 'service_id', string='Asignaciones')
+    tracking_ids = fields.One2many('custodia.service.tracking', 'service_id', string='Historial de Ubicaciones')
 
     request_type = fields.Selection(
         [('alerta', 'Alerta'), ('servicio', 'Servicio')],
@@ -149,8 +167,10 @@ class CustodiaService(models.Model):
     def create(self, vals_list):
         seq = self.env['ir.sequence']
         for vals in vals_list:
+            if vals.get('sequence', 'Nuevo') == 'Nuevo':
+                vals['sequence'] = seq.next_by_code('custodia.service') or 'Nuevo'
             if vals.get('name', 'Nuevo') == 'Nuevo':
-                vals['name'] = seq.next_by_code('custodia.service') or 'Nuevo'
+                vals['name'] = vals['sequence']
             if not vals.get('state'):
                 vals['state'] = 'alerta' if vals.get('request_type', 'alerta') == 'alerta' else 'solicitado'
         return super().create(vals_list)
