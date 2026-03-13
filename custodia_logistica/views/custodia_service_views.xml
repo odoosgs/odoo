@@ -1,21 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
-
     <record id="view_custodia_service_list" model="ir.ui.view">
         <field name="name">custodia.service.list</field>
         <field name="model">custodia.service</field>
         <field name="arch" type="xml">
-            <list string="Servicios de Custodia" decoration-info="state == 'solicitado'" decoration-success="state == 'aprobado'">
+            <list string="Servicios" decoration-info="state == 'solicitado'" decoration-success="state == 'aprobado'">
                 <field name="sequence"/>
                 <field name="start_datetime"/>
                 <field name="partner_id"/>
                 <field name="ruta_maestra_id"/>
                 <field name="load_id"/>
-                <field name="state" widget="badge" 
-                       decoration-info="state == 'solicitado'" 
-                       decoration-success="state == 'aprobado'"
-                       decoration-warning="state == 'asignado'"
-                       decoration-primary="state == 'en_ejecucion'"/>
+                <field name="state" widget="badge"/>
             </list>
         </field>
     </record>
@@ -24,15 +19,10 @@
         <field name="name">custodia.service.calendar</field>
         <field name="model">custodia.service</field>
         <field name="arch" type="xml">
-            <calendar string="Planeación de Custodias" 
-                      date_start="start_datetime" 
-                      color="state" 
-                      mode="month"
-                      event_open_popup="True">
+            <calendar string="Planeación" date_start="start_datetime" color="state" mode="month">
                 <field name="partner_id"/>
-                <field name="ruta_maestra_id"/>
+                <field name="ruta_id"/>
                 <field name="load_id"/>
-                <field name="state" filters="1"/>
             </calendar>
         </field>
     </record>
@@ -43,53 +33,45 @@
         <field name="arch" type="xml">
             <form string="Servicio de Custodia">
                 <header>
-                    <button name="action_aprobar" type="object" string="Aprobar / Confirmar" class="btn-primary"
-                            invisible="state != 'solicitado'"/>
-                    <button name="action_asignar" type="object" string="Asignar" class="btn-secondary"
-                            invisible="state != 'aprobado'"/>
-                    <button name="action_ejecutar" type="object" string="Ejecutar" class="btn-secondary"
-                            invisible="state != 'asignado'"/>
-                    <button name="action_finalizar" type="object" string="Finalizar" class="btn-success"
-                            invisible="state != 'en_ejecucion'"/>
-                    <button name="action_cancelar" type="object" string="Cancelar" class="btn-danger"
-                            invisible="state == 'finalizado'"/>
-                    <field name="state" widget="statusbar"
-                           statusbar_visible="solicitado,aprobado,asignado,en_ejecucion,finalizado"/>
+                    <button name="action_aprobar" type="object" string="Confirmar Servicio" class="btn-primary" invisible="state != 'solicitado'"/>
+                    <button name="action_asignar" type="object" string="Asignar" class="btn-secondary" invisible="state != 'aprobado'"/>
+                    <button name="action_cancelar" type="object" string="Cancelar" class="btn-danger" invisible="state == 'finalizado'"/>
+                    <field name="state" widget="statusbar"/>
                 </header>
                 <sheet>
                     <div class="oe_title">
                         <h1><field name="sequence"/></h1>
                     </div>
                     <group>
-                        <group string="Cliente y Contacto">
+                        <group string="Información del Cliente">
                             <field name="partner_id"/>
                             <field name="contact_id" domain="[('parent_id','=',partner_id)]"/>
-                            <field name="load_id" placeholder="Ej. L-99823"/>
+                            <field name="load_id"/>
+                        </group>
+                        <group string="Ubicación y Ruta">
+                            <field name="ruta_maestra_id"/>
+                            <field name="nodo_origen_id" domain="[('ruta_maestra_id','=',ruta_maestra_id)]"/>
+                            <field name="nodo_destino_id" domain="[('ruta_maestra_id','=',ruta_maestra_id)]"/>
+                            <field name="ruta_id" readonly="1" force_save="1"/>
                         </group>
                         <group string="Programación">
                             <field name="start_datetime"/>
                             <field name="nivel_seguridad"/>
-                            <field name="ruta_maestra_id"/>
-                            <field name="ruta_id" domain="[('ruta_maestra_id','=',ruta_maestra_id)]"/>
+                        </group>
+                        <group string="Datos del Vehículo">
+                            <field name="carrier_id"/>
+                            <field name="transporte"/>
+                            <field name="placas"/>
+                            <field name="tipo_unidad"/>
+                            <field name="operador1_nombre"/>
                         </group>
                     </group>
                     <notebook>
-                        <page string="Logística de Unidad" name="logistica">
-                            <group>
-                                <group>
-                                    <field name="carrier_id"/>
-                                    <field name="transporte"/>
-                                    <field name="tipo_unidad"/>
-                                </group>
-                                <group>
-                                    <field name="placas"/>
-                                    <field name="operador1_nombre"/>
-                                    <field name="tel_monitoreo_1"/>
-                                </group>
-                            </group>
-                        </page>
                         <page string="Asignaciones" name="asignaciones">
                             <field name="asignacion_ids"/>
+                        </page>
+                        <page string="Comentarios" name="comentarios">
+                            <field name="comentarios_cliente"/>
                         </page>
                     </notebook>
                 </sheet>
@@ -106,18 +88,8 @@
         <field name="name">Servicios de Custodia</field>
         <field name="res_model">custodia.service</field>
         <field name="view_mode">list,calendar,form,kanban</field>
-        <field name="help" type="html">
-            <p class="o_view_nocontent_smiling_face">
-                Crea tu primera alerta o servicio de custodia.
-            </p>
-        </field>
     </record>
 
     <menuitem id="menu_custodia_root" name="Custodia de Valores" sequence="10"/>
-    <menuitem id="menu_custodia_service" 
-              name="Servicios" 
-              parent="menu_custodia_root" 
-              action="action_custodia_service" 
-              sequence="10"/>
-
+    <menuitem id="menu_custodia_service" name="Servicios" parent="menu_custodia_root" action="action_custodia_service" sequence="10"/>
 </odoo>
