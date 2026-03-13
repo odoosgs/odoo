@@ -142,9 +142,10 @@ class CustodiaPortal(CustomerPortal):
             carrier_id = clean_id('carrier_id', 'custodia.carrier')
             contact_id = clean_id('contact_id', 'res.partner')
 
-            # 3. Búsqueda de la variante específica para activar el mapa
+            # 3. Búsqueda o Creación Automática de la Variante
             ruta_id = False
             if maestra_id and origen_id and destino_id:
+                # Intentamos buscar si ya existe la combinación
                 ruta_variante = request.env['custodia.ruta'].sudo().search([
                     ('ruta_maestra_id', '=', maestra_id),
                     ('nodo_origen_id', '=', origen_id),
@@ -154,18 +155,27 @@ class CustodiaPortal(CustomerPortal):
                 if ruta_variante:
                     ruta_id = ruta_variante.id
                 else:
-                    _logger.info("No se encontró variante para M:%s O:%s D:%s", maestra_id, origen_id, destino_id)
+                    # SI NO EXISTE, LA CREAMOS AL VUELO
+                    # Esto soluciona el problema de los registros antiguos vs nuevos
+                    _logger.info("Creando variante de ruta nueva para: M:%s O:%s D:%s", maestra_id, origen_id, destino_id)
+                    nueva_ruta = request.env['custodia.ruta'].sudo().create({
+                        'ruta_maestra_id': maestra_id,
+                        'nodo_origen_id': origen_id,
+                        'nodo_destino_id': destino_id,
+                        'name': "Ruta Auto-Generada", # Luego la Acción de Servidor le pondrá el nombre bonito
+                    })
+                    ruta_id = nueva_ruta.id
 
-            # 4. Preparar Valores para el registro (Modo Alerta)
+            # 4. Preparar Valores para el registro (Vals)
             vals = {
                 'partner_id': partner.id,
                 'contact_id': contact_id,
                 'start_datetime': start_dt,
-                'state': 'solicitado', # Se crea como Alerta
+                'state': 'solicitado',
                 'ruta_maestra_id': maestra_id,
                 'nodo_origen_id': origen_id,
                 'nodo_destino_id': destino_id,
-                'ruta_id': ruta_id,
+                'ruta_id': ruta_id,  # AHORA SIEMPRE TENDRÁ UN VALOR
                 'carrier_id': carrier_id,
                 'nivel_seguridad': post.get('nivel_seguridad'),
                 'load_id': post.get('load_id') or "PENDIENTE",
