@@ -1,10 +1,13 @@
 # -*- coding: utf-8 -*-
 import json
+import logging
 from datetime import datetime
 from odoo import http, fields
 from odoo.http import request
 from odoo.addons.portal.controllers.portal import CustomerPortal
 from odoo.exceptions import AccessError
+
+_logger = logging.getLogger(__name__)
 
 class CustodiaPortal(CustomerPortal):
 
@@ -64,7 +67,7 @@ class CustodiaPortal(CustomerPortal):
         })
 
     # =========================================================
-    # FILTRADO DE NODOS (CASCADA) - TYPE HTTP PARA FETCH
+    # FILTRADO DE NODOS (CASCADA)
     # =========================================================
     @http.route('/get_nodos_by_maestra/<int:maestra_id>', type='http', auth='user', website=True, csrf=False)
     def get_nodos_by_maestra(self, maestra_id, **kwargs):
@@ -95,134 +98,8 @@ class CustodiaPortal(CustomerPortal):
         )
 
     # =========================================================
-    # SUBMIT NUEVA SOLICITUD (MODO ALERTA / PROGRAMACIÓN)
+    # FORMULARIO NUEVA SOLICITUD
     # =========================================================
-    @http.route(['/solicitar-servicio/submit'], type='http', auth='user', website=True, csrf=True)
-    def solicitar_submit(self, **post):
-        partner = request.env.user.partner_id.commercial_partner_id
-        try:
-            # 1. Validación de fecha (Campo mandatorio)
-            start_dt = False
-            if post.get('start_datetime'):
-                start_dt = datetime.strptime(post['start_datetime'], "%Y-%m-%dT%H:%M")
-            else:
-                raise Exception("La fecha de inicio es obligatoria para programar el servicio.")
-
-            # 2. Función interna de limpieza y verificación de IDs
-            def clean_id(field_name, model_name):
-                val = post.get(field_name)
-                if not val:
-                    return False
-                try:
-                    val_id = int(val)
-                    if val_id <= 0:
-                        return False
-                    # Verificamos que el ID exista realmente en la tabla correspondiente
-                    exists = request.env[model_name].sudo().browse(val_id).exists()
-                    return val_id if exists else False
-                except:
-                    return False
-
-            # Limpieza de los campos relacionales enviando el modelo correcto
-            maestra_id = clean_id('ruta_maestra_id', 'custodia.ruta.maestra')
-            origen_id = clean_id('nodo_origen_id', 'custodia.ruta.nodo')
-            destino_id = clean_id('nodo_destino_id', 'custodia.ruta.nodo')
-            carrier_id = clean_id('carrier_id', 'custodia.carrier')
-            contact_id = clean_id('contact_id', 'res.partner')
-
-            # 3. Buscar variante de ruta (Opcional para alertas)
-            # --- BUSQUEDA DE LA VARIANTE ESPECIFICA PARA EL MAPA ---
-            ruta_id = False
-            if maestra_id and origen_id and destino_id:
-                # Buscamos solo por la combinación geográfica
-                ruta_variante = request.env['custodia.ruta'].sudo().search([
-                    ('ruta_maestra_id', '=', maestra_id),
-                    ('nodo_origen_id', '=', origen_id),
-                    ('nodo_destino_id', '=', destino_id)
-                ], limit=1)
-                
-                if ruta_variante:
-                    ruta_id = ruta_variante.id
-                else:
-                    # Opcional: log para debug en Odoo.sh
-                    _logger.info("No se encontro variante para M:%s O:%s D:%s", maestra_id, origen_id, destino_id)
-
-            # --- PREPARAR VALORES (Se incluyen TODOS los campos del formulario) ---
-            vals = {
-                'partner_id': partner.id,
-                'contact_id': contact_id,
-                'start_datetime': start_dt,
-                'state': 'solicitado',
-                'ruta_maestra_id': maestra_id,
-                'nodo_origen_id': origen_id,
-                'nodo_destino_id': destino_id,
-                'ruta_id': ruta_id,  # Este es el campo "llave" para el mapa
-                'carrier_id': carrier_id,
-                'nivel_seguridad': post.get('nivel_seguridad'),
-                'load_id': post.get('load_id') or "PENDIENTE",
-                'tipo_unidad': post.get('tipo_unidad'),
-                'placas': post.get('placas'),
-                'transporte': post.get('transporte'),
-                'operador1_nombre': post.get('operador1_nombre'),
-                'tel_monitoreo_1': post.get('tel_monitoreo_1'),
-            }
-            
-            service = request.env['custodia.service'].sudo().create(vals)
-            return request.redirect(f'/mis-servicios/{service.id}?access_token={service.access_token}')
-
-        except Exception as e:
-            # En caso de error, no consultamos la BD para evitar problemas de transacción
-            return request.render('custodia_logistica.portal_service_form', {
-                'error': f"Error al procesar la solicitud: {str(e)}",
-                'cliente': partner,
-                # Cargamos listas mínimas solo si la transacción lo permite
-                'rutas_maestras': request.env['custodia.ruta.maestra'].sudo().search([]),
-                'carriers': request.env['custodia.carrier'].sudo().search([]),
-                'contacts': request.env['res.partner'].sudo().search([('parent_id', '=', partner.id)]),
-            })
-
-    # =========================================================
-    # ACCIONES DEL CUSTODIO E INCIDENCIAS (Mantener tus funciones)
-    # =========================================================
-    @http.route('/custodia/service/<int:service_id>/incidencia', type='json', auth='user', methods=['POST'], website=True)
-    def custodia_reportar_incidencia(self, service_id, **kwargs):
-        service = request.env['custodia.service'].sudo().browse(service_id)
-        mensaje = kwargs.get('mensaje')
-        if not service.exists() or not mensaje:
-            return {'status': 'error', 'message': 'Datos incompletos'}
-        service.message_post(body=f"⚠️ <b>INCIDENCIA REPORTADA:</b><br/>{mensaje}")
-        return {'status': 'success'}
-
-    @http.route(['/mis-servicios/<int:service_id>/tracking'], type='http', auth='public', website=True, csrf=False)
-    def portal_service_tracking(self, service_id, access_token=None, **kwargs):
-        try:
-            service = self._document_check_access('custodia.service', service_id, access_token)
-        except:
-            return request.make_response(json.dumps({'error': 'Acceso denegado'}), headers=[('Content-Type', 'application/json')])
-        
-        lat = service.current_lat or service.ruta_id.origin_latitude
-        lng = service.current_lng or service.ruta_id.origin_longitude
-        data = {'lat': lat, 'lng': lng, 'last_update': str(service.last_update), 'state': service.state}
-        return request.make_response(json.dumps(data), headers=[('Content-Type', 'application/json')])
-
-    @http.route('/custodia/service/<int:service_id>/<string:action>', type='json', auth='user', methods=['POST'], website=True)
-    def custodia_action(self, service_id, action, **kwargs):
-        service = request.env['custodia.service'].sudo().browse(service_id)
-        if not service.exists():
-            return {'status': 'error', 'message': 'Servicio no encontrado.'}
-        
-        now = fields.Datetime.now()
-        try:
-            if action == 'llegada':
-                service.write({'hora_llegada': now})
-                service.message_post(body=f"✅ <b>Llegada de Custodio</b>")
-            elif action == 'iniciar':
-                service.write({'hora_inicio_real': now, 'state': 'en_ejecucion'})
-                service.message_post(body=f"🚀 <b>Servicio Iniciado</b>")
-            return {'status': 'success'}
-        except Exception as e:
-            return {'status': 'error', 'message': str(e)}
-
     @http.route(['/solicitar-servicio'], type='http', auth='user', website=True)
     def solicitar_form(self, **kwargs):
         partner = request.env.user.partner_id.commercial_partner_id
@@ -232,3 +109,128 @@ class CustodiaPortal(CustomerPortal):
             'contacts': request.env['res.partner'].sudo().search([('parent_id', '=', partner.id)]),
             'cliente': partner,
         })
+
+    # =========================================================
+    # SUBMIT NUEVA SOLICITUD (MODO ALERTA Y BUSQUEDA DE RUTA)
+    # =========================================================
+    @http.route(['/solicitar-servicio/submit'], type='http', auth='user', website=True, csrf=True)
+    def solicitar_submit(self, **post):
+        partner = request.env.user.partner_id.commercial_partner_id
+        try:
+            # 1. Validación de fecha obligatoria
+            start_dt = False
+            if post.get('start_datetime'):
+                start_dt = datetime.strptime(post['start_datetime'], "%Y-%m-%dT%H:%M")
+            else:
+                raise Exception("La fecha de inicio es obligatoria.")
+
+            # 2. Función de limpieza y verificación de existencia de IDs
+            def clean_id(field_name, model_name):
+                val = post.get(field_name)
+                if not val: return False
+                try:
+                    val_id = int(val)
+                    if val_id <= 0: return False
+                    exists = request.env[model_name].sudo().browse(val_id).exists()
+                    return val_id if exists else False
+                except: return False
+
+            # Limpieza de parámetros relacionales
+            maestra_id = clean_id('ruta_maestra_id', 'custodia.ruta.maestra')
+            origen_id = clean_id('nodo_origen_id', 'custodia.ruta.nodo')
+            destino_id = clean_id('nodo_destino_id', 'custodia.ruta.nodo')
+            carrier_id = clean_id('carrier_id', 'custodia.carrier')
+            contact_id = clean_id('contact_id', 'res.partner')
+
+            # 3. Búsqueda de la variante específica para activar el mapa
+            ruta_id = False
+            if maestra_id and origen_id and destino_id:
+                ruta_variante = request.env['custodia.ruta'].sudo().search([
+                    ('ruta_maestra_id', '=', maestra_id),
+                    ('nodo_origen_id', '=', origen_id),
+                    ('nodo_destino_id', '=', destino_id)
+                ], limit=1)
+                
+                if ruta_variante:
+                    ruta_id = ruta_variante.id
+                else:
+                    _logger.info("No se encontró variante para M:%s O:%s D:%s", maestra_id, origen_id, destino_id)
+
+            # 4. Preparar Valores para el registro (Modo Alerta)
+            vals = {
+                'partner_id': partner.id,
+                'contact_id': contact_id,
+                'start_datetime': start_dt,
+                'state': 'solicitado', # Se crea como Alerta
+                'ruta_maestra_id': maestra_id,
+                'nodo_origen_id': origen_id,
+                'nodo_destino_id': destino_id,
+                'ruta_id': ruta_id,
+                'carrier_id': carrier_id,
+                'nivel_seguridad': post.get('nivel_seguridad'),
+                'load_id': post.get('load_id') or "PENDIENTE",
+                'tipo_unidad': post.get('tipo_unidad'),
+                'placas': post.get('placas'),
+                'transporte': post.get('transporte'),
+                'operador1_nombre': post.get('operador1_nombre'),
+                'tel_monitoreo_1': post.get('tel_monitoreo_1'),
+            }
+
+            service = request.env['custodia.service'].sudo().create(vals)
+            return request.redirect(f'/mis-servicios/{service.id}?access_token={service.access_token}')
+
+        except Exception as e:
+            _logger.error("Error en solicitar_submit: %s", str(e))
+            # Respuesta segura si falla la transacción
+            return request.render('custodia_logistica.portal_service_form', {
+                'error': f"Error al procesar la solicitud: {str(e)}",
+                'cliente': partner,
+                'rutas_maestras': request.env['custodia.ruta.maestra'].sudo().search([]),
+                'carriers': request.env['custodia.carrier'].sudo().search([]),
+                'contacts': request.env['res.partner'].sudo().search([('parent_id', '=', partner.id)]),
+            })
+
+    # =========================================================
+    # ENDPOINTS DE SEGUIMIENTO Y ACCIONES
+    # =========================================================
+    @http.route(['/mis-servicios/<int:service_id>/tracking'], type='http', auth='public', website=True, csrf=False)
+    def portal_service_tracking(self, service_id, access_token=None, **kwargs):
+        try:
+            service = self._document_check_access('custodia.service', service_id, access_token)
+        except:
+            return request.make_response(json.dumps({'error': 'Acceso denegado'}), headers=[('Content-Type', 'application/json')])
+        
+        # Coordenadas actuales o de origen si está empezando
+        lat = service.current_lat or (service.ruta_id.nodo_origen_id.latitude if service.ruta_id else 19.4326)
+        lng = service.current_lng or (service.ruta_id.nodo_origen_id.longitude if service.ruta_id else -99.1332)
+        
+        data = {
+            'lat': lat,
+            'lng': lng,
+            'last_update': str(service.last_update) if service.last_update else "Sin reportes",
+            'state': service.state,
+        }
+        return request.make_response(json.dumps(data), headers=[('Content-Type', 'application/json')])
+
+    @http.route('/custodia/service/<int:service_id>/<string:action>', type='json', auth='user', methods=['POST'], website=True)
+    def custodia_action(self, service_id, action, **kwargs):
+        service = request.env['custodia.service'].sudo().browse(service_id)
+        if not service.exists(): return {'status': 'error', 'message': 'No encontrado'}
+        
+        now = fields.Datetime.now()
+        try:
+            if action == 'llegada':
+                service.write({'hora_llegada': now})
+            elif action == 'iniciar':
+                service.write({'hora_inicio_real': now, 'state': 'en_ejecucion'})
+            return {'status': 'success'}
+        except Exception as e:
+            return {'status': 'error', 'message': str(e)}
+
+    @http.route('/custodia/service/<int:service_id>/incidencia', type='json', auth='user', methods=['POST'], website=True)
+    def custodia_reportar_incidencia(self, service_id, **kwargs):
+        service = request.env['custodia.service'].sudo().browse(service_id)
+        mensaje = kwargs.get('mensaje')
+        if not service.exists() or not mensaje: return {'status': 'error'}
+        service.message_post(body=f"⚠️ <b>INCIDENCIA:</b> {mensaje}")
+        return {'status': 'success'}
