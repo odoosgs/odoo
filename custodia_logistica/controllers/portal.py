@@ -131,25 +131,32 @@ class CustodiaPortal(CustomerPortal):
             contact_id = clean_id('contact_id', 'res.partner')
 
             # 3. Buscar variante de ruta (Opcional para alertas)
+            # --- BUSQUEDA DE LA VARIANTE ESPECIFICA PARA EL MAPA ---
             ruta_id = False
             if maestra_id and origen_id and destino_id:
+                # Buscamos solo por la combinación geográfica
                 ruta_variante = request.env['custodia.ruta'].sudo().search([
                     ('ruta_maestra_id', '=', maestra_id),
                     ('nodo_origen_id', '=', origen_id),
                     ('nodo_destino_id', '=', destino_id)
                 ], limit=1)
-                ruta_id = ruta_variante.id if ruta_variante else False
+                
+                if ruta_variante:
+                    ruta_id = ruta_variante.id
+                else:
+                    # Opcional: log para debug en Odoo.sh
+                    _logger.info("No se encontro variante para M:%s O:%s D:%s", maestra_id, origen_id, destino_id)
 
-            # 4. Preparar Valores para el registro
+            # --- PREPARAR VALORES (Se incluyen TODOS los campos del formulario) ---
             vals = {
                 'partner_id': partner.id,
                 'contact_id': contact_id,
                 'start_datetime': start_dt,
-                'state': 'solicitado', # Se crea como Alerta
+                'state': 'solicitado',
                 'ruta_maestra_id': maestra_id,
                 'nodo_origen_id': origen_id,
                 'nodo_destino_id': destino_id,
-                'ruta_id': ruta_id,
+                'ruta_id': ruta_id,  # Este es el campo "llave" para el mapa
                 'carrier_id': carrier_id,
                 'nivel_seguridad': post.get('nivel_seguridad'),
                 'load_id': post.get('load_id') or "PENDIENTE",
@@ -159,7 +166,7 @@ class CustodiaPortal(CustomerPortal):
                 'operador1_nombre': post.get('operador1_nombre'),
                 'tel_monitoreo_1': post.get('tel_monitoreo_1'),
             }
-
+            
             service = request.env['custodia.service'].sudo().create(vals)
             return request.redirect(f'/mis-servicios/{service.id}?access_token={service.access_token}')
 
