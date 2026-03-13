@@ -42,7 +42,7 @@
                 </header>
                 <sheet>
                     <div class="oe_title">
-                        <h1><field name="sequence"/></h1>
+                        <h1><field name="sequence" readonly="1"/></h1>
                     </div>
                     <group>
                         <group string="Información del Cliente">
@@ -56,30 +56,27 @@
                             <field name="nodo_destino_id"/>
                             <field name="ruta_id" readonly="1" force_save="1"/>
                         </group>
+                    </group>
+                    <group>
                         <group string="Programación">
                             <field name="start_datetime"/>
                             <field name="nivel_seguridad"/>
                         </group>
-                        <group string="Datos del Vehículo">
+                        <group string="Datos del Vehículo (Logística)">
                             <field name="carrier_id"/>
                             <field name="transporte"/>
                             <field name="placas"/>
                             <field name="tipo_unidad"/>
                             <field name="operador1_nombre"/>
+                            <field name="tel_monitoreo_1"/>
                         </group>
                     </group>
                     <notebook>
                         <page string="Asignaciones" name="asignaciones">
-                            <field name="asignacion_ids">
-                                <list editable="bottom">
-                                    <field name="custodio_id"/>
-                                    <field name="unidad_id"/>
-                                    <field name="role"/>
-                                </list>
-                            </field>
+                            <field name="asignacion_ids"/>
                         </page>
-                        <page string="Comentarios y Notas" name="comentarios">
-                            <field name="comentarios_cliente" placeholder="Notas adicionales del cliente..."/>
+                        <page string="Notas del Cliente" name="comentarios">
+                            <field name="comentarios_cliente"/>
                         </page>
                     </notebook>
                 </sheet>
