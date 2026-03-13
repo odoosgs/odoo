@@ -34,6 +34,20 @@ class CustodiaService(models.Model):
 
     load_id = fields.Char(string='Load ID', index=True, tracking=True)
 
+    # Ubicación y eventos de ejecución
+    current_lat = fields.Float(string='Latitud Actual', tracking=True)
+    current_lng = fields.Float(string='Longitud Actual', tracking=True)
+    last_update = fields.Datetime(string='Última Actualización', tracking=True)
+
+    hora_llegada = fields.Datetime(string='Hora de llegada custodio', tracking=True)
+    hora_inicio_real = fields.Datetime(string='Hora de inicio real', tracking=True)
+
+    tipo_unidad = fields.Char(string='Tipo de unidad', tracking=True)
+    placas = fields.Char(string='Placas', tracking=True)
+    transporte = fields.Char(string='Transporte', tracking=True)
+    operador1_nombre = fields.Char(string='Operador 1', tracking=True)
+    tel_monitoreo_1 = fields.Char(string='Teléfono Monitoreo 1', tracking=True)
+
     request_type = fields.Selection(
         [('alerta', 'Alerta'), ('servicio', 'Servicio')],
         string='Tipo de registro',
