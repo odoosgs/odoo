@@ -108,10 +108,12 @@ class CustodiaPortal(CustomerPortal):
             carrier_id = clean_id('carrier_id', 'custodia.carrier')
             contact_id = clean_id('contact_id', 'res.partner')
 
-            # 3. Vincular o Crear variante de ruta para activar el mapa
+            # =========================================================
+            # 3. VINCULAR O CREAR VARIANTE DE RUTA (LÓGICA DE ACTIVACIÓN DE MAPA)
+            # =========================================================
             ruta_id = False
             if maestra_id and origen_id and destino_id:
-                # Buscamos si existe
+                # Buscamos si existe la combinación geográfica exacta
                 ruta_v = request.env['custodia.ruta'].sudo().search([
                     ('ruta_maestra_id', '=', maestra_id),
                     ('nodo_origen_id', '=', origen_id),
@@ -121,7 +123,8 @@ class CustodiaPortal(CustomerPortal):
                 if ruta_v:
                     ruta_id = ruta_v.id
                 else:
-                    # Si no existe (por cambio de IDs), la creamos para que el mapa funcione
+                    # SI NO EXISTE (debido al cambio de IDs de Nodos), la creamos al vuelo.
+                    # Esto es vital para que el campo 'Ruta' NO salga vacío y el mapa se pinte.
                     n_o = request.env['custodia.ruta.nodo'].sudo().browse(origen_id).name
                     n_d = request.env['custodia.ruta.nodo'].sudo().browse(destino_id).name
                     n_m = request.env['custodia.ruta.maestra'].sudo().browse(maestra_id).name
@@ -133,16 +136,20 @@ class CustodiaPortal(CustomerPortal):
                     })
                     ruta_id = nueva_r.id
 
-            # 4. Preparar Valores (TODOS los campos del formulario)
+            # =========================================================
+            # 4. PREPARAR VALORES (INCLUYE TODOS LOS PARÁMETROS DE LOGÍSTICA)
+            # =========================================================
             vals = {
                 'partner_id': partner.id,
                 'contact_id': contact_id,
                 'start_datetime': start_dt,
-                'state': 'solicitado',
+                'state': 'solicitado', # Se crea como ALERTA
+                # Campos de Ruta para el Backend
                 'ruta_maestra_id': maestra_id,
                 'nodo_origen_id': origen_id,
                 'nodo_destino_id': destino_id,
-                'ruta_id': ruta_id,
+                'ruta_id': ruta_id,  # CAMPO CLAVE: Si este tiene ID, el mapa se ve.
+                # Campos de Logística y Carrier
                 'carrier_id': carrier_id,
                 'nivel_seguridad': post.get('nivel_seguridad'),
                 'load_id': post.get('load_id') or "PENDIENTE",
@@ -154,6 +161,7 @@ class CustodiaPortal(CustomerPortal):
                 'comentarios_cliente': post.get('comentarios_cliente'),
             }
 
+            # Creación final protegida por Sudo
             service = request.env['custodia.service'].sudo().create(vals)
             return request.redirect(f'/mis-servicios/{service.id}?access_token={service.access_token}')
 
