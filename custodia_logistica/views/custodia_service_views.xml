@@ -10,7 +10,9 @@
                 <field name="partner_id"/>
                 <field name="ruta_maestra_id"/>
                 <field name="load_id"/>
-                <field name="state" widget="badge"/>
+                <field name="state" widget="badge" 
+                       decoration-info="state == 'solicitado'" 
+                       decoration-success="state == 'aprobado'"/>
             </list>
         </field>
     </record>
@@ -36,7 +38,7 @@
                     <button name="action_aprobar" type="object" string="Confirmar Servicio" class="btn-primary" invisible="state != 'solicitado'"/>
                     <button name="action_asignar" type="object" string="Asignar" class="btn-secondary" invisible="state != 'aprobado'"/>
                     <button name="action_cancelar" type="object" string="Cancelar" class="btn-danger" invisible="state == 'finalizado'"/>
-                    <field name="state" widget="statusbar"/>
+                    <field name="state" widget="statusbar" statusbar_visible="solicitado,aprobado,asignado,en_ejecucion,finalizado"/>
                 </header>
                 <sheet>
                     <div class="oe_title">
@@ -50,8 +52,8 @@
                         </group>
                         <group string="Ubicación y Ruta">
                             <field name="ruta_maestra_id"/>
-                            <field name="nodo_origen_id" domain="[('ruta_maestra_id','=',ruta_maestra_id)]"/>
-                            <field name="nodo_destino_id" domain="[('ruta_maestra_id','=',ruta_maestra_id)]"/>
+                            <field name="nodo_origen_id"/>
+                            <field name="nodo_destino_id"/>
                             <field name="ruta_id" readonly="1" force_save="1"/>
                         </group>
                         <group string="Programación">
@@ -68,10 +70,16 @@
                     </group>
                     <notebook>
                         <page string="Asignaciones" name="asignaciones">
-                            <field name="asignacion_ids"/>
+                            <field name="asignacion_ids">
+                                <list editable="bottom">
+                                    <field name="custodio_id"/>
+                                    <field name="unidad_id"/>
+                                    <field name="role"/>
+                                </list>
+                            </field>
                         </page>
-                        <page string="Comentarios" name="comentarios">
-                            <field name="comentarios_cliente"/>
+                        <page string="Comentarios y Notas" name="comentarios">
+                            <field name="comentarios_cliente" placeholder="Notas adicionales del cliente..."/>
                         </page>
                     </notebook>
                 </sheet>
