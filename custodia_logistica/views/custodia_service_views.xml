@@ -6,7 +6,7 @@
     <field name="arch" type="xml">
       <form string="Servicio de Custodia">
         <header>
-          <button name="action_convert_to_service" type="object" string="Convertir a servicio" class="btn-primary"
+          <button name="action_convert_to_service" type="object" string="Convertir a solicitud" class="btn-primary"
                   invisible="request_type != 'alerta'"/>
           <button name="action_aprobar" type="object" string="Aprobar" class="btn-primary"
                   invisible="state != 'solicitado'"/>
@@ -24,6 +24,7 @@
         <sheet>
           <group>
             <field name="name" readonly="1"/>
+            <field name="sequence" readonly="1"/>
             <field name="request_type"/>
             <field name="partner_id"/>
             <field name="contact_id"/>
@@ -33,6 +34,14 @@
             <field name="nivel_seguridad"/>
             <field name="load_id"/>
           </group>
+          <notebook>
+            <page string="Asignaciones">
+              <field name="asignacion_ids" mode="list,form"/>
+            </page>
+            <page string="Tracking">
+              <field name="tracking_ids" mode="list,form"/>
+            </page>
+          </notebook>
         </sheet>
         <chatter/>
       </form>
