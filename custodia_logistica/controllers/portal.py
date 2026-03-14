@@ -161,14 +161,21 @@ class CustodiaPortal(CustomerPortal):
                 'tel_monitoreo_1': post.get('tel_monitoreo_1'),
             }
 
-            required_for_service = all([
-                vals.get('carrier_id'),
-                vals.get('ruta_id'),
-                vals.get('nivel_seguridad'),
-                vals.get('load_id'),
-            ])
-            vals['request_type'] = 'servicio' if required_for_service else 'alerta'
-            vals['state'] = 'solicitado' if required_for_service else 'alerta'
+            # Portal crea ALERTA por defecto para captura anticipada.
+            # Solo se crea servicio directo cuando el formulario lo envía explícitamente.
+            create_as_service = str(post.get('create_as_service', '')).lower() in ('1', 'true', 'on', 'yes')
+            if create_as_service:
+                required_for_service = all([
+                    vals.get('carrier_id'),
+                    vals.get('ruta_id'),
+                    vals.get('nivel_seguridad'),
+                    vals.get('load_id'),
+                ])
+                vals['request_type'] = 'servicio' if required_for_service else 'alerta'
+                vals['state'] = 'solicitado' if required_for_service else 'alerta'
+            else:
+                vals['request_type'] = 'alerta'
+                vals['state'] = 'alerta'
 
             service = request.env['custodia.service'].sudo().create(vals)
             service._portal_ensure_token()
