@@ -51,6 +51,7 @@ class CustodiaPortal(CustomerPortal):
             'cliente': service.partner_id,
             'token': service.access_token,
             'page_name': 'service_detail',
+            'can_convert_alert': service.request_type == 'alerta',
         })
 
     @http.route('/custodia/service/<int:service_id>/incidencia', type='json', auth='user', methods=['POST'], website=True)
@@ -67,6 +68,24 @@ class CustodiaPortal(CustomerPortal):
             subtype_xmlid='mail.mt_comment'
         )
         return {'status': 'success'}
+
+
+    @http.route(['/mis-servicios/<int:service_id>/convertir'], type='http', auth='user', website=True)
+    def portal_convert_alert(self, service_id, access_token=None, **kwargs):
+        try:
+            service = self._document_check_access('custodia.service', service_id, access_token)
+        except Exception:
+            return request.redirect('/mis-servicios')
+
+        partner = request.env.user.partner_id.commercial_partner_id
+        if service.partner_id != partner and not request.env.user.has_group('base.group_user'):
+            return request.redirect('/mis-servicios')
+
+        if service.request_type == 'alerta':
+            service.action_convert_to_service()
+            service.message_post(body='Alerta convertida a solicitud desde portal por el cliente.')
+
+        return request.redirect(f'/mis-servicios/{service.id}?access_token={service.access_token}')
 
     @http.route(['/mis-servicios/<int:service_id>/tracking'], type='http', auth='public', website=True, csrf=False)
     def portal_service_tracking(self, service_id, access_token=None, **kwargs):
