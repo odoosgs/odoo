@@ -52,6 +52,9 @@ class CustodiaService(models.Model):
     hora_llegada = fields.Datetime(string='Hora de llegada custodio', tracking=True)
     hora_inicio_real = fields.Datetime(string='Hora de inicio real', tracking=True)
 
+    diff_llegada_min = fields.Integer(string='Diferencia llegada (min)', compute='_compute_diferencias')
+    diff_inicio_min = fields.Integer(string='Diferencia inicio (min)', compute='_compute_diferencias')
+
     tipo_unidad = fields.Char(string='Tipo de unidad', tracking=True)
     placas = fields.Char(string='Placas', tracking=True)
     transporte = fields.Char(string='Transporte', tracking=True)
@@ -111,6 +114,21 @@ class CustodiaService(models.Model):
                 rec.calendar_color = color_map['alerta']
             else:
                 rec.calendar_color = color_map.get(rec.state, 1)
+
+    @api.depends('start_datetime', 'hora_llegada', 'hora_inicio_real')
+    def _compute_diferencias(self):
+        for record in self:
+            diff_llegada = 0
+            diff_inicio = 0
+            if record.start_datetime:
+                if record.hora_llegada:
+                    diff = (record.hora_llegada - record.start_datetime).total_seconds() / 60
+                    diff_llegada = int(diff)
+                if record.hora_inicio_real:
+                    diff = (record.hora_inicio_real - record.start_datetime).total_seconds() / 60
+                    diff_inicio = int(diff)
+            record.diff_llegada_min = diff_llegada
+            record.diff_inicio_min = diff_inicio
 
     @api.constrains('request_type', 'start_datetime')
     def _check_alerta_lead_time(self):
