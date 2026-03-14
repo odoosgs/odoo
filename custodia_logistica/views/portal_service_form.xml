@@ -7,7 +7,7 @@
                     <div class="col-lg-10">
                         <div class="card shadow">
                             <div class="card-header bg-primary text-white">
-                                <h3 class="mb-0">Nueva Solicitud de Custodia</h3>
+                                <h3 class="mb-0">Nueva Alerta de Custodia</h3>
                             </div>
                             <div class="card-body">
                                 <t t-if="error">
@@ -18,10 +18,14 @@
 
                                 <form action="/solicitar-servicio/submit" method="post" enctype="multipart/form-data">
                                     <input type="hidden" name="csrf_token" t-att-value="request.csrf_token()"/>
+
+                                    <div class="alert alert-info">
+                                        Solo son obligatorios <strong>Contacto solicitante</strong> y <strong>Fecha/Hora</strong>. El resto lo puedes completar después.
+                                    </div>
                                     
                                     <div class="row">
                                         <div class="col-md-6 mb-3">
-                                            <label class="form-label" for="contact_id">Contacto Solicitante</label>
+                                            <label class="form-label" for="contact_id">Contacto Solicitante *</label>
                                             <select name="contact_id" class="form-select" required="1">
                                                 <t t-foreach="contacts" t-as="c">
                                                     <option t-att-value="c.id"><t t-esc="c.name"/></option>
@@ -29,14 +33,32 @@
                                             </select>
                                         </div>
                                         <div class="col-md-6 mb-3">
+                                            <label class="form-label" for="start_datetime">Fecha y Hora de Inicio *</label>
+                                            <input type="datetime-local" name="start_datetime" class="form-control" required="1"/>
+                                        </div>
+
+                                        <div class="col-md-6 mb-3">
                                             <label class="form-label" for="carrier_id">Carrier (Transportista)</label>
-                                            <select name="carrier_id" class="form-select" required="1">
+                                            <select name="carrier_id" class="form-select">
+                                                <option value="">-- Opcional --</option>
                                                 <t t-foreach="carriers" t-as="car">
                                                     <option t-att-value="car.id"><t t-esc="car.name"/></option>
                                                 </t>
                                             </select>
                                         </div>
-                                        
+
+                                        <div class="col-md-6 mb-3">
+                                            <label class="form-label" for="nivel_seguridad">Nivel de Seguridad</label>
+                                            <select name="nivel_seguridad" class="form-select">
+                                                <option value="">-- Opcional --</option>
+                                                <option value="1">Nivel 1</option>
+                                                <option value="2">Nivel 2</option>
+                                                <option value="3">Nivel 3</option>
+                                                <option value="4">Nivel 4</option>
+                                                <option value="4x">Excepción + Nivel 4</option>
+                                            </select>
+                                        </div>
+
                                         <div class="col-md-12 mb-3">
                                             <label class="form-label text-primary" for="ruta_maestra_id">
                                                 <i class="fa fa-map-signs me-1"/> 1. Seleccione Ruta Principal (Origen - Destino)
@@ -62,30 +84,15 @@
                                                 <option value="">-- Primero elija la ruta --</option>
                                             </select>
                                         </div>
-                                        
-                                        <div class="col-md-6 mb-3">
-                                            <label class="form-label" for="start_datetime">Fecha y Hora de Inicio</label>
-                                            <input type="datetime-local" name="start_datetime" class="form-control" required="1"/>
-                                        </div>
 
                                         <div class="col-md-6 mb-3">
-                                            <label class="form-label" for="nivel_seguridad">Nivel de Seguridad</label>
-                                            <select name="nivel_seguridad" class="form-select" required="1">
-                                                <option value="1">Nivel 1</option>
-                                                <option value="2">Nivel 2</option>
-                                                <option value="3">Nivel 3</option>
-                                                <option value="4">Nivel 4</option>
-                                                <option value="4x">Excepción + Nivel 4</option>
-                                            </select>
-                                        </div>
-                                        <div class="col-md-6 mb-3">
                                             <label class="form-label" for="load_id">Load ID (Referencia)</label>
-                                            <input type="text" name="load_id" class="form-control" placeholder="Ej. L-99823" required="1"/>
+                                            <input type="text" name="load_id" class="form-control" placeholder="Ej. L-99823"/>
                                         </div>
                                     </div>
 
                                     <hr/>
-                                    <h5 class="text-muted mb-3">Datos del Vehículo de Carga</h5>
+                                    <h5 class="text-muted mb-3">Datos del Vehículo de Carga (opcionales)</h5>
                                     <div class="row">
                                         <div class="col-md-4 mb-3">
                                             <label class="form-label" for="tipo_unidad">Tipo de Unidad</label>
@@ -112,9 +119,16 @@
                                         </div>
                                     </div>
 
+                                    <div class="form-check mt-3">
+                                        <input class="form-check-input" type="checkbox" value="1" id="create_as_service" name="create_as_service"/>
+                                        <label class="form-check-label" for="create_as_service">
+                                            Crear directamente como solicitud (si ya tienes todos los datos)
+                                        </label>
+                                    </div>
+
                                     <div class="d-flex justify-content-end mt-4">
                                         <a href="/mis-servicios" class="btn btn-secondary me-2">Cancelar</a>
-                                        <button type="submit" class="btn btn-primary">Enviar Solicitud</button>
+                                        <button type="submit" class="btn btn-primary">Crear Alerta</button>
                                     </div>
                                 </form>
                             </div>
