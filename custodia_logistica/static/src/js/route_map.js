@@ -62,6 +62,12 @@
     document.addEventListener("DOMContentLoaded", function () {
         console.log("DOM listo - Verificando existencia de mapas...");
 
+        // Guard clause: evitar errores si Leaflet no cargó por CDN bloqueado
+        if (typeof window.L === "undefined") {
+            console.warn("Leaflet no está disponible. Se omite inicialización de mapas.");
+            return;
+        }
+
         // Pequeño retraso para asegurar que los elementos del portal estén renderizados
         setTimeout(() => {
             const routeMapContainer = document.getElementById("route-map");
@@ -129,8 +135,10 @@
 
             const summaryDiv = document.getElementById("route-summary");
             if (summaryDiv) {
-                document.getElementById("route-distance").textContent = distanceKm + " km";
-                document.getElementById("route-duration").textContent = (hours > 0) ? `${hours} h ${minutes} min` : `${minutes} min`;
+                const distanceEl = document.getElementById("route-distance");
+                const durationEl = document.getElementById("route-duration");
+                if (distanceEl) distanceEl.textContent = distanceKm + " km";
+                if (durationEl) durationEl.textContent = (hours > 0) ? `${hours} h ${minutes} min` : `${minutes} min`;
                 summaryDiv.style.display = "block";
             }
             setTimeout(() => mapRoute.invalidateSize(), 200);
