@@ -62,14 +62,8 @@
     document.addEventListener("DOMContentLoaded", function () {
         console.log("DOM listo - Verificando existencia de mapas...");
 
-        // Guard clause: evitar errores si Leaflet no cargó por CDN bloqueado
-        if (typeof window.L === "undefined") {
-            console.warn("Leaflet no está disponible. Se omite inicialización de mapas.");
-            return;
-        }
-
-        // Pequeño retraso para asegurar que los elementos del portal estén renderizados
-        setTimeout(() => {
+        // Espera activa por Leaflet: en algunos entornos externos tarda en estar disponible.
+        waitForLeaflet(15, 300, function () {
             const routeMapContainer = document.getElementById("route-map");
             const liveMapContainer = document.getElementById("live-map");
 
@@ -82,15 +76,33 @@
                 console.log("Iniciando Mapa de Monitoreo en Vivo...");
                 initLiveTrackingMap();
             }
-        }, 500);
+        });
     });
+
+    function waitForLeaflet(retries, intervalMs, onReady) {
+        if (window.L) {
+            onReady();
+            return;
+        }
+        if (retries <= 0) {
+            console.warn("Leaflet no está disponible. Verifica carga de assets frontend/CDN.");
+            return;
+        }
+        setTimeout(function () {
+            waitForLeaflet(retries - 1, intervalMs, onReady);
+        }, intervalMs);
+    }
 
     // =========================================================
     // 3. FUNCIÓN: MAPA 1 - RUTA PLANEADA
     // =========================================================
     async function initPlannedRouteMap() {
         const container = document.getElementById("route-map");
-        if (!container || !container.dataset.rutaId) return;
+        if (!container) return;
+        if (!container.dataset.rutaId) {
+            console.warn("No hay ruta asignada para dibujar mapa planeado.");
+            return;
+        }
 
         const rutaId = container.dataset.rutaId;
 
