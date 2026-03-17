@@ -87,6 +87,43 @@ class CustodiaPortal(CustomerPortal):
 
         return request.redirect(f'/mis-servicios/{service.id}?access_token={service.access_token}')
 
+
+    @http.route(['/mis-servicios/<int:service_id>/editar'], type='http', auth='user', website=True, methods=['GET', 'POST'])
+    def portal_edit_service(self, service_id, access_token=None, **post):
+        try:
+            service = self._document_check_access('custodia.service', service_id, access_token)
+        except Exception:
+            return request.redirect('/mis-servicios')
+
+        partner = request.env.user.partner_id.commercial_partner_id
+        if service.partner_id != partner and not request.env.user.has_group('base.group_user'):
+            return request.redirect('/mis-servicios')
+
+        if request.httprequest.method == 'POST':
+            vals = {
+                'contact_id': int(post.get('contact_id')) if post.get('contact_id') else service.contact_id.id,
+                'carrier_id': int(post.get('carrier_id')) if post.get('carrier_id') else False,
+                'start_datetime': datetime.strptime(post.get('start_datetime'), '%Y-%m-%dT%H:%M') if post.get('start_datetime') else service.start_datetime,
+                'nivel_seguridad': post.get('nivel_seguridad') or False,
+                'load_id': post.get('load_id') or False,
+                'tipo_unidad': post.get('tipo_unidad') or False,
+                'placas': post.get('placas') or False,
+                'transporte': post.get('transporte') or False,
+                'operador1_nombre': post.get('operador1_nombre') or False,
+                'tel_monitoreo_1': post.get('tel_monitoreo_1') or False,
+            }
+            service.sudo().write(vals)
+            service.message_post(body='Datos actualizados por cliente desde portal.')
+            return request.redirect(f'/mis-servicios/{service.id}?access_token={service.access_token}')
+
+        return request.render('custodia_logistica.portal_service_edit', {
+            'service': service,
+            'carriers': request.env['custodia.carrier'].sudo().search([]),
+            'contacts': request.env['res.partner'].sudo().search([('parent_id', '=', partner.id)]),
+            'cliente': partner,
+            'page_name': 'service_edit',
+        })
+
     @http.route(['/mis-servicios/<int:service_id>/tracking'], type='http', auth='public', website=True, csrf=False)
     def portal_service_tracking(self, service_id, access_token=None, **kwargs):
         try:
