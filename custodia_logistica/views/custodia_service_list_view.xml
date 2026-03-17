@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
-  <!-- Vista lista del padre -->
+  <!-- Vista lista compatible con despliegues existentes -->
   <record id="view_custodia_service_list" model="ir.ui.view">
     <field name="name">custodia.service.list</field>
     <field name="model">custodia.service</field>
@@ -20,10 +20,61 @@
     </field>
   </record>
 
-  <!-- Actualización de la acción para incluir la vista lista -->
+  <!-- Búsqueda y filtros rápidos -->
+  <record id="view_custodia_service_search" model="ir.ui.view">
+    <field name="name">custodia.service.search</field>
+    <field name="model">custodia.service</field>
+    <field name="arch" type="xml">
+      <search string="Buscar Servicios">
+        <field name="name"/>
+        <field name="partner_id"/>
+        <field name="contact_id"/>
+        <field name="carrier_id"/>
+        <field name="ruta_id"/>
+        <field name="load_id"/>
+        <field name="state"/>
+
+        <filter name="filter_alertas" string="Solo Alertas" domain="[('request_type', '=', 'alerta')]"/>
+        <filter name="filter_solicitudes" string="Solo Solicitudes" domain="[('request_type', '=', 'servicio')]"/>
+
+        <group expand="0" string="Agrupar por">
+          <filter string="Estado" context="{'group_by':'state'}"/>
+          <filter string="Tipo" context="{'group_by':'request_type'}"/>
+          <filter string="Carrier" context="{'group_by':'carrier_id'}"/>
+          <filter string="Ruta" context="{'group_by':'ruta_id'}"/>
+          <filter string="Fecha" context="{'group_by':'start_datetime:day'}"/>
+        </group>
+      </search>
+    </field>
+  </record>
+
+  <!-- Forzamos calendario en la acción principal para mostrar selector de vistas -->
   <record id="action_custodia_service" model="ir.actions.act_window">
     <field name="name">Servicios de Custodia</field>
     <field name="res_model">custodia.service</field>
-    <field name="view_mode">list,form</field>
+    <field name="view_mode">list,calendar,form</field>
+    <field name="search_view_id" ref="custodia_logistica.view_custodia_service_search"/>
+  </record>
+
+  <!-- Vistas explícitas en la acción (garantiza selector visible) -->
+  <record id="action_custodia_service_list_view" model="ir.actions.act_window.view">
+    <field name="sequence" eval="1"/>
+    <field name="view_mode">list</field>
+    <field name="view_id" ref="view_custodia_service_list"/>
+    <field name="act_window_id" ref="action_custodia_service"/>
+  </record>
+
+  <record id="action_custodia_service_calendar_view" model="ir.actions.act_window.view">
+    <field name="sequence" eval="2"/>
+    <field name="view_mode">calendar</field>
+    <field name="view_id" ref="view_custodia_service_calendar"/>
+    <field name="act_window_id" ref="action_custodia_service"/>
+  </record>
+
+  <record id="action_custodia_service_form_view" model="ir.actions.act_window.view">
+    <field name="sequence" eval="3"/>
+    <field name="view_mode">form</field>
+    <field name="view_id" ref="view_custodia_service_form"/>
+    <field name="act_window_id" ref="action_custodia_service"/>
   </record>
 </odoo>
