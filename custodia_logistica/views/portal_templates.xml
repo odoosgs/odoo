@@ -74,8 +74,12 @@
                             </div>
                         </div>
 
+                        <hr/>
+                        <a t-att-href="'/mis-servicios/%s/editar?access_token=%s' % (service.id, service.access_token)"
+                           class="btn btn-outline-primary me-2">
+                            Editar datos
+                        </a>
                         <t t-if="can_convert_alert">
-                            <hr/>
                             <a t-att-href="'/mis-servicios/%s/convertir?access_token=%s' % (service.id, service.access_token)"
                                class="btn btn-warning">
                                 Convertir alerta a solicitud
@@ -92,20 +96,89 @@
                             <span class="mx-2">|</span>
                             <strong>Duración estimada:</strong> <span id="route-duration">-</span>
                         </div>
-                        <div id="route-map" t-att-data-ruta-id="service.ruta_id.id if service.ruta_id else ''"
-                             style="height: 360px; border-radius: 6px;"/>
+                        <div id="route-map" t-att-data-ruta-id="service.ruta_id.id if service.ruta_id else ''" style="height: 360px; border-radius: 6px;"></div>
                     </div>
                 </div>
 
                 <div class="card">
                     <div class="card-header"><strong>Monitoreo en Vivo</strong></div>
                     <div class="card-body">
-                        <div id="live-map"
-                             t-att-data-service-id="service.id"
-                             t-att-data-token="service.access_token"
-                             style="height: 320px; border-radius: 6px;"/>
+                        <div id="live-map" t-att-data-service-id="service.id" t-att-data-token="service.access_token" style="height: 320px; border-radius: 6px;"></div>
                     </div>
                 </div>
+            </div>
+        </t>
+    </template>
+
+    <template id="portal_service_edit" name="Editar Alerta/Servicio Custodia">
+        <t t-call="portal.portal_layout">
+            <div class="container my-4">
+                <h3 class="mb-3">Editar <t t-esc="service.name"/></h3>
+                <form t-att-action="'/mis-servicios/%s/editar?access_token=%s' % (service.id, service.access_token)" method="post">
+                    <input type="hidden" name="csrf_token" t-att-value="request.csrf_token()"/>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Contacto Solicitante *</label>
+                            <select name="contact_id" class="form-select" required="1">
+                                <t t-foreach="contacts" t-as="c">
+                                    <option t-att-value="c.id" t-att-selected="'selected' if service.contact_id.id == c.id else None"><t t-esc="c.name"/></option>
+                                </t>
+                            </select>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Fecha y Hora de Inicio *</label>
+                            <input type="datetime-local" name="start_datetime" class="form-control" t-att-value="service.start_datetime and service.start_datetime.strftime('%Y-%m-%dT%H:%M') or ''" required="1"/>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Carrier</label>
+                            <select name="carrier_id" class="form-select">
+                                <option value="">-- Opcional --</option>
+                                <t t-foreach="carriers" t-as="car">
+                                    <option t-att-value="car.id" t-att-selected="'selected' if service.carrier_id.id == car.id else None"><t t-esc="car.name"/></option>
+                                </t>
+                            </select>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Nivel de Seguridad</label>
+                            <select name="nivel_seguridad" class="form-select">
+                                <option value="">-- Opcional --</option>
+                                <option value="1" t-att-selected="'selected' if service.nivel_seguridad == '1' else None">Nivel 1</option>
+                                <option value="2" t-att-selected="'selected' if service.nivel_seguridad == '2' else None">Nivel 2</option>
+                                <option value="3" t-att-selected="'selected' if service.nivel_seguridad == '3' else None">Nivel 3</option>
+                                <option value="4" t-att-selected="'selected' if service.nivel_seguridad == '4' else None">Nivel 4</option>
+                                <option value="4x" t-att-selected="'selected' if service.nivel_seguridad == '4x' else None">Excepción + Nivel 4</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Load ID</label>
+                            <input type="text" name="load_id" class="form-control" t-att-value="service.load_id or ''"/>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Tipo de Unidad</label>
+                            <input type="text" name="tipo_unidad" class="form-control" t-att-value="service.tipo_unidad or ''"/>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Placas</label>
+                            <input type="text" name="placas" class="form-control" t-att-value="service.placas or ''"/>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Transporte</label>
+                            <input type="text" name="transporte" class="form-control" t-att-value="service.transporte or ''"/>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Operador</label>
+                            <input type="text" name="operador1_nombre" class="form-control" t-att-value="service.operador1_nombre or ''"/>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Teléfono Monitoreo</label>
+                            <input type="text" name="tel_monitoreo_1" class="form-control" t-att-value="service.tel_monitoreo_1 or ''"/>
+                        </div>
+                    </div>
+                    <div class="d-flex justify-content-end gap-2">
+                        <a t-att-href="'/mis-servicios/%s?access_token=%s' % (service.id, service.access_token)" class="btn btn-secondary">Cancelar</a>
+                        <button type="submit" class="btn btn-primary">Guardar cambios</button>
+                    </div>
+                </form>
             </div>
         </t>
     </template>
