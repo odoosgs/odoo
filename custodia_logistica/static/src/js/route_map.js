@@ -56,11 +56,121 @@
         }
     });
 
+    function showFeedback(element, type, message) {
+        if (!element) return;
+        element.className = `alert alert-${type} mb-3`;
+        element.textContent = message;
+        element.classList.remove("d-none");
+    }
+
+    function bindServiceControls() {
+        const controlPanel = document.getElementById("service-control-panel");
+        if (!controlPanel) return;
+
+        const feedback = document.getElementById("service-control-feedback");
+        const serviceId = controlPanel.dataset.serviceId;
+        const token = controlPanel.dataset.token;
+        const buttons = controlPanel.querySelectorAll(".service-action-btn");
+        const horaLlegada = document.getElementById("hora-llegada");
+        const diffLlegada = document.getElementById("diff-llegada");
+        const horaInicio = document.getElementById("hora-inicio-real");
+        const diffInicio = document.getElementById("diff-inicio");
+        const stateBadge = document.querySelector(".badge.bg-info");
+
+        buttons.forEach((button) => {
+            button.addEventListener("click", async () => {
+                if (button.disabled) return;
+                const action = button.dataset.action;
+                button.disabled = true;
+                try {
+                    const response = await fetch(`/custodia/service/${serviceId}/${action}`, {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ params: { access_token: token } }),
+                    });
+                    const payload = await response.json();
+                    const result = payload.result || payload;
+                    if (result.status !== "success") {
+                        showFeedback(feedback, "danger", result.message || "No fue posible registrar la acción.");
+                        button.disabled = false;
+                        return;
+                    }
+
+                    showFeedback(feedback, "success", result.message || "Registro actualizado correctamente.");
+                    if (action === "llegada") {
+                        if (horaLlegada) horaLlegada.textContent = result.hora_llegada || "Registrada";
+                        if (diffLlegada) diffLlegada.textContent = result.diff_llegada_min ?? "0";
+                        const startButton = controlPanel.querySelector('[data-action="iniciar"]');
+                        if (startButton) startButton.disabled = false;
+                    }
+                    if (action === "iniciar") {
+                        if (horaInicio) horaInicio.textContent = result.hora_inicio_real || "Registrada";
+                        if (diffInicio) diffInicio.textContent = result.diff_inicio_min ?? "0";
+                        if (stateBadge && result.state_label) stateBadge.textContent = result.state_label;
+                    }
+                } catch (error) {
+                    console.error("Error al ejecutar acción de servicio:", error);
+                    showFeedback(feedback, "danger", "Ocurrió un error de comunicación con el portal.");
+                    button.disabled = false;
+                }
+            });
+        });
+    }
+
+    function bindIncidentReporter() {
+        const panel = document.getElementById("incident-panel");
+        if (!panel) return;
+
+        const serviceId = panel.dataset.serviceId;
+        const token = panel.dataset.token;
+        const textarea = document.getElementById("incident-message");
+        const submit = document.getElementById("incident-submit");
+        const feedback = document.getElementById("incident-feedback");
+
+        if (!textarea || !submit) return;
+
+        submit.addEventListener("click", async () => {
+            const mensaje = textarea.value.trim();
+            if (!mensaje) {
+                showFeedback(feedback, "warning", "Debes describir la incidencia antes de enviarla.");
+                return;
+            }
+
+            submit.disabled = true;
+            try {
+                const response = await fetch(`/custodia/service/${serviceId}/incidencia`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ params: { mensaje, access_token: token } }),
+                });
+                const payload = await response.json();
+                const result = payload.result || payload;
+                if (result.status !== "success") {
+                    showFeedback(feedback, "danger", result.message || "No fue posible registrar la incidencia.");
+                    submit.disabled = false;
+                    return;
+                }
+
+                textarea.value = "";
+                showFeedback(feedback, "success", result.message || "Incidencia reportada correctamente.");
+            } catch (error) {
+                console.error("Error al reportar incidencia:", error);
+                showFeedback(feedback, "danger", "Ocurrió un error de comunicación con el portal.");
+                submit.disabled = false;
+                return;
+            }
+            submit.disabled = false;
+        });
+    }
+
     // =========================================================
     // 2. ARRANCAR MAPAS AL CARGAR LA PÁGINA
     // =========================================================
     function bootMaps() {
         console.log("DOM listo - Verificando existencia de mapas...");
+
+        bindServiceControls();
+        bindIncidentReporter();
 
         // Espera activa por Leaflet: en algunos entornos externos tarda en estar disponible.
         waitForLeaflet(15, 300, function () {
