@@ -56,37 +56,103 @@
                     <span class="badge bg-info text-dark" t-esc="dict(service._fields['state'].selection).get(service.state)"/>
                 </div>
 
-                <div class="card mb-3">
-                    <div class="card-body">
-                        <div class="row">
-                            <div class="col-md-6">
+                <div class="card mb-3 shadow-sm">
+                    <div class="card-body p-4">
+                        <div class="row g-4">
+                            <div class="col-lg-6 border-end-lg">
+                                <h4 class="mb-3">Información General</h4>
                                 <p><strong>Cliente:</strong> <t t-esc="service.partner_id.name"/></p>
                                 <p><strong>Ruta:</strong> <t t-esc="service.ruta_id.name if service.ruta_id else '-'"/></p>
                                 <p><strong>Inicio Programado:</strong> <t t-esc="service.start_datetime"/></p>
                                 <p><strong>Nivel de Seguridad:</strong> <t t-esc="dict(service._fields['nivel_seguridad'].selection).get(service.nivel_seguridad) if service.nivel_seguridad else '-'"/></p>
-                                <p><strong>Load ID:</strong> <t t-esc="service.load_id or '-'"/></p>
+                                <p class="mb-0"><strong>Load ID:</strong> <t t-esc="service.load_id or '-'"/></p>
                             </div>
-                            <div class="col-md-6">
+                            <div class="col-lg-6">
+                                <h4 class="mb-3">Datos de Logística</h4>
                                 <p><strong>Unidad:</strong> <t t-esc="service.tipo_unidad or '-'"/></p>
                                 <p><strong>Placas:</strong> <t t-esc="service.placas or '-'"/></p>
                                 <p><strong>Transporte:</strong> <t t-esc="service.transporte or '-'"/></p>
-                                <p><strong>Operador:</strong> <t t-esc="service.operador1_nombre or '-'"/></p>
+                                <p class="mb-0"><strong>Operador:</strong> <t t-esc="service.operador1_nombre or '-'"/></p>
                             </div>
                         </div>
 
                         <hr/>
-                        <a t-att-href="'/mis-servicios/%s/editar?access_token=%s' % (service.id, service.access_token)"
-                           class="btn btn-outline-primary me-2">
-                            Editar datos
-                        </a>
-                        <t t-if="can_convert_alert">
-                            <a t-att-href="'/mis-servicios/%s/convertir?access_token=%s' % (service.id, service.access_token)"
-                               class="btn btn-warning">
-                                Convertir alerta a solicitud
+                        <div class="d-flex flex-wrap gap-2">
+                            <a t-att-href="'/mis-servicios/%s/editar?access_token=%s' % (service.id, service.access_token)"
+                               class="btn btn-outline-primary">
+                                Editar datos
                             </a>
-                        </t>
+                            <t t-if="can_convert_alert">
+                                <a t-att-href="'/mis-servicios/%s/convertir?access_token=%s' % (service.id, service.access_token)"
+                                   class="btn btn-warning">
+                                    Convertir alerta a solicitud
+                                </a>
+                            </t>
+                        </div>
                     </div>
                 </div>
+
+                <t t-if="service.request_type == 'servicio' or service.state != 'alerta'">
+                    <div class="card mb-3 border-0 shadow-sm bg-light">
+                        <div class="card-body p-4"
+                             id="service-control-panel"
+                             t-att-data-service-id="service.id"
+                             t-att-data-token="service.access_token">
+                            <div class="d-flex flex-column flex-lg-row justify-content-between align-items-lg-center gap-3 mb-3">
+                                <h4 class="mb-0">Control de Servicio</h4>
+                                <div class="d-flex flex-wrap gap-2">
+                                    <button type="button"
+                                            class="btn btn-warning service-action-btn"
+                                            data-action="llegada"
+                                            t-att-disabled="'disabled' if service.hora_llegada else None">
+                                        Marcar llegada custodio
+                                    </button>
+                                    <button type="button"
+                                            class="btn btn-success service-action-btn"
+                                            data-action="iniciar"
+                                            t-att-disabled="'disabled' if (not service.hora_llegada or service.hora_inicio_real or service.state == 'finalizado') else None">
+                                        Iniciar servicio
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="alert d-none mb-3" id="service-control-feedback" role="alert"></div>
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <div class="border rounded bg-white p-3 h-100">
+                                        <div class="fw-bold mb-1">Llegada</div>
+                                        <div>
+                                            <span id="hora-llegada"><t t-esc="service.hora_llegada or 'Pendiente'"/></span>
+                                            <span class="text-muted">(<span id="diff-llegada"><t t-esc="service.diff_llegada_min"/></span> min)</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="border rounded bg-white p-3 h-100">
+                                        <div class="fw-bold mb-1">Inicio real</div>
+                                        <div>
+                                            <span id="hora-inicio-real"><t t-esc="service.hora_inicio_real or 'Pendiente'"/></span>
+                                            <span class="text-muted">(<span id="diff-inicio"><t t-esc="service.diff_inicio_min"/></span> min)</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card mb-3 shadow-sm">
+                        <div class="card-body p-4"
+                             id="incident-panel"
+                             t-att-data-service-id="service.id"
+                             t-att-data-token="service.access_token">
+                            <h4 class="mb-3 text-danger">Reportar Incidencia</h4>
+                            <div class="alert d-none mb-3" id="incident-feedback" role="alert"></div>
+                            <div class="mb-3">
+                                <textarea class="form-control" id="incident-message" rows="3" placeholder="Describe la situación..."></textarea>
+                            </div>
+                            <button type="button" class="btn btn-danger w-100" id="incident-submit">Enviar reporte</button>
+                        </div>
+                    </div>
+                </t>
 
                 <div class="card mb-3">
                     <div class="card-header"><strong>Ruta Planeada</strong></div>
