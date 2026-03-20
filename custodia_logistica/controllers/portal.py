@@ -4,11 +4,30 @@ from datetime import datetime
 
 from odoo import fields, http
 from odoo.addons.portal.controllers.portal import CustomerPortal
-from odoo.exceptions import AccessError
+from odoo.exceptions import AccessError, MissingError
 from odoo.http import request
 
 
 class CustodiaPortal(CustomerPortal):
+
+    def _get_portal_service(self, service_id, access_token=None):
+        try:
+            return self._document_check_access('custodia.service', service_id, access_token)
+        except (AccessError, MissingError):
+            if access_token:
+                raise
+
+        service = request.env['custodia.service'].sudo().browse(service_id)
+        if not service.exists():
+            raise MissingError()
+
+        if request.env.user._is_public():
+            raise AccessError()
+
+        partner = request.env.user.partner_id.commercial_partner_id
+        if service.partner_id != partner and not request.env.user.has_group('base.group_user'):
+            raise AccessError()
+        return service
 
     def _extract_lat_lng(self, record, lat_names=None, lng_names=None):
         if not record:
@@ -110,8 +129,8 @@ class CustodiaPortal(CustomerPortal):
     @http.route(['/mis-servicios/<int:service_id>'], type='http', auth='public', website=True)
     def portal_service_detail(self, service_id, access_token=None, **kwargs):
         try:
-            service = self._document_check_access('custodia.service', service_id, access_token)
-        except AccessError:
+            service = self._get_portal_service(service_id, access_token)
+        except (AccessError, MissingError):
             return request.redirect('/mis-servicios')
 
         return request.render('custodia_logistica.portal_service_detail', {
@@ -122,31 +141,30 @@ class CustodiaPortal(CustomerPortal):
             'can_convert_alert': service.request_type == 'alerta',
         })
 
-    @http.route('/custodia/service/<int:service_id>/incidencia', type='json', auth='user', methods=['POST'], website=True)
-    def custodia_reportar_incidencia(self, service_id, **kwargs):
-        service = request.env['custodia.service'].sudo().browse(service_id)
-        mensaje = kwargs.get('mensaje')
+    @http.route('/custodia/service/<int:service_id>/incidencia', type='json', auth='public', methods=['POST'], website=True, csrf=False)
+    def custodia_reportar_incidencia(self, service_id, access_token=None, **kwargs):
+        mensaje = (kwargs.get('mensaje') or '').strip()
+        try:
+            service = self._get_portal_service(service_id, access_token)
+        except (AccessError, MissingError):
+            return {'status': 'error', 'message': 'Acceso denegado.'}
 
-        if not service.exists() or not mensaje:
-            return {'status': 'error', 'message': 'Datos incompletos'}
+        if not mensaje:
+            return {'status': 'error', 'message': 'Debes describir la incidencia.'}
 
         service.message_post(
             body=f"⚠️ <b>INCIDENCIA REPORTADA:</b><br/>{mensaje}",
             message_type='comment',
             subtype_xmlid='mail.mt_comment'
         )
-        return {'status': 'success'}
+        return {'status': 'success', 'message': 'Incidencia reportada correctamente.'}
 
 
     @http.route(['/mis-servicios/<int:service_id>/convertir'], type='http', auth='user', website=True)
     def portal_convert_alert(self, service_id, access_token=None, **kwargs):
         try:
-            service = self._document_check_access('custodia.service', service_id, access_token)
-        except Exception:
-            return request.redirect('/mis-servicios')
-
-        partner = request.env.user.partner_id.commercial_partner_id
-        if service.partner_id != partner and not request.env.user.has_group('base.group_user'):
+            service = self._get_portal_service(service_id, access_token)
+        except (AccessError, MissingError):
             return request.redirect('/mis-servicios')
 
         if service.request_type == 'alerta':
@@ -159,13 +177,11 @@ class CustodiaPortal(CustomerPortal):
     @http.route(['/mis-servicios/<int:service_id>/editar'], type='http', auth='user', website=True, methods=['GET', 'POST'])
     def portal_edit_service(self, service_id, access_token=None, **post):
         try:
-            service = self._document_check_access('custodia.service', service_id, access_token)
-        except Exception:
+            service = self._get_portal_service(service_id, access_token)
+        except (AccessError, MissingError):
             return request.redirect('/mis-servicios')
 
         partner = request.env.user.partner_id.commercial_partner_id
-        if service.partner_id != partner and not request.env.user.has_group('base.group_user'):
-            return request.redirect('/mis-servicios')
 
         if request.httprequest.method == 'POST':
             vals = {
@@ -195,8 +211,8 @@ class CustodiaPortal(CustomerPortal):
     @http.route(['/mis-servicios/<int:service_id>/tracking'], type='http', auth='public', website=True, csrf=False)
     def portal_service_tracking(self, service_id, access_token=None, **kwargs):
         try:
-            service = self._document_check_access('custodia.service', service_id, access_token)
-        except Exception:
+            service = self._get_portal_service(service_id, access_token)
+        except (AccessError, MissingError):
             return request.make_response(
                 json.dumps({'error': 'Acceso denegado'}),
                 headers=[('Content-Type', 'application/json')]
@@ -315,14 +331,11 @@ class CustodiaPortal(CustomerPortal):
                 'error': str(err),
             })
 
-    @http.route('/custodia/service/<int:service_id>/<string:action>', type='json', auth='user', methods=['POST'], website=True)
-    def custodia_action(self, service_id, action, **kwargs):
-        service = request.env['custodia.service'].sudo().browse(service_id)
-        if not service.exists():
-            return {'status': 'error', 'message': 'Servicio no encontrado.'}
-
-        partner = request.env.user.partner_id.commercial_partner_id
-        if service.partner_id != partner and not request.env.user.has_group('base.group_user'):
+    @http.route('/custodia/service/<int:service_id>/<string:action>', type='json', auth='public', methods=['POST'], website=True, csrf=False)
+    def custodia_action(self, service_id, action, access_token=None, **kwargs):
+        try:
+            service = self._get_portal_service(service_id, access_token)
+        except (AccessError, MissingError):
             return {'status': 'error', 'message': 'No tiene permisos para realizar esta acción.'}
 
         now = fields.Datetime.now()
@@ -335,17 +348,32 @@ class CustodiaPortal(CustomerPortal):
                     body=f"✅ <b>Llegada de Custodio:</b> Registrada el {fields.Datetime.to_string(now)}.",
                     subtype_xmlid='mail.mt_note'
                 )
-            elif action == 'iniciar':
-                if service.state in ['en_ejecucion', 'finalizado']:
-                    return {'status': 'error', 'message': 'El servicio ya se encuentra en ejecución o ha finalizado.'}
+                return {
+                    'status': 'success',
+                    'message': 'Llegada registrada correctamente.',
+                    'hora_llegada': fields.Datetime.to_string(service.hora_llegada),
+                    'diff_llegada_min': service.diff_llegada_min,
+                }
+            if action == 'iniciar':
+                if not service.hora_llegada:
+                    return {'status': 'error', 'message': 'Primero debes registrar la llegada del custodio.'}
+                if service.hora_inicio_real:
+                    return {'status': 'error', 'message': 'El inicio real ya ha sido registrado anteriormente.'}
+                if service.state == 'finalizado':
+                    return {'status': 'error', 'message': 'El servicio ya ha finalizado.'}
                 service.write({'hora_inicio_real': now, 'state': 'en_ejecucion'})
                 service.message_post(
                     body=f"🚀 <b>Servicio Iniciado:</b> Ejecución comenzada el {fields.Datetime.to_string(now)}.",
                     subtype_xmlid='mail.mt_note'
                 )
-            else:
-                return {'status': 'error', 'message': 'Acción no reconocida.'}
-
-            return {'status': 'success', 'message': 'Registro actualizado correctamente'}
+                return {
+                    'status': 'success',
+                    'message': 'Inicio real registrado correctamente.',
+                    'hora_inicio_real': fields.Datetime.to_string(service.hora_inicio_real),
+                    'diff_inicio_min': service.diff_inicio_min,
+                    'state': service.state,
+                    'state_label': dict(service._fields['state'].selection).get(service.state),
+                }
+            return {'status': 'error', 'message': 'Acción no reconocida.'}
         except Exception as err:
             return {'status': 'error', 'message': str(err)}
