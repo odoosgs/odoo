@@ -57,9 +57,9 @@
     });
 
     // =========================================================
-    // 2. ARRANCAR MAPAS AL CARGAR LA PÁGINA (DOMContentReady)
+    // 2. ARRANCAR MAPAS AL CARGAR LA PÁGINA
     // =========================================================
-    document.addEventListener("DOMContentLoaded", function () {
+    function bootMaps() {
         console.log("DOM listo - Verificando existencia de mapas...");
 
         // Espera activa por Leaflet: en algunos entornos externos tarda en estar disponible.
@@ -77,7 +77,14 @@
                 initLiveTrackingMap();
             }
         });
-    });
+    }
+
+    if (document.readyState === "loading") {
+        document.addEventListener("DOMContentLoaded", bootMaps);
+    } else {
+        // En Odoo portal los assets pueden cargarse después de DOMContentLoaded.
+        bootMaps();
+    }
 
     function waitForLeaflet(retries, intervalMs, onReady) {
         if (window.L) {
