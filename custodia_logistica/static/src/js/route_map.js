@@ -123,41 +123,67 @@
             const data = await response.json();
             const coords = data.result;
 
-            if (!coords || coords.length < 2) return;
+            if (!coords || coords.length < 2) {
+                console.warn("La ruta no devolvió suficientes coordenadas para dibujar.", coords);
+                return;
+            }
 
             const origin = coords[0];
             const destination = coords[coords.length - 1];
-
-            const osrmUrl = `https://router.project-osrm.org/route/v1/driving/${origin.lng},${origin.lat};${destination.lng},${destination.lat}?overview=full&geometries=geojson`;
-
-            const routeResponse = await fetch(osrmUrl);
-            const routeData = await routeResponse.json();
-
-            if (!routeData.routes || routeData.routes.length === 0) return;
-
-            const route = routeData.routes[0];
-            const routeGeo = route.geometry;
-
             const mapRoute = L.map("route-map").setView([origin.lat, origin.lng], 6);
             L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png").addTo(mapRoute);
 
-            const routeLayer = L.geoJSON(routeGeo, {
-                style: { color: "blue", weight: 5 }
-            }).addTo(mapRoute);
+            let routeLayer = null;
+            let distanceText = "-";
+            let durationText = "-";
 
-            mapRoute.fitBounds(routeLayer.getBounds());
+            try {
+                const osrmUrl = `https://router.project-osrm.org/route/v1/driving/${origin.lng},${origin.lat};${destination.lng},${destination.lat}?overview=full&geometries=geojson`;
+                const routeResponse = await fetch(osrmUrl);
+                const routeData = await routeResponse.json();
 
-            const distanceKm = (route.distance / 1000).toFixed(1);
-            const totalMinutes = Math.round(route.duration / 60);
-            const hours = Math.floor(totalMinutes / 60);
-            const minutes = totalMinutes % 60;
+                if (routeData.routes && routeData.routes.length > 0) {
+                    const route = routeData.routes[0];
+                    const routeGeo = route.geometry;
+                    routeLayer = L.geoJSON(routeGeo, {
+                        style: { color: "blue", weight: 5 }
+                    }).addTo(mapRoute);
+                    distanceText = (route.distance / 1000).toFixed(1) + " km";
+                    const totalMinutes = Math.round(route.duration / 60);
+                    const hours = Math.floor(totalMinutes / 60);
+                    const minutes = totalMinutes % 60;
+                    durationText = (hours > 0) ? `${hours} h ${minutes} min` : `${minutes} min`;
+                }
+            } catch (routeErr) {
+                console.warn("No fue posible obtener ruta OSRM; se dibujará línea base.", routeErr);
+            }
+
+            if (!routeLayer) {
+                const fallbackLine = {
+                    type: "Feature",
+                    geometry: {
+                        type: "LineString",
+                        coordinates: [
+                            [origin.lng, origin.lat],
+                            [destination.lng, destination.lat]
+                        ]
+                    }
+                };
+                routeLayer = L.geoJSON(fallbackLine, {
+                    style: { color: "#0d6efd", weight: 4, dashArray: "8, 8" }
+                }).addTo(mapRoute);
+                L.marker([origin.lat, origin.lng]).addTo(mapRoute).bindPopup(origin.label || "Origen");
+                L.marker([destination.lat, destination.lng]).addTo(mapRoute).bindPopup(destination.label || "Destino");
+            }
+
+            mapRoute.fitBounds(routeLayer.getBounds(), { padding: [20, 20] });
 
             const summaryDiv = document.getElementById("route-summary");
             if (summaryDiv) {
                 const distanceEl = document.getElementById("route-distance");
                 const durationEl = document.getElementById("route-duration");
-                if (distanceEl) distanceEl.textContent = distanceKm + " km";
-                if (durationEl) durationEl.textContent = (hours > 0) ? `${hours} h ${minutes} min` : `${minutes} min`;
+                if (distanceEl) distanceEl.textContent = distanceText;
+                if (durationEl) durationEl.textContent = durationText;
                 summaryDiv.style.display = "block";
             }
             setTimeout(() => mapRoute.invalidateSize(), 200);
