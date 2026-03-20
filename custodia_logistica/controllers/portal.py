@@ -10,6 +10,38 @@ from odoo.http import request
 
 class CustodiaPortal(CustomerPortal):
 
+    def _extract_lat_lng(self, record, lat_names=None, lng_names=None):
+        if not record:
+            return None
+        lat_names = lat_names or ['latitude', 'lat', 'origin_latitude', 'destination_latitude']
+        lng_names = lng_names or ['longitude', 'lng', 'lon', 'origin_longitude', 'destination_longitude']
+        lat = False
+        lng = False
+        for name in lat_names:
+            if hasattr(record, name):
+                lat = getattr(record, name)
+                if lat not in (False, None, ''):
+                    break
+        for name in lng_names:
+            if hasattr(record, name):
+                lng = getattr(record, name)
+                if lng not in (False, None, ''):
+                    break
+        if lat in (False, None, '') or lng in (False, None, ''):
+            return None
+        return {'lat': lat, 'lng': lng}
+
+    def _extract_point_from_text(self, value, label=None):
+        if not value or ',' not in str(value):
+            return None
+        try:
+            parts = [p.strip() for p in str(value).split(',')]
+            if len(parts) < 2:
+                return None
+            return {'lat': float(parts[0]), 'lng': float(parts[1]), 'label': label}
+        except Exception:
+            return None
+
     def _prepare_home_portal_values(self, counters):
         values = super()._prepare_home_portal_values(counters)
         if 'services_count' in counters:
@@ -24,7 +56,43 @@ class CustodiaPortal(CustomerPortal):
         ruta = request.env['custodia.ruta'].sudo().browse(ruta_id)
         if not ruta.exists():
             return []
-        return ruta.get_route_coordinates()
+
+        coords = ruta.get_route_coordinates() if hasattr(ruta, 'get_route_coordinates') else []
+        if coords and len(coords) >= 2:
+            return coords
+
+        fallback = []
+
+        direct_origin = self._extract_lat_lng(
+            ruta,
+            lat_names=['origin_latitude', 'latitude', 'lat'],
+            lng_names=['origin_longitude', 'longitude', 'lng', 'lon'],
+        )
+        direct_dest = self._extract_lat_lng(
+            ruta,
+            lat_names=['destination_latitude', 'dest_latitude', 'latitude_destino'],
+            lng_names=['destination_longitude', 'dest_longitude', 'longitude_destino'],
+        )
+        node_origin = self._extract_lat_lng(getattr(ruta, 'nodo_origen_id', False))
+        node_dest = self._extract_lat_lng(getattr(ruta, 'nodo_destino_id', False))
+        text_origin = self._extract_point_from_text(getattr(ruta, 'start_coords', False), 'Origen')
+        text_dest = self._extract_point_from_text(getattr(ruta, 'end_coords', False), 'Destino')
+
+        for point, label in [
+            (direct_origin, 'Origen'),
+            (node_origin, 'Origen'),
+            (text_origin, 'Origen'),
+            (direct_dest, 'Destino'),
+            (node_dest, 'Destino'),
+            (text_dest, 'Destino'),
+        ]:
+            if point:
+                point.setdefault('label', label)
+                exists = any(abs(p['lat'] - point['lat']) < 1e-9 and abs(p['lng'] - point['lng']) < 1e-9 for p in fallback)
+                if not exists:
+                    fallback.append(point)
+
+        return fallback
 
     @http.route(['/mis-servicios'], type='http', auth='user', website=True)
     def portal_services(self, **kwargs):
