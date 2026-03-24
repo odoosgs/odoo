@@ -47,16 +47,53 @@
                                             </select>
                                         </div>
 
-                                        <div class="col-md-6 mb-3">
-                                            <label class="form-label" for="nivel_seguridad">Nivel de Seguridad</label>
-                                            <select name="nivel_seguridad" class="form-select">
-                                                <option value="">-- Opcional --</option>
-                                                <option value="1">Nivel 1</option>
-                                                <option value="2">Nivel 2</option>
-                                                <option value="3">Nivel 3</option>
-                                                <option value="4">Nivel 4</option>
-                                                <option value="4x">Excepción + Nivel 4</option>
-                                            </select>
+                                        <div class="col-12 mb-4">
+                                            <label class="form-label d-block">Nivel de Seguridad</label>
+                                            <div class="custodia-security-levels" data-security-level-widget="1">
+                                                <div class="custodia-security-level-options">
+                                                    <label class="custodia-level-option">
+                                                        <input type="radio" name="nivel_seguridad" value="1" data-level-title="Nivel 1 — Básico"/>
+                                                        <span class="custodia-level-card">
+                                                            <span class="custodia-level-card-title">🟢 Nivel 1</span>
+                                                            <span class="custodia-level-card-subtitle">Opción básica para operación estándar.</span>
+                                                        </span>
+                                                    </label>
+                                                    <label class="custodia-level-option">
+                                                        <input type="radio" name="nivel_seguridad" value="2" data-level-title="Nivel 2 — Intermedio"/>
+                                                        <span class="custodia-level-card">
+                                                            <span class="custodia-level-card-title">🔵 Nivel 2</span>
+                                                            <span class="custodia-level-card-subtitle">Mayor cobertura operativa y apoyo en ruta.</span>
+                                                        </span>
+                                                    </label>
+                                                    <label class="custodia-level-option">
+                                                        <input type="radio" name="nivel_seguridad" value="3" data-level-title="Nivel 3 — Avanzado"/>
+                                                        <span class="custodia-level-card">
+                                                            <span class="custodia-level-card-title">🟠 Nivel 3</span>
+                                                            <span class="custodia-level-card-subtitle">Protección avanzada para rutas de mayor exposición.</span>
+                                                        </span>
+                                                    </label>
+                                                    <label class="custodia-level-option">
+                                                        <input type="radio" name="nivel_seguridad" value="4" data-level-title="Nivel 4 — Máximo"/>
+                                                        <span class="custodia-level-card">
+                                                            <span class="custodia-level-card-title">🔴 Nivel 4</span>
+                                                            <span class="custodia-level-card-subtitle">Cobertura máxima para operaciones críticas.</span>
+                                                        </span>
+                                                    </label>
+                                                    <label class="custodia-level-option">
+                                                        <input type="radio" name="nivel_seguridad" value="4x" data-level-title="Excepción + Nivel 4"/>
+                                                        <span class="custodia-level-card">
+                                                            <span class="custodia-level-card-title">🛡️ Excepción + Nivel 4</span>
+                                                            <span class="custodia-level-card-subtitle">Atención especial para escenarios fuera de política estándar.</span>
+                                                        </span>
+                                                    </label>
+                                                </div>
+                                                <div class="custodia-security-summary">
+                                                    <div class="custodia-security-badge" data-level-badge="1">Selecciona un nivel</div>
+                                                    <h5 data-security-level-title="1">Nivel de Seguridad</h5>
+                                                    <p class="text-muted mb-3" data-security-level-description="1">Selecciona el nivel que mejor se adapte al riesgo y al tipo de carga.</p>
+                                                    <div data-security-level-content="1"></div>
+                                                </div>
+                                            </div>
                                         </div>
 
                                         <div class="col-md-12 mb-3">
