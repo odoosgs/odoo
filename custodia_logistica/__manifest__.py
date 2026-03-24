@@ -52,6 +52,7 @@
             # Aquí puedes agregar CSS/JS para personalizar el portal
             'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css',
             'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js',
+            'custodia_logistica/static/src/css/portal_security_levels.css',
             'custodia_logistica/static/src/js/route_map.js', # Sin el "/" inicial
         ],
     },
