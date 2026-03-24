@@ -33,6 +33,7 @@
             <field name="ruta_id"/>
             <field name="nivel_seguridad"/>
             <field name="load_id"/>
+            <field name="gps_tracking_url" widget="url" placeholder="https://gps.example.com/seguimiento/..."/>
           </group>
           <notebook>
             <page string="Asignaciones">
