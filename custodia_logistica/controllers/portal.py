@@ -11,6 +11,27 @@ from odoo.http import request
 
 class CustodiaPortal(CustomerPortal):
 
+    def _missing_service_fields(self, service):
+        if hasattr(service, '_get_missing_service_fields'):
+            try:
+                return service._get_missing_service_fields()
+            except Exception:
+                pass
+
+        checks = [
+            ('Contacto solicitante', getattr(service, 'contact_id', False)),
+            ('Fecha programada', getattr(service, 'start_datetime', False)),
+            ('Carrier', getattr(service, 'carrier_id', False)),
+            ('Ruta', getattr(service, 'ruta_id', False)),
+            ('Nivel de seguridad', getattr(service, 'nivel_seguridad', False)),
+            ('Load ID', getattr(service, 'load_id', False)),
+        ]
+        missing = []
+        for label, value in checks:
+            if not value:
+                missing.append(label)
+        return missing
+
     def _get_portal_service(self, service_id, access_token=None):
         try:
             return self._document_check_access('custodia.service', service_id, access_token)
@@ -140,7 +161,7 @@ class CustodiaPortal(CustomerPortal):
             'token': service.access_token,
             'page_name': 'service_detail',
             'can_convert_alert': service.request_type == 'alerta',
-            'missing_service_fields': service._get_missing_service_fields() if service.request_type == 'alerta' else [],
+            'missing_service_fields': self._missing_service_fields(service) if service.request_type == 'alerta' else [],
             'convert_error': kwargs.get('convert_error'),
         })
 
@@ -214,7 +235,7 @@ class CustodiaPortal(CustomerPortal):
             'cliente': partner,
             'page_name': 'service_edit',
             'convert_error': post.get('convert_error'),
-            'missing_service_fields': service._get_missing_service_fields() if service.request_type == 'alerta' else [],
+            'missing_service_fields': self._missing_service_fields(service) if service.request_type == 'alerta' else [],
         })
 
     @http.route(['/mis-servicios/<int:service_id>/tracking'], type='http', auth='public', website=True, csrf=False)
