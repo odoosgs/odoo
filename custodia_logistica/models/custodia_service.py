@@ -142,26 +142,33 @@ class CustodiaService(models.Model):
                         'Para servicios urgentes, capture directamente el servicio completo.'
                     ))
 
+    def _get_missing_service_fields(self):
+        self.ensure_one()
+        missing = []
+        checks = [
+            (_('Contacto solicitante'), self.contact_id),
+            (_('Fecha programada'), self.start_datetime),
+            (_('Carrier'), self.carrier_id),
+            (_('Ruta'), self.ruta_id),
+            (_('Nivel de seguridad'), self.nivel_seguridad),
+            (_('Load ID'), self.load_id),
+        ]
+        for label, value in checks:
+            if not value:
+                missing.append(label)
+        return missing
+
+    def _raise_if_missing_service_fields(self):
+        for rec in self:
+            missing = rec._get_missing_service_fields()
+            if missing:
+                raise ValidationError(_('Para convertir a servicio faltan campos: %s') % ', '.join(missing))
+
     @api.constrains('request_type', 'carrier_id', 'ruta_id', 'nivel_seguridad', 'load_id', 'contact_id', 'start_datetime')
     def _check_required_for_service(self):
         for rec in self:
-            if rec.request_type != 'servicio':
-                continue
-            missing = []
-            if not rec.contact_id:
-                missing.append(_('Contacto solicitante'))
-            if not rec.start_datetime:
-                missing.append(_('Fecha programada'))
-            if not rec.carrier_id:
-                missing.append(_('Carrier'))
-            if not rec.ruta_id:
-                missing.append(_('Ruta'))
-            if not rec.nivel_seguridad:
-                missing.append(_('Nivel de seguridad'))
-            if not rec.load_id:
-                missing.append(_('Load ID'))
-            if missing:
-                raise ValidationError(_('Para convertir a servicio faltan campos: %s') % ', '.join(missing))
+            if rec.request_type == 'servicio':
+                rec._raise_if_missing_service_fields()
 
     @api.constrains('load_id')
     def _check_unique_load_id(self):
@@ -196,6 +203,7 @@ class CustodiaService(models.Model):
 
     def action_convert_to_service(self):
         for rec in self:
+            rec._raise_if_missing_service_fields()
             rec.write({
                 'request_type': 'servicio',
                 'state': 'solicitado',
