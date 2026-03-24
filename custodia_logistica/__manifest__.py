@@ -45,7 +45,7 @@
         # Portal
         'views/portal_templates.xml',
         'views/portal_service_form.xml',
-        #'views/portal_service_detail.xml',
+        'views/portal_service_detail.xml',
     ],
     'assets': {
         'web.assets_frontend': [
