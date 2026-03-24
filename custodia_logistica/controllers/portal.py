@@ -1,10 +1,11 @@
 # -*- coding: utf-8 -*-
 import json
 from datetime import datetime
+from urllib.parse import quote_plus
 
 from odoo import fields, http
 from odoo.addons.portal.controllers.portal import CustomerPortal
-from odoo.exceptions import AccessError, MissingError
+from odoo.exceptions import AccessError, MissingError, ValidationError
 from odoo.http import request
 
 
@@ -139,6 +140,8 @@ class CustodiaPortal(CustomerPortal):
             'token': service.access_token,
             'page_name': 'service_detail',
             'can_convert_alert': service.request_type == 'alerta',
+            'missing_service_fields': service._get_missing_service_fields() if service.request_type == 'alerta' else [],
+            'convert_error': kwargs.get('convert_error'),
         })
 
     @http.route('/custodia/service/<int:service_id>/incidencia', type='json', auth='public', methods=['POST'], website=True, csrf=False)
@@ -168,7 +171,11 @@ class CustodiaPortal(CustomerPortal):
             return request.redirect('/mis-servicios')
 
         if service.request_type == 'alerta':
-            service.action_convert_to_service()
+            try:
+                service.action_convert_to_service()
+            except ValidationError as err:
+                message = quote_plus(str(err))
+                return request.redirect(f'/mis-servicios/{service.id}/editar?access_token={service.access_token}&convert_error={message}')
             service.message_post(body='Alerta convertida a solicitud desde portal por el cliente.')
 
         return request.redirect(f'/mis-servicios/{service.id}?access_token={service.access_token}')
@@ -206,6 +213,8 @@ class CustodiaPortal(CustomerPortal):
             'contacts': request.env['res.partner'].sudo().search([('parent_id', '=', partner.id)]),
             'cliente': partner,
             'page_name': 'service_edit',
+            'convert_error': post.get('convert_error'),
+            'missing_service_fields': service._get_missing_service_fields() if service.request_type == 'alerta' else [],
         })
 
     @http.route(['/mis-servicios/<int:service_id>/tracking'], type='http', auth='public', website=True, csrf=False)
