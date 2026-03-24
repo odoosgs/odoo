@@ -56,6 +56,108 @@
         }
     });
 
+    function bindSecurityLevelWidgets() {
+        const widgets = document.querySelectorAll("[data-security-level-widget]");
+        if (!widgets.length) return;
+
+        const levelData = {
+            1: {
+                badge: "🟢 Básico",
+                title: "Nivel 1 — Básico",
+                description: "Ideal para operaciones estándar donde el usuario necesita una decisión rápida sin perder claridad.",
+                items: [
+                    "🚗 1 vehículo de custodia",
+                    "👤 1 custodio",
+                    "🔒 Candado mecánico",
+                    "📍 GPS activo",
+                    "⏱️ Cobertura estimada: 3 horas"
+                ]
+            },
+            2: {
+                badge: "🔵 Intermedio",
+                title: "Nivel 2 — Intermedio",
+                description: "Incrementa la cobertura para rutas con exposición media o necesidades adicionales de acompañamiento.",
+                items: [
+                    "🚗 Custodia principal + vehículo sombra",
+                    "👥 2 custodios",
+                    "🔒 Candado digital",
+                    "📍 GPS activo",
+                    "⏱️ Cobertura estimada: 4 horas"
+                ]
+            },
+            3: {
+                badge: "🟠 Avanzado",
+                title: "Nivel 3 — Avanzado",
+                description: "Recomendado para operaciones sensibles que requieren más presencia operativa y control en ruta.",
+                items: [
+                    "🚗 Custodia + sombra",
+                    "👥 3 personas (incluye a bordo)",
+                    "🔒 Candado digital",
+                    "📍 GPS activo",
+                    "⏱️ Cobertura estimada: 5 horas"
+                ]
+            },
+            4: {
+                badge: "🔴 Máximo",
+                title: "Nivel 4 — Máximo",
+                description: "Máxima cobertura para eventos críticos, alto riesgo o requerimientos corporativos reforzados.",
+                items: [
+                    "🚗 Custodia + sombra + a bordo",
+                    "🚧 4 puntos de seguridad",
+                    "👥 7 personas",
+                    "🔒 Candado digital",
+                    "📍 GPS activo",
+                    "⏱️ Cobertura estimada: 6 horas"
+                ]
+            },
+            '4x': {
+                badge: "🛡️ Excepción",
+                title: "Excepción + Nivel 4",
+                description: "Escenario especial para solicitudes fuera de política estándar que requieren validación y operación reforzada.",
+                items: [
+                    "🔴 Basado en nivel 4",
+                    "📋 Revisión especial de operación",
+                    "👥 Recursos reforzados según evento",
+                    "📍 GPS activo y monitoreo dedicado",
+                    "☎️ Coordinación puntual con planeación"
+                ]
+            }
+        };
+
+        const renderWidget = (widget, level) => {
+            const badge = widget.querySelector("[data-level-badge]");
+            const title = widget.querySelector("[data-security-level-title]");
+            const description = widget.querySelector("[data-security-level-description]");
+            const content = widget.querySelector("[data-security-level-content]");
+            if (!levelData[level]) {
+                if (badge) badge.textContent = "Selecciona un nivel";
+                if (title) title.textContent = "Nivel de Seguridad";
+                if (description) description.textContent = "Elige una opción para ver el alcance del servicio y tomar una decisión con mayor claridad.";
+                if (content) content.innerHTML = '<div class="text-muted">Aquí verás un resumen dinámico de vehículos, custodios, candados, GPS y cobertura estimada.</div>';
+                return;
+            }
+            const summary = levelData[level];
+            if (badge) badge.textContent = summary.badge;
+            if (title) title.textContent = summary.title;
+            if (description) description.textContent = summary.description;
+            if (content) {
+                content.innerHTML = `<ul>${summary.items.map((item) => `<li>${item}</li>`).join("")}</ul>`;
+            }
+        };
+
+        widgets.forEach((widget) => {
+            const radios = widget.querySelectorAll('input[name="nivel_seguridad"]');
+            if (!radios.length) return;
+
+            const selected = Array.from(radios).find((radio) => radio.checked);
+            renderWidget(widget, selected ? selected.value : null);
+
+            radios.forEach((radio) => {
+                radio.addEventListener("change", () => renderWidget(widget, radio.value));
+            });
+        });
+    }
+
     function showFeedback(element, type, message) {
         if (!element) return;
         element.className = `alert alert-${type} mb-3`;
@@ -169,6 +271,7 @@
     function bootMaps() {
         console.log("DOM listo - Verificando existencia de mapas...");
 
+        bindSecurityLevelWidgets();
         bindServiceControls();
         bindIncidentReporter();
 
