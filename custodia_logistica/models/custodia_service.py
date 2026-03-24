@@ -48,6 +48,7 @@ class CustodiaService(models.Model):
     current_lat = fields.Float(string='Latitud Actual', tracking=True)
     current_lng = fields.Float(string='Longitud Actual', tracking=True)
     last_update = fields.Datetime(string='Última Actualización', tracking=True)
+    gps_tracking_url = fields.Char(string='Liga GPS en tiempo real', tracking=True)
 
     hora_llegada = fields.Datetime(string='Hora de llegada custodio', tracking=True)
     hora_inicio_real = fields.Datetime(string='Hora de inicio real', tracking=True)
