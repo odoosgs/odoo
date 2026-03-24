@@ -23,8 +23,6 @@ class CustodiaService(models.Model):
     carrier_id = fields.Many2one('custodia.carrier', string='Carrier', tracking=True)
     ruta_id = fields.Many2one('custodia.ruta', string='Ruta', tracking=True)
     
-    name = fields.Char(tracking=True)
-    state = fields.Selection([...], tracking=True)
 
     # Compatibilidad con vistas/catálogos existentes
     ruta_maestra_id = fields.Many2one('custodia.ruta.maestra', string='Ruta Principal', tracking=True)
