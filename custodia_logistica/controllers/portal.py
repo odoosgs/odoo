@@ -159,6 +159,7 @@ class CustodiaPortal(CustomerPortal):
             'service': service,
             'cliente': service.partner_id,
             'token': service.access_token,
+            'pid': request.env.user.partner_id.id if not request.env.user._is_public() else False,
             'page_name': 'service_detail',
             'can_convert_alert': service.request_type == 'alerta',
             'missing_service_fields': self._missing_service_fields(service) if service.request_type == 'alerta' else [],
@@ -212,20 +213,45 @@ class CustodiaPortal(CustomerPortal):
         partner = request.env.user.partner_id.commercial_partner_id
 
         if request.httprequest.method == 'POST':
-            vals = {
-                'contact_id': int(post.get('contact_id')) if post.get('contact_id') else service.contact_id.id,
-                'carrier_id': int(post.get('carrier_id')) if post.get('carrier_id') else False,
-                'start_datetime': datetime.strptime(post.get('start_datetime'), '%Y-%m-%dT%H:%M') if post.get('start_datetime') else service.start_datetime,
-                'nivel_seguridad': post.get('nivel_seguridad') or False,
-                'load_id': post.get('load_id') or False,
-                'tipo_unidad': post.get('tipo_unidad') or False,
-                'placas': post.get('placas') or False,
-                'transporte': post.get('transporte') or False,
-                'operador1_nombre': post.get('operador1_nombre') or False,
-                'tel_monitoreo_1': post.get('tel_monitoreo_1') or False,
-            }
-            service.sudo().write(vals)
-            service.message_post(body='Datos actualizados por cliente desde portal.')
+            vals = {}
+            if post.get('contact_id'):
+                vals['contact_id'] = int(post.get('contact_id'))
+            if 'carrier_id' in post:
+                vals['carrier_id'] = int(post.get('carrier_id')) if post.get('carrier_id') else False
+            if post.get('start_datetime'):
+                new_start_datetime = datetime.strptime(post.get('start_datetime'), '%Y-%m-%dT%H:%M')
+                if not service.start_datetime or service.start_datetime != new_start_datetime:
+                    vals['start_datetime'] = new_start_datetime
+            if 'nivel_seguridad' in post:
+                vals['nivel_seguridad'] = post.get('nivel_seguridad') or False
+            if 'load_id' in post:
+                vals['load_id'] = post.get('load_id') or False
+            if 'tipo_unidad' in post:
+                vals['tipo_unidad'] = post.get('tipo_unidad') or False
+            if 'placas' in post:
+                vals['placas'] = post.get('placas') or False
+            if 'transporte' in post:
+                vals['transporte'] = post.get('transporte') or False
+            if 'operador1_nombre' in post:
+                vals['operador1_nombre'] = post.get('operador1_nombre') or False
+            if 'tel_monitoreo_1' in post:
+                vals['tel_monitoreo_1'] = post.get('tel_monitoreo_1') or False
+
+            try:
+                if vals:
+                    service.sudo().write(vals)
+                    service.message_post(body='Datos actualizados por cliente desde portal.')
+            except ValidationError as err:
+                return request.render('custodia_logistica.portal_service_edit', {
+                    'service': service,
+                    'carriers': request.env['custodia.carrier'].sudo().search([]),
+                    'contacts': request.env['res.partner'].sudo().search([('parent_id', '=', partner.id)]),
+                    'cliente': partner,
+                    'page_name': 'service_edit',
+                    'convert_error': str(err),
+                    'missing_service_fields': self._missing_service_fields(service) if service.request_type == 'alerta' else [],
+                })
+
             return request.redirect(f'/mis-servicios/{service.id}?access_token={service.access_token}')
 
         return request.render('custodia_logistica.portal_service_edit', {
