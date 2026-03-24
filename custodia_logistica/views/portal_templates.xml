@@ -77,16 +77,37 @@
                         </div>
 
                         <hr/>
+                        <t t-if="convert_error">
+                            <div class="alert alert-warning mb-3">
+                                <strong>No fue posible convertir la alerta.</strong>
+                                <div><t t-esc="convert_error"/></div>
+                            </div>
+                        </t>
+                        <t t-if="can_convert_alert and missing_service_fields">
+                            <div class="alert alert-info mb-3">
+                                <strong>Antes de convertirla a servicio, completa:</strong>
+                                <ul class="mb-0 mt-2">
+                                    <li t-foreach="missing_service_fields" t-as="field_name"><t t-esc="field_name"/></li>
+                                </ul>
+                            </div>
+                        </t>
                         <div class="d-flex flex-wrap gap-2">
                             <a t-att-href="'/mis-servicios/%s/editar?access_token=%s' % (service.id, service.access_token)"
                                class="btn btn-outline-primary">
                                 Editar datos
                             </a>
                             <t t-if="can_convert_alert">
-                                <a t-att-href="'/mis-servicios/%s/convertir?access_token=%s' % (service.id, service.access_token)"
-                                   class="btn btn-warning">
+                                <a t-att-href="('/mis-servicios/%s/editar?access_token=%s' % (service.id, service.access_token)) if missing_service_fields else ('/mis-servicios/%s/convertir?access_token=%s' % (service.id, service.access_token))"
+                                   t-att-class="'btn btn-warning disabled' if missing_service_fields else 'btn btn-warning'"
+                                   t-att-aria-disabled="'true' if missing_service_fields else None">
                                     Convertir alerta a solicitud
                                 </a>
+                                <t t-if="missing_service_fields">
+                                    <a t-att-href="'/mis-servicios/%s/editar?access_token=%s' % (service.id, service.access_token)"
+                                       class="btn btn-primary">
+                                        Completar datos faltantes
+                                    </a>
+                                </t>
                             </t>
                         </div>
                     </div>
@@ -199,6 +220,20 @@
                 <h3 class="mb-3">Editar <t t-esc="service.name"/></h3>
                 <form t-att-action="'/mis-servicios/%s/editar?access_token=%s' % (service.id, service.access_token)" method="post">
                     <input type="hidden" name="csrf_token" t-att-value="request.csrf_token()"/>
+                    <t t-if="convert_error">
+                        <div class="alert alert-warning">
+                            <strong>No fue posible convertir la alerta.</strong>
+                            <div><t t-esc="convert_error"/></div>
+                        </div>
+                    </t>
+                    <t t-if="missing_service_fields and service.request_type == 'alerta'">
+                        <div class="alert alert-info">
+                            <strong>Completa estos datos para poder convertirla a servicio:</strong>
+                            <ul class="mb-0 mt-2">
+                                <li t-foreach="missing_service_fields" t-as="field_name"><t t-esc="field_name"/></li>
+                            </ul>
+                        </div>
+                    </t>
                     <div class="row">
                         <div class="col-md-6 mb-3">
                             <label class="form-label">Contacto Solicitante *</label>
