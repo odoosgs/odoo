@@ -1,5 +1,6 @@
 from odoo import models, fields, api, _
 from odoo.exceptions import UserError
+from datetime import datetime
 
 class HrEmployee(models.Model):
     _inherit = 'hr.employee'
@@ -14,20 +15,26 @@ class HrEmployee(models.Model):
         if not employees:
             raise UserError("No hay empleados en el sistema.")
 
-        # Reiniciar secuencia a 1
+        # 1. Reiniciar secuencia a 1
         sequence = self.env['ir.sequence'].search([('code', '=', 'hr.employee.number')], limit=1)
         if sequence:
             sequence.write({'number_next_actual': 1})
 
-        # Función de ordenamiento con conversión de tipos para evitar el TypeError
+        # 2. Función de ordenamiento segura
         def get_cleaning_date(emp):
-            # Si tiene fecha importada, esa es la prioridad
+            # Si tiene la fecha importada del Excel, esa manda
             if emp.contract_date_start:
-                return fields.Date.to_date(emp.contract_date_start)
-            # Si no, usamos la fecha de creación convertida a solo fecha (Date)
-            return fields.Datetime.to_date(emp.create_date)
+                return emp.contract_date_start
+            
+            # Si no hay fecha importada, usamos la fecha de creación.
+            # Convertimos Datetime a Date de forma nativa en Python (.date())
+            if emp.create_date:
+                return emp.create_date.date()
+            
+            # Si de plano no hay nada (muy raro), devolvemos la fecha de hoy
+            return fields.Date.today()
 
-        # Ahora sí, la comparación es entre Date y Date
+        # 3. Ordenar y asignar
         sorted_employees = sorted(employees, key=get_cleaning_date)
 
         for emp in sorted_employees:
@@ -42,7 +49,7 @@ class HrEmployee(models.Model):
         return {
             'effect': {
                 'fadeout': 'slow',
-                'message': '¡Numeración corregida por antigüedad real!',
+                'message': '¡Numeración corregida con éxito!',
                 'type': 'rainbow_man',
             }
         }
