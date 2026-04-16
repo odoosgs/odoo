@@ -19,24 +19,18 @@
               action="action_custodia_punto_operativo" 
               sequence="20"/>
 
-  <record id="action_custodia_orden" model="ir.actions.act_window">
-    <field name="name">Plantilla de Custodia</field>
-    <field name="res_model">custodia.orden</field>
-    <field name="view_mode">list,form</field>
-    <field name="help" type="html">
-      <p class="o_view_nocontent_smiling_face">
-        Crea una nueva Plantilla de Custodia
-      </p>
-    </field>
-  </record>
+  <record id="action_custodia_asignacion" model="ir.actions.act_window">
+        <field name="name">Asignaciones de Custodia</field>
+        <field name="res_model">custodia.asignacion</field>
+        <field name="view_mode">list,form</field>
+    </record>
 
-  <menuitem id="menu_custodia_orden_main"
-            name="Plantilla de Custodia"
-            parent="menu_custodia_root"
-            action="action_custodia_orden"
-            sequence="15"/>
+    <menuitem id="menu_custodia_orden_main"
+              name="Plantilla de Custodia"
+              parent="menu_custodia_root"
+              action="action_custodia_orden"
+              sequence="10"/>
   
-
   <!-- Servicios -->
   <record id="action_custodia_service" model="ir.actions.act_window">
     <field name="name">Servicios de Custodia</field>
