@@ -31,6 +31,7 @@
         'views/custodia_catalogos_views.xml', # <--- Nuevo        
         'views/custodia_carrier_views.xml',
         'views/custodia_ruta_views.xml',
+        'views/custodia_views.xml',
 
         # Servicio principal
         'views/custodia_service_views.xml',
