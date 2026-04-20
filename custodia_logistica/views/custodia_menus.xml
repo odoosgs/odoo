@@ -19,7 +19,7 @@
               action="action_custodia_punto_operativo" 
               sequence="20"/>
 
-  <record id="action_custodia_asignacion" model="ir.actions.act_window">
+ <!-- <record id="action_custodia_asignacion" model="ir.actions.act_window">
         <field name="name">Asignaciones de Custodia</field>
         <field name="res_model">custodia.asignacion</field>
         <field name="view_mode">list,form</field>
@@ -29,7 +29,7 @@
               name="Plantilla de Custodia"
               parent="menu_custodia_root"
               action="action_custodia_orden"
-              sequence="10"/>
+              sequence="10"/> -->
   
   <!-- Servicios -->
   <record id="action_custodia_service" model="ir.actions.act_window">
