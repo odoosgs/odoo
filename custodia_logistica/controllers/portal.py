@@ -328,13 +328,21 @@ class CustodiaPortal(CustomerPortal):
             if post.get('start_datetime'):
                 start_dt = datetime.strptime(post['start_datetime'], '%Y-%m-%dT%H:%M')
 
-            contact_id = int(post.get('contact_id')) if post.get('contact_id') else False
-            if not contact_id or not start_dt:
-                raise ValueError('Debe capturar contacto solicitante y fecha programada.')
-
-            maestra_id = int(post.get('ruta_maestra_id', 0))
-            origen_id = int(post.get('nodo_origen_id', 0))
-            destino_id = int(post.get('nodo_destino_id', 0))
+# Función auxiliar para convertir a int de forma segura
+    def to_int(value):
+        try:
+            return int(value) if value else False
+        except (ValueError, TypeError):
+            return False
+    
+    contact_id = to_int(post.get('contact_id'))
+    if not contact_id or not start_dt:
+        raise ValueError('Debe capturar contacto solicitante y fecha programada.')
+    
+    maestra_id = to_int(post.get('ruta_maestra_id'))
+    origen_id = to_int(post.get('nodo_origen_id'))
+    destino_id = to_int(post.get('nodo_destino_id'))
+    carrier_id = to_int(post.get('carrier_id'))
 
             ruta_variante = request.env['custodia.ruta'].sudo().search([
                 ('ruta_maestra_id', '=', maestra_id),
