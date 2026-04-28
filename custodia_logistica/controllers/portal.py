@@ -8,6 +8,14 @@ from odoo.addons.portal.controllers.portal import CustomerPortal
 from odoo.exceptions import AccessError, MissingError, ValidationError
 from odoo.http import request
 
+def to_int(value):
+    """ Función auxiliar para convertir a int de forma segura y evitar errores de base 10 """
+    try:
+        if value and str(value).strip():
+            return int(value)
+        return False
+    except (ValueError, TypeError):
+        return False
 
 class CustodiaPortal(CustomerPortal):
 
@@ -92,7 +100,7 @@ class CustodiaPortal(CustomerPortal):
             ])
         return values
 
-    @http.route(['/custodia/ruta/<int:ruta_id>/coordinates'], type='json', auth='public', website=True)
+    @http.route(['/custodia/ruta/<int:ruta_id>/coordinates'], type='jsonrpc', auth='public', website=True)
     def get_ruta_coordinates(self, ruta_id, **kwargs):
         ruta = request.env['custodia.ruta'].sudo().browse(ruta_id)
         if not ruta.exists():
@@ -103,36 +111,21 @@ class CustodiaPortal(CustomerPortal):
             return coords
 
         fallback = []
-
-        direct_origin = self._extract_lat_lng(
-            ruta,
-            lat_names=['origin_latitude', 'latitude', 'lat'],
-            lng_names=['origin_longitude', 'longitude', 'lng', 'lon'],
-        )
-        direct_dest = self._extract_lat_lng(
-            ruta,
-            lat_names=['destination_latitude', 'dest_latitude', 'latitude_destino'],
-            lng_names=['destination_longitude', 'dest_longitude', 'longitude_destino'],
-        )
+        direct_origin = self._extract_lat_lng(ruta, lat_names=['origin_latitude', 'latitude', 'lat'], lng_names=['origin_longitude', 'longitude', 'lng', 'lon'])
+        direct_dest = self._extract_lat_lng(ruta, lat_names=['destination_latitude', 'dest_latitude', 'latitude_destino'], lng_names=['destination_longitude', 'dest_longitude', 'longitude_destino'])
+        
         node_origin = self._extract_lat_lng(getattr(ruta, 'nodo_origen_id', False))
         node_dest = self._extract_lat_lng(getattr(ruta, 'nodo_destino_id', False))
+        
         text_origin = self._extract_point_from_text(getattr(ruta, 'start_coords', False), 'Origen')
         text_dest = self._extract_point_from_text(getattr(ruta, 'end_coords', False), 'Destino')
 
-        for point, label in [
-            (direct_origin, 'Origen'),
-            (node_origin, 'Origen'),
-            (text_origin, 'Origen'),
-            (direct_dest, 'Destino'),
-            (node_dest, 'Destino'),
-            (text_dest, 'Destino'),
-        ]:
+        for point, label in [(direct_origin, 'Origen'), (node_origin, 'Origen'), (text_origin, 'Origen'), (direct_dest, 'Destino'), (node_dest, 'Destino'), (text_dest, 'Destino')]:
             if point:
                 point.setdefault('label', label)
                 exists = any(abs(p['lat'] - point['lat']) < 1e-9 and abs(p['lng'] - point['lng']) < 1e-9 for p in fallback)
                 if not exists:
                     fallback.append(point)
-
         return fallback
 
     @http.route(['/mis-servicios'], type='http', auth='user', website=True)
@@ -166,7 +159,7 @@ class CustodiaPortal(CustomerPortal):
             'convert_error': kwargs.get('convert_error'),
         })
 
-    @http.route('/custodia/service/<int:service_id>/incidencia', type='json', auth='public', methods=['POST'], website=True, csrf=False)
+    @http.route('/custodia/service/<int:service_id>/incidencia', type='jsonrpc', auth='public', methods=['POST'], website=True, csrf=False)
     def custodia_reportar_incidencia(self, service_id, access_token=None, **kwargs):
         mensaje = (kwargs.get('mensaje') or '').strip()
         try:
@@ -183,7 +176,6 @@ class CustodiaPortal(CustomerPortal):
             subtype_xmlid='mail.mt_comment'
         )
         return {'status': 'success', 'message': 'Incidencia reportada correctamente.'}
-
 
     @http.route(['/mis-servicios/<int:service_id>/convertir'], type='http', auth='user', website=True)
     def portal_convert_alert(self, service_id, access_token=None, **kwargs):
@@ -202,7 +194,6 @@ class CustodiaPortal(CustomerPortal):
 
         return request.redirect(f'/mis-servicios/{service.id}?access_token={service.access_token}')
 
-
     @http.route(['/mis-servicios/<int:service_id>/editar'], type='http', auth='user', website=True, methods=['GET', 'POST'])
     def portal_edit_service(self, service_id, access_token=None, **post):
         try:
@@ -215,27 +206,18 @@ class CustodiaPortal(CustomerPortal):
         if request.httprequest.method == 'POST':
             vals = {}
             if post.get('contact_id'):
-                vals['contact_id'] = int(post.get('contact_id'))
+                vals['contact_id'] = to_int(post.get('contact_id'))
             if 'carrier_id' in post:
-                vals['carrier_id'] = int(post.get('carrier_id')) if post.get('carrier_id') else False
+                vals['carrier_id'] = to_int(post.get('carrier_id'))
             if post.get('start_datetime'):
                 new_start_datetime = datetime.strptime(post.get('start_datetime'), '%Y-%m-%dT%H:%M')
                 if not service.start_datetime or service.start_datetime != new_start_datetime:
                     vals['start_datetime'] = new_start_datetime
-            if 'nivel_seguridad' in post:
-                vals['nivel_seguridad'] = post.get('nivel_seguridad') or False
-            if 'load_id' in post:
-                vals['load_id'] = post.get('load_id') or False
-            if 'tipo_unidad' in post:
-                vals['tipo_unidad'] = post.get('tipo_unidad') or False
-            if 'placas' in post:
-                vals['placas'] = post.get('placas') or False
-            if 'transporte' in post:
-                vals['transporte'] = post.get('transporte') or False
-            if 'operador1_nombre' in post:
-                vals['operador1_nombre'] = post.get('operador1_nombre') or False
-            if 'tel_monitoreo_1' in post:
-                vals['tel_monitoreo_1'] = post.get('tel_monitoreo_1') or False
+            
+            # Otros campos
+            for field in ['nivel_seguridad', 'load_id', 'tipo_unidad', 'placas', 'transporte', 'operador1_nombre', 'tel_monitoreo_1']:
+                if field in post:
+                    vals[field] = post.get(field) or False
 
             try:
                 if vals:
@@ -269,17 +251,11 @@ class CustodiaPortal(CustomerPortal):
         try:
             service = self._get_portal_service(service_id, access_token)
         except (AccessError, MissingError):
-            return request.make_response(
-                json.dumps({'error': 'Acceso denegado'}),
-                headers=[('Content-Type', 'application/json')]
-            )
-
-        lat = service.current_lat or service.ruta_id.origin_latitude
-        lng = service.current_lng or service.ruta_id.origin_longitude
+            return request.make_response(json.dumps({'error': 'Acceso denegado'}), headers=[('Content-Type', 'application/json')])
 
         data = {
-            'lat': lat,
-            'lng': lng,
+            'lat': service.current_lat or service.ruta_id.origin_latitude,
+            'lng': service.current_lng or service.ruta_id.origin_longitude,
             'last_update': str(service.last_update) if service.last_update else 'Sin reportes',
             'state': service.state,
         }
@@ -287,14 +263,9 @@ class CustodiaPortal(CustomerPortal):
 
     @http.route('/get_nodos_by_maestra/<int:maestra_id>', type='http', auth='user', website=True, csrf=False)
     def get_nodos_by_maestra(self, maestra_id, **kwargs):
-        rutas = request.env['custodia.ruta'].sudo().search([
-            ('ruta_maestra_id', '=', maestra_id)
-        ])
-
-        origenes = []
-        destinos = []
-        seen_orig = set()
-        seen_dest = set()
+        rutas = request.env['custodia.ruta'].sudo().search([('ruta_maestra_id', '=', maestra_id)])
+        origenes, destinos = [], []
+        seen_orig, seen_dest = set(), set()
 
         for ruta in rutas:
             if ruta.nodo_origen_id and ruta.nodo_origen_id.id not in seen_orig:
@@ -304,10 +275,7 @@ class CustodiaPortal(CustomerPortal):
                 destinos.append({'id': ruta.nodo_destino_id.id, 'name': ruta.nodo_destino_id.name})
                 seen_dest.add(ruta.nodo_destino_id.id)
 
-        data = {
-            'origenes': sorted(origenes, key=lambda x: x['name']),
-            'destinos': sorted(destinos, key=lambda x: x['name']),
-        }
+        data = {'origenes': sorted(origenes, key=lambda x: x['name']), 'destinos': sorted(destinos, key=lambda x: x['name'])}
         return request.make_response(json.dumps(data), headers=[('Content-Type', 'application/json')])
 
     @http.route(['/solicitar-servicio'], type='http', auth='user', website=True)
@@ -328,14 +296,14 @@ class CustodiaPortal(CustomerPortal):
             if post.get('start_datetime'):
                 start_dt = datetime.strptime(post['start_datetime'], '%Y-%m-%dT%H:%M')
 
-            contact_id = int(post.get('contact_id')) if post.get('contact_id') else False
+            contact_id = to_int(post.get('contact_id'))
             if not contact_id or not start_dt:
-                raise ValueError('Debe capturar contacto solicitante y fecha programada.')
+                raise ValidationError('Debe capturar contacto solicitante y fecha programada.')
 
-            maestra_id = int(post.get('ruta_maestra_id', 0))
-            origen_id = int(post.get('nodo_origen_id', 0))
-            destino_id = int(post.get('nodo_destino_id', 0))
-
+            maestra_id = to_int(post.get('ruta_maestra_id'))
+            origen_id = to_int(post.get('nodo_origen_id'))
+            destino_id = to_int(post.get('nodo_destino_id'))
+            carrier_id = to_int(post.get('carrier_id'))
 
             ruta_variante = request.env['custodia.ruta'].sudo().search([
                 ('ruta_maestra_id', '=', maestra_id),
@@ -346,7 +314,7 @@ class CustodiaPortal(CustomerPortal):
             vals = {
                 'partner_id': partner.id,
                 'contact_id': contact_id,
-                'carrier_id': int(post.get('carrier_id')) if post.get('carrier_id') else False,
+                'carrier_id': carrier_id,
                 'ruta_id': ruta_variante.id if ruta_variante else False,
                 'start_datetime': start_dt,
                 'nivel_seguridad': post.get('nivel_seguridad') or False,
@@ -358,16 +326,9 @@ class CustodiaPortal(CustomerPortal):
                 'tel_monitoreo_1': post.get('tel_monitoreo_1'),
             }
 
-            # Portal crea ALERTA por defecto para captura anticipada.
-            # Solo se crea servicio directo cuando el formulario lo envía explícitamente.
             create_as_service = str(post.get('create_as_service', '')).lower() in ('1', 'true', 'on', 'yes')
             if create_as_service:
-                required_for_service = all([
-                    vals.get('carrier_id'),
-                    vals.get('ruta_id'),
-                    vals.get('nivel_seguridad'),
-                    vals.get('load_id'),
-                ])
+                required_for_service = all([vals.get('carrier_id'), vals.get('ruta_id'), vals.get('nivel_seguridad'), vals.get('load_id')])
                 vals['request_type'] = 'servicio' if required_for_service else 'alerta'
                 vals['state'] = 'solicitado' if required_for_service else 'alerta'
             else:
@@ -376,7 +337,6 @@ class CustodiaPortal(CustomerPortal):
 
             service = request.env['custodia.service'].sudo().create(vals)
             service._portal_ensure_token()
-
             return request.redirect(f'/mis-servicios/{service.id}?access_token={service.access_token}')
 
         except Exception as err:
@@ -388,7 +348,7 @@ class CustodiaPortal(CustomerPortal):
                 'error': str(err),
             })
 
-    @http.route('/custodia/service/<int:service_id>/<string:action>', type='json', auth='public', methods=['POST'], website=True, csrf=False)
+    @http.route('/custodia/service/<int:service_id>/<string:action>', type='jsonrpc', auth='public', methods=['POST'], website=True, csrf=False)
     def custodia_action(self, service_id, action, access_token=None, **kwargs):
         try:
             service = self._get_portal_service(service_id, access_token)
@@ -401,36 +361,18 @@ class CustodiaPortal(CustomerPortal):
                 if service.hora_llegada:
                     return {'status': 'error', 'message': 'La llegada ya ha sido registrada anteriormente.'}
                 service.write({'hora_llegada': now})
-                service.message_post(
-                    body=f"✅ <b>Llegada de Custodio:</b> Registrada el {fields.Datetime.to_string(now)}.",
-                    subtype_xmlid='mail.mt_note'
-                )
-                return {
-                    'status': 'success',
-                    'message': 'Llegada registrada correctamente.',
-                    'hora_llegada': fields.Datetime.to_string(service.hora_llegada),
-                    'diff_llegada_min': service.diff_llegada_min,
-                }
+                service.message_post(body=f"✅ <b>Llegada de Custodio:</b> Registrada el {fields.Datetime.to_string(now)}.", subtype_xmlid='mail.mt_note')
+                return {'status': 'success', 'message': 'Llegada registrada correctamente.', 'hora_llegada': fields.Datetime.to_string(service.hora_llegada), 'diff_llegada_min': service.diff_llegada_min}
+            
             if action == 'iniciar':
                 if not service.hora_llegada:
                     return {'status': 'error', 'message': 'Primero debes registrar la llegada del custodio.'}
                 if service.hora_inicio_real:
                     return {'status': 'error', 'message': 'El inicio real ya ha sido registrado anteriormente.'}
-                if service.state == 'finalizado':
-                    return {'status': 'error', 'message': 'El servicio ya ha finalizado.'}
                 service.write({'hora_inicio_real': now, 'state': 'en_ejecucion'})
-                service.message_post(
-                    body=f"🚀 <b>Servicio Iniciado:</b> Ejecución comenzada el {fields.Datetime.to_string(now)}.",
-                    subtype_xmlid='mail.mt_note'
-                )
-                return {
-                    'status': 'success',
-                    'message': 'Inicio real registrado correctamente.',
-                    'hora_inicio_real': fields.Datetime.to_string(service.hora_inicio_real),
-                    'diff_inicio_min': service.diff_inicio_min,
-                    'state': service.state,
-                    'state_label': dict(service._fields['state'].selection).get(service.state),
-                }
+                service.message_post(body=f"🚀 <b>Servicio Iniciado:</b> Ejecución comenzada el {fields.Datetime.to_string(now)}.", subtype_xmlid='mail.mt_note')
+                return {'status': 'success', 'message': 'Inicio real registrado correctamente.', 'hora_inicio_real': fields.Datetime.to_string(service.hora_inicio_real), 'state': service.state}
+            
             return {'status': 'error', 'message': 'Acción no reconocida.'}
         except Exception as err:
             return {'status': 'error', 'message': str(err)}
