@@ -119,7 +119,11 @@
                 <filter name="approved" string="Autorizados" domain="[('status','=','approved')]"/>
                 <filter name="rejected" string="Rechazados" domain="[('status','=','rejected')]"/>
                 <filter name="late" string="Fuera de 12h" domain="[('is_late','=',True)]"/>
-                <group expand="0" string="Agrupar"><filter string="Custodio" context="{'group_by':'custodian_id'}"/><filter string="Estado" context="{'group_by':'status'}"/><filter string="Mes" context="{'group_by':'date:month'}"/></group>
+                <group expand="0" string="Agrupar">
+                    <filter name="group_by_custodian" string="Custodio" context="{'group_by':'custodian_id'}"/>
+                    <filter name="group_by_status" string="Estado" context="{'group_by':'status'}"/>
+                    <filter name="group_by_month" string="Mes" context="{'group_by':'date:month'}"/>
+                </group>
             </search>
         </field>
     </record>
