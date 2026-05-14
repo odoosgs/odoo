@@ -5,8 +5,8 @@
     'summary': 'Gestión de viáticos SGS',
     'depends': ['base', 'portal', 'hr'],
     'data': [
-        'security/security.xml',
         'security/ir.model.access.csv',
+        'security/security.xml',
         'views/viatico_views.xml',
         'views/portal_templates.xml',
         'views/menu_views.xml',
