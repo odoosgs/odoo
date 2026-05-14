@@ -1,32 +1,64 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
-    <!-- Vista de Entregas -->
-    <record id="view_sgs_viatico_entrega_tree" model="ir.ui.view">
+    <!-- VISTA DE LISTA: ENTREGAS -->
+    <record id="view_sgs_viatico_entrega_list" model="ir.ui.view">
         <field name="name">sgs.viatico.entrega.list</field>
         <field name="model">sgs.viatico.entrega</field>
         <field name="arch" type="xml">
-            <list> <!-- CAMBIADO DE tree A list -->
+            <list>
                 <field name="name"/>
                 <field name="employee_id"/>
-                <field name="amount" sum="Total"/>
+                <field name="amount" sum="Total Entregado"/>
                 <field name="date"/>
                 <field name="state" widget="badge" decoration-info="state == 'draft'" decoration-success="state == 'done'"/>
             </list>
         </field>
     </record>
 
+    <!-- VISTA FORMULARIO: ENTREGAS (CORRIGE EL ERROR DE TU IMAGEN) -->
+    <record id="view_sgs_viatico_entrega_form" model="ir.ui.view">
+        <field name="name">sgs.viatico.entrega.form</field>
+        <field name="model">sgs.viatico.entrega</field>
+        <field name="arch" type="xml">
+            <form>
+                <header>
+                    <button name="action_confirm" string="Confirmar Entrega" type="object" class="oe_highlight" invisible="state == 'done'"/>
+                    <field name="state" widget="statusbar"/>
+                </header>
+                <sheet>
+                    <div class="oe_title">
+                        <h1><field name="name"/></h1>
+                    </div>
+                    <group>
+                        <group>
+                            <field name="employee_id" placeholder="Seleccione al custodio..."/>
+                            <field name="amount"/>
+                        </group>
+                        <group>
+                            <field name="date"/>
+                        </group>
+                    </group>
+                </sheet>
+                <div class="oe_chatter">
+                    <field name="message_follower_ids"/>
+                    <field name="message_ids"/>
+                </div>
+            </form>
+        </field>
+    </record>
+
     <record id="action_sgs_viatico_entrega" model="ir.actions.act_window">
         <field name="name">Entregas de Efectivo</field>
         <field name="res_model">sgs.viatico.entrega</field>
-        <field name="view_mode">list,form</field> <!-- CAMBIADO DE tree A list -->
+        <field name="view_mode">list,form</field>
     </record>
 
-    <!-- Vista de Gastos -->
-    <record id="view_sgs_viatico_gasto_tree" model="ir.ui.view">
+    <!-- VISTA DE LISTA: GASTOS -->
+    <record id="view_sgs_viatico_gasto_list" model="ir.ui.view">
         <field name="name">sgs.viatico.gasto.list</field>
         <field name="model">sgs.viatico.gasto</field>
         <field name="arch" type="xml">
-            <list decoration-danger="state == 'reported'" decoration-success="state == 'approved'"> <!-- CAMBIADO DE tree A list -->
+            <list decoration-danger="state == 'reported'" decoration-success="state == 'approved'">
                 <field name="date"/>
                 <field name="employee_id"/>
                 <field name="name"/>
@@ -37,9 +69,46 @@
         </field>
     </record>
 
+    <!-- VISTA FORMULARIO: GASTOS -->
+    <record id="view_sgs_viatico_gasto_form" model="ir.ui.view">
+        <field name="name">sgs.viatico.gasto.form</field>
+        <field name="model">sgs.viatico.gasto</field>
+        <field name="arch" type="xml">
+            <form>
+                <header>
+                    <button name="action_approve" string="Aprobar" type="object" class="oe_highlight" invisible="state != 'reported'"/>
+                    <button name="action_refuse" string="Rechazar" type="object" class="btn-danger" invisible="state != 'reported'"/>
+                    <field name="state" widget="statusbar"/>
+                </header>
+                <sheet>
+                    <group>
+                        <group>
+                            <field name="employee_id"/>
+                            <field name="name"/>
+                            <field name="category"/>
+                        </group>
+                        <group>
+                            <field name="amount"/>
+                            <field name="date"/>
+                        </group>
+                    </group>
+                    <notebook>
+                        <page string="Comprobante">
+                            <field name="receipt_image" widget="image" class="oe_avatar" options='{"size": [500, 500]}'/>
+                        </page>
+                    </notebook>
+                </sheet>
+                <div class="oe_chatter">
+                    <field name="message_follower_ids"/>
+                    <field name="message_ids"/>
+                </div>
+            </form>
+        </field>
+    </record>
+
     <record id="action_sgs_viatico_gasto" model="ir.actions.act_window">
         <field name="name">Gastos de Custodios</field>
         <field name="res_model">sgs.viatico.gasto</field>
-        <field name="view_mode">list,form</field> <!-- CAMBIADO DE tree A list -->
+        <field name="view_mode">list,form</field>
     </record>
 </odoo>
