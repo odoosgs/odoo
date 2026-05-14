@@ -1,9 +1,8 @@
 {
     'name': 'SGS Viáticos Custodios',
-    'version': '1.0',
-    'category': 'Human Resources',
-    'summary': 'Gestión de viáticos y gastos para custodios SGS - Interfaz Portal',
-    'author': 'SGS',
+    'version': '19.0.1.0.0',
+    'category': 'Operations',
+    'summary': 'Gestión de viáticos SGS',
     'depends': ['base', 'portal', 'hr'],
     'data': [
         'security/security.xml',
