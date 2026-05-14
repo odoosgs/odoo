@@ -2,44 +2,44 @@
 <odoo>
     <!-- Vista de Entregas -->
     <record id="view_sgs_viatico_entrega_tree" model="ir.ui.view">
-        <field name="name">sgs.viatico.entrega.tree</field>
+        <field name="name">sgs.viatico.entrega.list</field>
         <field name="model">sgs.viatico.entrega</field>
         <field name="arch" type="xml">
-            <tree>
+            <list> <!-- CAMBIADO DE tree A list -->
                 <field name="name"/>
                 <field name="employee_id"/>
                 <field name="amount" sum="Total"/>
                 <field name="date"/>
-                <field name="state" widget="badge"/>
-            </tree>
+                <field name="state" widget="badge" decoration-info="state == 'draft'" decoration-success="state == 'done'"/>
+            </list>
         </field>
     </record>
 
     <record id="action_sgs_viatico_entrega" model="ir.actions.act_window">
         <field name="name">Entregas de Efectivo</field>
         <field name="res_model">sgs.viatico.entrega</field>
-        <field name="view_mode">tree,form</field>
+        <field name="view_mode">list,form</field> <!-- CAMBIADO DE tree A list -->
     </record>
 
     <!-- Vista de Gastos -->
     <record id="view_sgs_viatico_gasto_tree" model="ir.ui.view">
-        <field name="name">sgs.viatico.gasto.tree</field>
+        <field name="name">sgs.viatico.gasto.list</field>
         <field name="model">sgs.viatico.gasto</field>
         <field name="arch" type="xml">
-            <tree decoration-danger="state == 'reported'" decoration-success="state == 'approved'">
+            <list decoration-danger="state == 'reported'" decoration-success="state == 'approved'"> <!-- CAMBIADO DE tree A list -->
                 <field name="date"/>
                 <field name="employee_id"/>
                 <field name="name"/>
                 <field name="category"/>
                 <field name="amount" sum="Total Gastos"/>
                 <field name="state" widget="badge"/>
-            </tree>
+            </list>
         </field>
     </record>
 
     <record id="action_sgs_viatico_gasto" model="ir.actions.act_window">
         <field name="name">Gastos de Custodios</field>
         <field name="res_model">sgs.viatico.gasto</field>
-        <field name="view_mode">tree,form</field>
+        <field name="view_mode">list,form</field> <!-- CAMBIADO DE tree A list -->
     </record>
 </odoo>
