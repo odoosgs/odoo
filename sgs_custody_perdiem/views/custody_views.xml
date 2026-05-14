@@ -111,19 +111,18 @@
         <field name="name">sgs.route.service.search</field>
         <field name="model">sgs.route.service</field>
         <field name="arch" type="xml">
-            <search>
+            <search string="Servicios / Gastos">
                 <field name="name"/>
                 <field name="custodian_id"/>
                 <field name="client_id"/>
-                <filter name="pending" string="Pendientes" domain="[('status','=','pending')]"/>
-                <filter name="approved" string="Autorizados" domain="[('status','=','approved')]"/>
-                <filter name="rejected" string="Rechazados" domain="[('status','=','rejected')]"/>
-                <filter name="late" string="Fuera de 12h" domain="[('is_late','=',True)]"/>
-                <group expand="0" string="Agrupar">
-                    <filter name="group_by_custodian" string="Custodio" context="{'group_by':'custodian_id'}"/>
-                    <filter name="group_by_status" string="Estado" context="{'group_by':'status'}"/>
-                    <filter name="group_by_month" string="Mes" context="{'group_by':'date:month'}"/>
-                </group>
+                <filter name="pending" string="Pendientes" domain="[('status', '=', 'pending')]"/>
+                <filter name="approved" string="Autorizados" domain="[('status', '=', 'approved')]"/>
+                <filter name="rejected" string="Rechazados" domain="[('status', '=', 'rejected')]"/>
+                <filter name="late" string="Fuera de 12h" domain="[('is_late', '=', True)]"/>
+                <separator/>
+                <filter name="group_by_custodian" string="Agrupar por custodio" context="{'group_by': 'custodian_id'}"/>
+                <filter name="group_by_status" string="Agrupar por estado" context="{'group_by': 'status'}"/>
+                <filter name="group_by_date" string="Agrupar por fecha" context="{'group_by': 'date'}"/>
             </search>
         </field>
     </record>
