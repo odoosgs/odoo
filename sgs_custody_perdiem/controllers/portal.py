@@ -8,8 +8,12 @@ from werkzeug.exceptions import NotFound
 class SgsCustodyPortal(http.Controller):
 
     def _format_amount(self, amount, currency):
-        symbol = currency.symbol or '$'
-        return '%s %,.2f' % (symbol, amount or 0.0)
+        symbol = currency.symbol if currency and currency.symbol else '$'
+        numeric_amount = amount or 0.0
+        formatted_amount = format(numeric_amount, ',.2f')
+        if currency and currency.position == 'after':
+            return '%s %s' % (formatted_amount, symbol)
+        return '%s %s' % (symbol, formatted_amount)
 
     def _get_custodian(self, token):
         custodian = request.env['sgs.custodian'].sudo().search([('portal_token', '=', token), ('active', '=', True)], limit=1)
