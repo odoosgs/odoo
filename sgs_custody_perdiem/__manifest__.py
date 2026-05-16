@@ -32,5 +32,5 @@ Módulo para administrar custodios de vehículos pesados, depósitos de viático
     },
     'application': True,
     'installable': True,
-    'icon': 'sgs_custody_perdiem/static/description/icon.png',
+    'icon': 'sgs_custody_perdiem/static/src/img/icon.png',
 }
