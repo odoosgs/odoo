@@ -7,97 +7,70 @@ from werkzeug.exceptions import NotFound
 
 class SgsCustodyPortal(http.Controller):
 
-    def _format_amount(self, amount, currency):
-        symbol = currency.symbol if currency and currency.symbol else '$'
-        numeric_amount = amount or 0.0
-        formatted_amount = format(numeric_amount, ',.2f')
-        if currency and currency.position == 'after':
-            return '%s %s' % (formatted_amount, symbol)
-        return '%s %s' % (symbol, formatted_amount)
-
     def _get_custodian(self, token):
-        custodian = request.env['sgs.custodian'].sudo().search([('portal_token', '=', token), ('active', '=', True)], limit=1)
+        custodian = request.env['sgs.custodian'].sudo().search([
+            ('portal_token', '=', token),
+            ('active', '=', True)
+        ], limit=1)
         if not custodian:
             raise NotFound()
         return custodian
 
-    @http.route(['/sgs/custodio/<string:token>'], type='http', auth='public', website=True, sitemap=False)
-    def custodian_home(self, token, **kw):
+    @http.route(['/sgs/custodio/<string:token>/ocr'], type='http', auth='public', methods=['GET', 'POST'], website=True, csrf=True, sitemap=False)
+    def portal_ocr(self, token, **post):
         custodian = self._get_custodian(token)
-        services = request.env['sgs.route.service'].sudo().search([('custodian_id', '=', custodian.id)], limit=20, order='date desc, id desc')
-        deposits = request.env['sgs.perdiem.deposit'].sudo().search([('custodian_id', '=', custodian.id)], limit=10, order='date desc, id desc')
-        fiscal = request.env['sgs.fiscal.receipt'].sudo().search([('custodian_id', '=', custodian.id)], limit=10, order='date desc, id desc')
-        clients = request.env['sgs.client'].sudo().search([('active', '=', True)], order='name')
-        vehicles = request.env['sgs.vehicle'].sudo().search([('active', '=', True)], order='plate')
-        return request.render('sgs_custody_perdiem.portal_custodian_home', {
+        if request.httprequest.method == 'POST':
+            upload = request.httprequest.files.get('image')
+            if not upload or not upload.filename:
+                return request.redirect('/sgs/custodio/%s?error=sin_imagen' % token)
+
+            vals = {
+                'custodian_id': custodian.id,
+                'document_type': post.get('document_type') or 'toll',
+                'date': post.get('date') or fields.Date.today(),
+                'amount': float(post.get('amount') or 0),
+                'vendor': post.get('vendor'),
+                'rfc': (post.get('rfc') or '').upper(),
+                'concept': post.get('concept'),
+                'image_filename': upload.filename,
+                'image': base64.b64encode(upload.read()),
+            }
+            doc = request.env['sgs.expense.document'].sudo().create(vals)
+            doc.action_process_ocr()
+            return request.redirect('/sgs/custodio/%s/ocr/%s' % (token, doc.id))
+
+        return request.render('sgs_custody_perdiem.portal_ocr_home', {
             'custodian': custodian,
-            'services': services,
-            'deposits': deposits,
-            'fiscal_receipts': fiscal,
-            'clients': clients,
-            'vehicles': vehicles,
             'token': token,
-            'format_amount': self._format_amount,
         })
 
-    @http.route(['/sgs/custodio/<string:token>/servicio'], type='http', auth='public', methods=['POST'], website=True, csrf=True, sitemap=False)
-    def submit_service(self, token, **post):
+    @http.route(['/sgs/custodio/<string:token>/ocr/<int:doc_id>'], type='http', auth='public', website=True, csrf=True, sitemap=False)
+    def portal_ocr_review(self, token, doc_id, **kw):
         custodian = self._get_custodian(token)
-        client = False
-        if post.get('client_id'):
-            client = request.env['sgs.client'].sudo().browse(int(post['client_id']))
-        vehicle = False
-        if post.get('vehicle_id'):
-            vehicle = request.env['sgs.vehicle'].sudo().browse(int(post['vehicle_id']))
-        vals = {
-            'custodian_id': custodian.id,
-            'date': post.get('date') or fields.Date.today(),
-            'client_id': client.id if client and client.exists() else False,
-            'origin': post.get('origin'),
-            'destination': post.get('destination'),
-            'companion': post.get('companion'),
-            'vehicle_id': vehicle.id if vehicle and vehicle.exists() else False,
-            'comments': post.get('comments'),
-            'amount_perdiem': float(post.get('amount_perdiem') or 0),
-            'amount_fuel': float(post.get('amount_fuel') or 0),
-            'amount_lodging': float(post.get('amount_lodging') or 0),
-            'amount_misc': float(post.get('amount_misc') or 0),
-            'misc_detail': post.get('misc_detail'),
-            'status': 'pending',
-        }
-        upload = request.httprequest.files.get('evidence')
-        if upload and upload.filename:
-            vals['evidence_filename'] = upload.filename
-            vals['evidence_image'] = base64.b64encode(upload.read())
-        service = request.env['sgs.route.service'].sudo().create(vals)
-        toll_names = request.httprequest.form.getlist('toll_name[]')
-        toll_amounts = request.httprequest.form.getlist('toll_amount[]')
-        toll_files = request.httprequest.files.getlist('toll_image[]')
-        for idx, name in enumerate(toll_names):
-            amount = float(toll_amounts[idx] or 0) if idx < len(toll_amounts) else 0
-            if not name and not amount:
-                continue
-            line_vals = {'service_id': service.id, 'name': name or 'Caseta', 'amount': amount}
-            if idx < len(toll_files) and toll_files[idx] and toll_files[idx].filename:
-                line_vals['image_filename'] = toll_files[idx].filename
-                line_vals['image'] = base64.b64encode(toll_files[idx].read())
-            request.env['sgs.toll.line'].sudo().create(line_vals)
-        return request.redirect('/sgs/custodio/%s?ok=servicio' % token)
+        doc = request.env['sgs.expense.document'].sudo().browse(doc_id)
+        if not doc.exists() or doc.custodian_id.id != custodian.id:
+            raise NotFound()
 
-    @http.route(['/sgs/custodio/<string:token>/fiscal'], type='http', auth='public', methods=['POST'], website=True, csrf=True, sitemap=False)
-    def submit_fiscal(self, token, **post):
+        return request.render('sgs_custody_perdiem.portal_ocr_review', {
+            'custodian': custodian,
+            'token': token,
+            'doc': doc,
+        })
+
+    @http.route(['/sgs/custodio/<string:token>/ocr/<int:doc_id>/confirm'], type='http', auth='public', methods=['POST'], website=True, csrf=True, sitemap=False)
+    def portal_ocr_confirm(self, token, doc_id, **post):
         custodian = self._get_custodian(token)
-        vals = {
-            'custodian_id': custodian.id,
-            'date': post.get('date') or fields.Date.today(),
-            'amount': float(post.get('amount') or 0),
-            'description': post.get('description') or _('Comprobante fiscal'),
-            'provider': post.get('provider'),
-            'provider_vat': (post.get('provider_vat') or '').upper(),
-        }
-        upload = request.httprequest.files.get('image')
-        if upload and upload.filename:
-            vals['image_filename'] = upload.filename
-            vals['image'] = base64.b64encode(upload.read())
-        request.env['sgs.fiscal.receipt'].sudo().create(vals)
-        return request.redirect('/sgs/custodio/%s?ok=fiscal' % token)
+        doc = request.env['sgs.expense.document'].sudo().browse(doc_id)
+        if not doc.exists() or doc.custodian_id.id != custodian.id:
+            raise NotFound()
+
+        doc.write({
+            'document_type': post.get('document_type') or doc.document_type,
+            'date': post.get('date') or doc.date,
+            'amount': float(post.get('amount') or doc.amount or 0),
+            'vendor': post.get('vendor') or doc.vendor,
+            'rfc': (post.get('rfc') or doc.rfc or '').upper(),
+            'concept': post.get('concept') or doc.concept,
+        })
+        doc.action_confirm()
+        return request.redirect('/sgs/custodio/%s?ok=ocr_confirmado' % token)
