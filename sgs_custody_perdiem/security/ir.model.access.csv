@@ -1,7 +1,0 @@
-id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
-access_sgs_custodian_user,sgs.custodian user,model_sgs_custodian,base.group_user,1,1,1,1
-access_sgs_route_service_user,sgs.route.service user,model_sgs_route_service,base.group_user,1,1,1,1
-access_sgs_perdiem_deposit_user,sgs.perdiem.deposit user,model_sgs_perdiem_deposit,base.group_user,1,1,1,1
-access_sgs_fiscal_receipt_user,sgs.fiscal.receipt user,model_sgs_fiscal_receipt,base.group_user,1,1,1,1
-access_sgs_vehicle_user,sgs.vehicle user,model_sgs_vehicle,base.group_user,1,1,1,1
-access_sgs_client_user,sgs.client user,model_sgs_client,base.group_user,1,1,1,1
