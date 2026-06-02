@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- list view -->
+    <record id="view_contract_reminder_list" model="ir.ui.view">
+        <field name="name">contract.reminder.list</field>
+        <field name="model">contract.reminder</field>
+        <field name="arch" type="xml">
+            <list string="Contract Reminders">
+                <field name="document_id"/>
+                <field name="start_date"/>
+                <field name="end_date"/>
+                <field name="reminder1_days"/>
+                <field name="reminder2_days"/>
+            </list>
+        </field>
+    </record>
+
+    <!-- Form view -->
+    <record id="view_contract_reminder_form" model="ir.ui.view">
+        <field name="name">contract.reminder.form</field>
+        <field name="model">contract.reminder</field>
+        <field name="arch" type="xml">
+            <form string="Contract Reminder">
+                <sheet>
+                    <group>
+                        <field name="document_id"/>
+                        <field name="start_date"/>
+                        <field name="end_date"/>
+                        <field name="reminder1_days"/>
+                        <field name="reminder2_days"/>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <!-- Action -->
+    <record id="action_contract_reminder" model="ir.actions.act_window">
+        <field name="name">Reminder Dates</field>
+        <field name="res_model">contract.reminder</field>
+        <field name="view_mode">list,form</field>
+    </record>
+
+    <!-- Menu -->
+    <menuitem id="contract_management_reminder_date_menu"
+              name="Reminder"
+              parent="documents.menu_root"
+              sequence="20"
+              action="action_contract_reminder"
+              groups="base.group_user"/>
+</odoo>

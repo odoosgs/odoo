@@ -1,0 +1,52 @@
+<odoo>
+    <!-- List View -->
+    <record id="view_contract_registration_list" model="ir.ui.view">
+        <field name="name">contract.registration.list</field>
+        <field name="model">contract.registration</field>
+        <field name="arch" type="xml">
+            <list create="0" delete="0">
+                <field name="name"/>
+                <field name="email"/>
+                <field name="contact"/>
+                <field name="uuid"/>
+            </list>
+        </field>
+    </record>
+
+    <!-- Form View -->
+    <record id="view_contract_registration_form" model="ir.ui.view">
+        <field name="name">contract.registration.form</field>
+        <field name="model">contract.registration</field>
+        <field name="arch" type="xml">
+            <form string="Registration" create="false" delete="false">
+                <sheet>
+                    <group>
+                        <field name="name"/>
+                        <field name="email"/>
+                        <field name="contact"/>
+                        <field name="uuid" readonly="1"/>
+                        <button name="action_regenerate_uuid" string="Regenerate UUID" type="object" class="oe_highlight"/>
+                        <field name="status" readonly="1"/>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <!-- Action -->
+    <record id="action_contract_registration" model="ir.actions.act_window">
+        <field name="name">Register</field>
+        <field name="res_model">contract.registration</field>
+        <field name="view_mode">list,form</field>
+        <field name="view_id" ref="view_contract_registration_list"/>
+    </record>
+
+    <!-- Menu Item -->
+    <menuitem id="menu_contract_registration"
+          name="Register"
+          parent="documents.menu_root"
+          action="action_contract_registration"
+          sequence="6"
+          groups="base.group_user"/>
+
+</odoo>

@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+    <!-- Ensure a "Contract" tag exists -->
+    <record id="contract_tag_contract" model="documents.tag">
+        <field name="name">Contract</field>
+    </record>
+</odoo>

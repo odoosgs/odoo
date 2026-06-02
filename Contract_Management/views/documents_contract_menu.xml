@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Action to open Documents filtered to Contract-tagged files -->
+    <record id="action_documents_contract_only" model="ir.actions.act_window">
+        <field name="name">Contract</field>
+        <field name="path">documents_contract</field>
+        <field name="res_model">documents.document</field>
+        <field name="view_mode">kanban,list,form</field>
+        <field name="domain" eval="[( 'type', '!=', 'folder'), ('tag_ids', 'in', [ref('Contract_Management.contract_tag_contract')]) ]"/>
+    </record>
+
+    <!-- Top menu tab after "Reminder Date" -->
+    <menuitem id="contract_management_contract_tab_menu"
+              name="Contracts"
+              parent="documents.menu_root"
+              sequence="5"
+              action="action_documents_contract_only"
+              groups="base.group_user"/>
+</odoo>

@@ -1,0 +1,28 @@
+<odoo>
+    <!-- Popup Wizard -->
+    <record id="view_ai_popup_wizard" model="ir.ui.view">
+        <field name="name">ai.popup.wizard.form</field>
+        <field name="model">ai.popup.wizard</field>
+        <field name="arch" type="xml">
+            <form string="AI Assistant">
+                <group>
+                    <div class="o_form_label">
+                        Do you want to Use AI to fetch information of your documents/pdf/images/word?
+                    </div>
+                </group>
+                <footer>
+                    <button string="Yes" type="object" name="action_yes" class="btn-primary"/>
+                    <button string="No" special="cancel" class="btn-secondary"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+
+    <!-- Action for Popup -->
+    <record id="action_ai_popup_wizard" model="ir.actions.act_window">
+        <field name="name">AI Popup</field>
+        <field name="res_model">ai.popup.wizard</field>
+        <field name="view_mode">form</field>
+        <field name="target">new</field>
+    </record>
+</odoo>

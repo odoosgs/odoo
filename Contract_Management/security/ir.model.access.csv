@@ -1,0 +1,5 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_ai_popup_wizard,access_ai_popup_wizard,model_ai_popup_wizard,,1,1,1,1
+access_contract_reminder_user,access_contract_reminder_user,model_contract_reminder,base.group_user,1,1,1,1
+
+access_contract_registration_user,access_contract_registration_user,Contract_Management.model_contract_registration,base.group_user,1,1,1,0

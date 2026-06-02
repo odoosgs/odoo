@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="ir_cron_contract_reminder" model="ir.cron">
+        <field name="name">Contract Reminder Notifications</field>
+        <field name="model_id" ref="model_contract_reminder"/>
+        <field name="state">code</field>
+        <field name="code">model._cron_check_reminders()</field>
+        <field name="active">True</field>
+        <field name="interval_number">1</field>
+        <field name="interval_type">minutes</field>
+    </record>
+</odoo>

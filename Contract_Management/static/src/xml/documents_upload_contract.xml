@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates>
+    <!-- Extend Documents "New" dropdown to add an extra entry: Upload Contract -->
+    <t t-inherit="documents.DocumentsViews.ControlPanel" t-inherit-mode="extension">
+        <!-- Insert right after the default Upload item -->
+        <xpath expr="//DropdownItem[contains(@class, 'o_documents_kanban_upload')]" position="after">
+            <DropdownItem tag="'button'" class="'btn btn-link o_documents_kanban_upload_contract'"
+                          onSelected="() => { window._cmUploadContract = true; this.uploadFileInputRef.el.click(); }"
+                          attrs="{'data-hotkey': 'u', disabled: !canUploadInFolder(folder)}">
+                <i class="fa fa-upload fa-fw me-1"/>
+                <span>Upload Contract</span>
+            </DropdownItem>
+        </xpath>
+    </t>
+</templates>
