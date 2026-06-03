@@ -20,7 +20,7 @@ Módulo para administrar custodios de vehículos pesados, depósitos de viático
         'hr', # Añadido para la integración con empleados
         'fleet', # Añadido para la integración con vehículos
         'contacts', # Añadido para la integración con clientes
-        'crm', # Necesario para algunas vistas de Odoo
+        'web_editor', # Necesario para algunas vistas de Odoo
     ],
     'external_dependencies': {
         'python': ['pdfminer.six'], # Añadido para la extracción de texto de PDF
