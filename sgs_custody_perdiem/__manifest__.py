@@ -12,7 +12,19 @@ Módulo para administrar custodios de vehículos pesados, depósitos de viático
     'author': 'Manus AI',
     'website': 'https://www.odoo.com',
     'license': 'LGPL-3',
-    'depends': ['base', 'web', 'mail', 'portal'],
+    'depends': [
+        'base',
+        'web',
+        'mail',
+        'portal',
+        'hr', # Añadido para la integración con empleados
+        'fleet', # Añadido para la integración con vehículos
+        'contacts', # Añadido para la integración con clientes
+        'web_editor', # Necesario para algunas vistas de Odoo
+    ],
+    'external_dependencies': {
+        'python': ['pdfminer.six'], # Añadido para la extracción de texto de PDF
+    },
     'data': [
         'security/security.xml',
         'security/ir.model.access.csv',
@@ -20,6 +32,7 @@ Módulo para administrar custodios de vehículos pesados, depósitos de viático
         'views/assets.xml',
         'views/menu.xml',
         'views/custody_views.xml',
+        'views/deposit_batch_views.xml', # Nueva vista para el asistente de carga masiva
         'views/portal_templates.xml',
     ],
     'demo': [
