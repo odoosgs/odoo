@@ -353,7 +353,7 @@ class SgsDepositFile(models.Model):
         ('processed', 'Procesado'),
         ('validated', 'Validado'),
         ('error', 'Error'),
-    ], string='Estado', default='pending', tracking=True)
+    ], string='Estado', default='pending')
     error_message = fields.Text('Mensaje de Error')
 
     extracted_rfc = fields.Char('RFC Extraído')
