@@ -14,13 +14,13 @@ Módulo para administrar custodios de vehículos pesados, depósitos de viático
     'license': 'LGPL-3',
     'depends': ['base', 'web', 'mail', 'portal', 'hr'],
     'data': [
-        'security/security.xml',
-        'security/ir.model.access.csv',
+        'security/security.xml',          # Grupo y privilegios primero
+        'security/ir.model.access.csv',   # Accesos después
         'data/sequence.xml',
     ],
     'views': [
         'views/assets.xml',
-        'views/menu.xml',
+        'views/menu.xml',                 # Menús después de seguridad
         'views/custody_views.xml',
         'views/portal_templates.xml',
     ],
