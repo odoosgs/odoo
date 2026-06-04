@@ -18,12 +18,30 @@ except ImportError:
 class HrEmployee(models.Model):
     _inherit = 'hr.employee'
     
-    # Añadimos los campos necesarios a hr.employee
+    # Campos necesarios
+    currency_id = fields.Many2one('res.currency', related='company_id.currency_id', readonly=True)
     initial_fund = fields.Monetary('Fondo inicial', currency_field='currency_id', default=0.0, tracking=True)
     portal_token = fields.Char('Token portal', copy=False, index=True, readonly=True, default=lambda self: secrets.token_urlsafe(24))
     portal_url = fields.Char('Enlace portal', compute='_compute_portal_url')
     whatsapp_url = fields.Char('Enlace WhatsApp', compute='_compute_portal_url')
     portal_qr_code = fields.Binary('Código QR Portal', compute='_compute_portal_qr_code')
+    
+    # --- SCRIPT DE AUTO-MIGRACIÓN (Añade esto) ---
+    def init(self):
+        """ Crea las columnas manualmente para evitar el Error 500 antes de actualizar """
+        self.env.cr.execute("""
+            SELECT column_name 
+            FROM information_schema.columns 
+            WHERE table_name='hr_employee' AND column_name IN ('initial_fund', 'portal_token')
+        """)
+        existing_columns = [row[0] for row in self.env.cr.fetchall()]
+        
+        if 'initial_fund' not in existing_columns:
+            self.env.cr.execute('ALTER TABLE hr_employee ADD COLUMN initial_fund numeric DEFAULT 0.0')
+        if 'portal_token' not in existing_columns:
+            self.env.cr.execute('ALTER TABLE hr_employee ADD COLUMN portal_token varchar')
+        
+        super(HrEmployee, self).init()
     
     deposit_ids = fields.One2many('sgs.perdiem.deposit', 'custodian_id', string='Depósitos')
     service_ids = fields.One2many('sgs.route.service', 'custodian_id', string='Servicios')
