@@ -5,7 +5,7 @@
     'summary': 'Gestión de custodios, rutas, viáticos, comprobación de gastos y portal público por token.',
     'description': '''
 SGS Control de Viáticos y Custodias
-=====================================
+====================================
 
 Módulo para administrar custodios de vehículos pesados, depósitos de viáticos, servicios de custodia en rutas, comprobación de gastos, casetas, facturas fiscales y validación administrativa. Incluye portal público por token para que los custodios reporten gastos sin usuario interno.
     ''',
