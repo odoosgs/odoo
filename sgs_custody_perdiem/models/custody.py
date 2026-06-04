@@ -19,23 +19,23 @@ class HrEmployee(models.Model):
     _inherit = 'hr.employee'
     
     # Añadimos los campos necesarios a hr.employee
-    #initial_fund = fields.Monetary('Fondo inicial', currency_field='currency_id', default=0.0, tracking=True)
-    #portal_token = fields.Char('Token portal', copy=False, index=True, readonly=True, default=lambda self: secrets.token_urlsafe(24))
-    #portal_url = fields.Char('Enlace portal', compute='_compute_portal_url')
-    #whatsapp_url = fields.Char('Enlace WhatsApp', compute='_compute_portal_url')
-    #portal_qr_code = fields.Binary('Código QR Portal', compute='_compute_portal_qr_code')
+    initial_fund = fields.Monetary('Fondo inicial', currency_field='currency_id', default=0.0, tracking=True)
+    portal_token = fields.Char('Token portal', copy=False, index=True, readonly=True, default=lambda self: secrets.token_urlsafe(24))
+    portal_url = fields.Char('Enlace portal', compute='_compute_portal_url')
+    whatsapp_url = fields.Char('Enlace WhatsApp', compute='_compute_portal_url')
+    portal_qr_code = fields.Binary('Código QR Portal', compute='_compute_portal_qr_code')
     
-    #deposit_ids = fields.One2many('sgs.perdiem.deposit', 'custodian_id', string='Depósitos')
-    #service_ids = fields.One2many('sgs.route.service', 'custodian_id', string='Servicios')
-    #fiscal_receipt_ids = fields.One2many('sgs.fiscal.receipt', 'custodian_id', string='Comprobantes fiscales')
+    deposit_ids = fields.One2many('sgs.perdiem.deposit', 'custodian_id', string='Depósitos')
+    service_ids = fields.One2many('sgs.route.service', 'custodian_id', string='Servicios')
+    fiscal_receipt_ids = fields.One2many('sgs.fiscal.receipt', 'custodian_id', string='Comprobantes fiscales')
     
-    #total_deposits = fields.Monetary('Total depositado', compute='_compute_amounts', currency_field='currency_id')
-    #total_expenses = fields.Monetary('Total gastos', compute='_compute_amounts', currency_field='currency_id')
-    #total_fiscal = fields.Monetary('Total fiscal comprobado', compute='_compute_amounts', currency_field='currency_id')
-    #balance = fields.Monetary('Saldo', compute='_compute_amounts', currency_field='currency_id')
+    total_deposits = fields.Monetary('Total depositado', compute='_compute_amounts', currency_field='currency_id')
+    total_expenses = fields.Monetary('Total gastos', compute='_compute_amounts', currency_field='currency_id')
+    total_fiscal = fields.Monetary('Total fiscal comprobado', compute='_compute_amounts', currency_field='currency_id')
+    balance = fields.Monetary('Saldo', compute='_compute_amounts', currency_field='currency_id')
     
-    #pending_service_count = fields.Integer('Servicios pendientes', compute='_compute_amounts')
-    #late_service_count = fields.Integer('Servicios fuera de 12h', compute='_compute_amounts')
+    pending_service_count = fields.Integer('Servicios pendientes', compute='_compute_amounts')
+    late_service_count = fields.Integer('Servicios fuera de 12h', compute='_compute_amounts')
     
     compliance_state = fields.Selection([
         ('blue', 'Sin gastos'),
