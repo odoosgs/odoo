@@ -92,3 +92,66 @@ class SGSPerdiemImportBatch(models.Model):
                 })
 
             batch.state = 'done'
+
+class SGSPerdiemImportLine(models.Model):
+    _name = 'sgs.perdiem.import.line'
+    _description = 'Detalle Dispersión Banorte'
+    _order = 'id'
+
+    batch_id = fields.Many2one(
+        'sgs.perdiem.import.batch',
+        required=True,
+        ondelete='cascade'
+    )
+
+    rfc = fields.Char(
+        string='RFC'
+    )
+
+    employee_id = fields.Many2one(
+        'hr.employee',
+        string='Custodio'
+    )
+
+    registration_number = fields.Char(
+        related='employee_id.registration_number',
+        string='ID Empleado'
+    )
+
+    amount = fields.Monetary(
+        string='Monto'
+    )
+
+    notes = fields.Char(
+        string='Observaciones'
+    )
+
+    status = fields.Selection([
+        ('ok', 'Correcto'),
+        ('warning', 'Advertencia'),
+        ('error', 'Error')
+    ], default='ok')
+
+    company_id = fields.Many2one(
+        related='batch_id.company_id'
+    )
+
+    currency_id = fields.Many2one(
+        related='batch_id.currency_id'
+    )
+
+    @api.onchange('rfc')
+    def _onchange_rfc(self):
+
+        if not self.rfc:
+            return
+
+        employee = self.env['hr.employee'].search([
+            ('l10n_mx_rfc', '=', self.rfc.upper().strip())
+        ], limit=1)
+
+        self.employee_id = employee.id if employee else False
+
+        if not employee:
+            self.status = 'error'
+            self.notes = _('RFC no encontrado')
