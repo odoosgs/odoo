@@ -191,7 +191,7 @@ class SgsRouteService(models.Model):
             if vals.get('name', 'Nuevo') == 'Nuevo':
                 cust = self.env['hr.employee'].browse(vals.get('custodian_id'))
                 seq = self.env['ir.sequence'].next_by_code('sgs.route.service') or '0001'
-                emp = cust.employee_number or str(cust.id or '')
+                emp = cust.registration_number or str(cust.id or '')
                 vals['name'] = 'F-%s-%s' % (emp, seq)
             if vals.get('vehicle_id') and not vals.get('vehicle_snapshot'):
                 veh = self.env['fleet.vehicle'].browse(vals['vehicle_id'])
