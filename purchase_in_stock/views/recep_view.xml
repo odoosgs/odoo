@@ -1,20 +1,23 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
     <record id="view_picking_form_inherit_purchase_prices" model="ir.ui.view">
-        <name>stock.picking.form.inherit.purchase.prices</name>
-        <model>stock.picking</model>
-        <inherit_id ref="stock.view_picking_form"/>
+        <field name="name">stock.picking.form.inherit.purchase.prices</field>
+        <field name="model">stock.picking</field>
+        <field name="inherit_id" ref="stock.view_picking_form"/>
         <arch type="xml">
+            
             <xpath expr="//field[@name='move_ids']/tree/field[@name='product_uom']" position="after">
                 <field name="purchase_price_unit" readonly="1" widget="monetary" optional="show"/>
                 <field name="purchase_subtotal" readonly="1" widget="monetary" optional="show"/>
             </xpath>
-            <xpath expr="//notebook" position="after">
+
+            <xpath expr="//sheet" position="inside">
                 <group class="oe_subtotal_footer oe_right" name="purchase_financial_total">
                     <field name="purchase_total" readonly="1" widget="monetary" string="Total Recibido (Aprox)"/>
                 </group>
                 <div class="clearfix"/>
             </xpath>
+
         </arch>
     </record>
 </odoo>
