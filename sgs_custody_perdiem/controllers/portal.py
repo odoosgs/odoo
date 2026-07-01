@@ -31,7 +31,8 @@ class SgsCustodyPortal(http.Controller):
         
         # Si ya tiene sesión activa, lo mandamos directo al home
         if self._get_custodian_from_session():
-            return request.redirect('/sgs/custodio')
+            # Al terminar de procesar todo el formulario, redirigimos de vuelta al portal
+            return request.redirect(f'/sgs/custodio/{token}?ok=servicio')
 
         if request.httprequest.method == 'POST':
             employee_num = (post.get('employee_number') or '').strip().upper() # Convertimos a mayúsculas por el prefijo SGS-C
