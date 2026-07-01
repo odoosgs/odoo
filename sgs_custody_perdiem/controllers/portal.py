@@ -29,30 +29,24 @@ class SgsCustodyPortal(http.Controller):
         """ Pantalla de inicio de sesión por No. de Empleado y NIP """
         error_msg = False
         
-        # Si ya tiene sesión activa, lo mandamos directo al home
-        if self._get_custodian_from_session():
-            # Al terminar de procesar todo el formulario, redirigimos de vuelta al portal
-            return request.redirect(f'/sgs/custodio/{token}?ok=servicio')
+        # Si ya tiene sesión activa, lo mandamos directo al home protegido por cookies
+        active_custodian = self._get_custodian_from_session()
+        if active_custodian:
+            return request.redirect('/sgs/custodio')
 
         if request.httprequest.method == 'POST':
-            employee_num = (post.get('employee_number') or '').strip().upper() # Convertimos a mayúsculas por el prefijo SGS-C
+            employee_num = (post.get('employee_number') or '').strip().upper() 
             pin = (post.get('pin') or '').strip()
             
-            # --- CORRECCIÓN: Autenticación por la nueva referencia independiente ---
-          #  custodian = request.env['sgs.custodian'].sudo().search([
-          #      ('ref_viaticos', '=', employee_num),
-          #      ('pin_access', '=', pin),
-          #      ('active', '=', True)
-          #  ], limit=1)
-            
-            # CÓDIGO CORREGIDO
+            # Buscamos al custodio usando las variables del formulario limpias
             custodian = request.env['sgs.custodian'].sudo().search([
-                ('employee_number', '=', employee_number), 
-                ('pin', '=', pin)
+                ('employee_number', '=', employee_num), 
+                ('pin', '=', pin),
+                ('active', '=', True)
             ], limit=1)
         
             if custodian:
-                # Login Exitoso: Redirigir al home del portal inyectando las cookies de sesión (válidas por 90 días)
+                # Login Exitoso: Redirigir al home del portal e inyectar cookies de sesión (90 días)
                 response = request.redirect('/sgs/custodio')
                 response.set_cookie('sgs_custodian_id', str(custodian.id), max_age=90*24*60*60, httponly=True)
                 response.set_cookie('sgs_session_token', custodian.portal_token, max_age=90*24*60*60, httponly=True)
@@ -72,7 +66,7 @@ class SgsCustodyPortal(http.Controller):
 
     @http.route(['/sgs/custodio'], type='http', auth='public', website=True, sitemap=False)
     def custodian_home(self, **kw):
-        """ Nueva Ruta Principal Protegida - Ya no expone el token en la URL """
+        """ Nueva Ruta Principal Protegida - Lee directo de la cookie de sesión """
         custodian = self._get_custodian_from_session()
         if not custodian:
             return request.redirect('/sgs/login')
@@ -93,7 +87,7 @@ class SgsCustodyPortal(http.Controller):
             'clients': clients,
             'vehicles': vehicles,
             'employees': employees,
-            'token': custodian.portal_token, # Lo pasamos internamente para procesar los forms POST seguros
+            'token': custodian.portal_token, 
             'format_amount': self._format_amount,
         })
         
@@ -102,6 +96,9 @@ class SgsCustodyPortal(http.Controller):
     def submit_service(self, token, **post):
         """ Procesa el servicio validando de forma estricta los archivos adjuntos """
         custodian = request.env['sgs.custodian'].sudo().search([('portal_token', '=', token)], limit=1)
+        if not custodian:
+            return request.redirect('/sgs/login')
+
         client = False
         if post.get('client_id'):
             client = request.env['sgs.client'].sudo().browse(int(post['client_id']))
@@ -128,7 +125,6 @@ class SgsCustodyPortal(http.Controller):
         fuel_file = request.httprequest.files.get('fuel_ticket')
         lodging_file = request.httprequest.files.get('lodging_ticket')
         
-        # Si hay monto pero no hay archivo o viene sin nombre (vacío), detenemos la operación de forma segura
         if amount_fuel > 0 and (not fuel_file or not fuel_file.filename):
             return request.make_response("<script>alert('Error: La foto del ticket de gasolina es obligatoria si registraste un monto.'); window.history.back();</script>")
             
@@ -161,7 +157,6 @@ class SgsCustodyPortal(http.Controller):
             'status': 'pending',
         }
 
-        # Procesar y guardar archivos de gasolina e higiene si fueron cargados
         if fuel_file and fuel_file.filename:
             vals['fuel_ticket_filename'] = fuel_file.filename
             vals['fuel_ticket'] = base64.b64encode(fuel_file.read())
@@ -187,10 +182,8 @@ class SgsCustodyPortal(http.Controller):
             if not name and not amount:
                 continue
                 
-            # Validación estricta para casetas: si hay monto, tiene que haber foto de la caseta
             t_file = toll_files[idx] if idx < len(toll_files) else False
             if amount > 0 and (not t_file or not t_file.filename):
-                # Como el servicio principal ya se creó, le permitimos continuar pero registramos la alerta en comentarios administrativos
                 service.comments = (service.comments or '') + f"\n[ALERTA ADM] Se registró monto para caseta '{name}' por ${amount} sin foto de evidencia."
                 continue
 
@@ -200,11 +193,15 @@ class SgsCustodyPortal(http.Controller):
                 line_vals['image'] = base64.b64encode(t_file.read())
             request.env['sgs.toll.line'].sudo().create(line_vals)
             
-        return request.redirect('/sgs/custodio/%s?ok=servicio' % token)
+        # Redirección corregida al home limpio y seguro del custodio pasando el parámetro de éxito
+        return request.redirect('/sgs/custodio?ok=servicio')
 
     @http.route(['/sgs/custodio/<string:token>/fiscal'], type='http', auth='public', methods=['POST'], website=True, csrf=True, sitemap=False)
     def submit_fiscal(self, token, **post):
-        custodian = self._get_custodian(token)
+        custodian = request.env['sgs.custodian'].sudo().search([('portal_token', '=', token)], limit=1)
+        if not custodian:
+            return request.redirect('/sgs/login')
+
         upload = request.httprequest.files.get('image')
         
         vals = {
@@ -226,4 +223,4 @@ class SgsCustodyPortal(http.Controller):
         if receipt.image:
             receipt.action_process_ocr()
             
-        return request.redirect('/sgs/custodio/%s?ok=fiscal' % token)
+        return request.redirect('/sgs/custodio?ok=fiscal')
