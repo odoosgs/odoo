@@ -95,7 +95,7 @@ class SgsCustodyPortal(http.Controller):
     @http.route(['/sgs/custodio/<string:token>/servicio'], type='http', auth='public', methods=['POST'], website=True, csrf=True, sitemap=False)
     def submit_service(self, token, **post):
         """ Procesa el servicio validando de forma estricta los archivos adjuntos """
-        custodian = self._get_custodian(token)
+        custodian = request.env['sgs.custodian'].sudo().search([('portal_token', '=', token)], limit=1)
         client = False
         if post.get('client_id'):
             client = request.env['sgs.client'].sudo().browse(int(post['client_id']))
