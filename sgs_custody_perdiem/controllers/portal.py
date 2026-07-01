@@ -39,13 +39,18 @@ class SgsCustodyPortal(http.Controller):
             pin = (post.get('pin') or '').strip()
             
             # --- CORRECCIÓN: Autenticación por la nueva referencia independiente ---
+          #  custodian = request.env['sgs.custodian'].sudo().search([
+          #      ('ref_viaticos', '=', employee_num),
+          #      ('pin_access', '=', pin),
+          #      ('active', '=', True)
+          #  ], limit=1)
+            
+            # CÓDIGO CORREGIDO
             custodian = request.env['sgs.custodian'].sudo().search([
-                ('ref_viaticos', '=', employee_num),
-                ('pin_access', '=', pin),
-                ('active', '=', True)
+                ('employee_number', '=', employee_number), 
+                ('pin', '=', pin)
             ], limit=1)
-            
-            
+        
             if custodian:
                 # Login Exitoso: Redirigir al home del portal inyectando las cookies de sesión (válidas por 90 días)
                 response = request.redirect('/sgs/custodio')
