@@ -41,7 +41,7 @@ class SgsCustodyPortal(http.Controller):
             # Buscamos al custodio usando las variables del formulario limpias
             custodian = request.env['sgs.custodian'].sudo().search([
                 ('employee_number', '=', employee_num), 
-                ('pin', '=', pin),
+                ('pin_access', '=', pin),  # <- Cambiado de 'pin' a 'pin_access'
                 ('active', '=', True)
             ], limit=1)
         
