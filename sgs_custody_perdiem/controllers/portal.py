@@ -37,6 +37,16 @@ class SgsCustodyPortal(http.Controller):
         if request.httprequest.method == 'POST':
             employee_num = (post.get('employee_number') or '').strip().upper() 
             pin = (post.get('pin') or '').strip()
+
+            # IMPRESIÓN TEMPORAL PARA DEPÚRACIÓN (Saca esto en el Log de Odoo.sh)
+            print("=== INTENTO DE LOGIN ===")
+            print(f"Buscando en el formulario: Usuario '{employee_num}' con PIN '{pin}'")
+            
+            # Busquemos TODOS los custodios para ver qué campos tienen guardados en BD
+            all_custodians = request.env['sgs.custodian'].sudo().search([])
+            for c in all_custodians:
+                print(f"Custodio en BD -> ID: {c.id}, Nombre: {c.name}, RefViaticos: {getattr(c, 'ref_viaticos', 'No existe campo')}, EmpNumber: {getattr(c, 'employee_number', 'No existe campo')}, Active: {c.active}")
+
             
             # Buscamos al custodio usando las variables del formulario limpias
             custodian = request.env['sgs.custodian'].sudo().search([
