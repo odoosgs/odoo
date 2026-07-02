@@ -47,7 +47,7 @@
         </field>
     </record>
 
-<record id="view_sgs_custodian_form" model="ir.ui.view">
+    <record id="view_sgs_custodian_form" model="ir.ui.view">
         <field name="name">sgs.custodian.form</field>
         <field name="model">sgs.custodian</field>
         <field name="arch" type="xml">
@@ -124,8 +124,7 @@
             </form>
         </field>
     </record>
-    
-
+        
     <record id="view_sgs_service_list" model="ir.ui.view">
         <field name="name">sgs.route.service.list</field>
         <field name="model">sgs.route.service</field>
@@ -144,8 +143,6 @@
             </list>
         </field>
     </record>
-
-<!-- Vista de búsqueda eliminada temporalmente para depuración -->
 
     <record id="view_sgs_service_form" model="ir.ui.view">
         <field name="name">sgs.route.service.form</field>
@@ -188,13 +185,37 @@
                         <group>
                             <field name="amount_tolls" readonly="1"/>
                             <field name="amount_total" readonly="1"/>
-                            <field name="evidence_image" widget="image" filename="evidence_filename"/>
+                            <field name="evidence_image" widget="image" filename="evidence_filename" style="max-width: 150px; max-height: 150px;"/>
                             <field name="evidence_filename" invisible="1"/>
                         </group>
                     </group>
                     <notebook>
-                        <page string="Casetas"><field name="toll_line_ids"><list editable="bottom"><field name="name"/><field name="amount"/><field name="image" widget="image" filename="image_filename"/><field name="image_filename" invisible="1"/></list></field></page>
-                        <page string="Comentarios"><field name="comments"/><field name="validation_note"/></page>
+                        <page string="Casetas">
+                            <field name="toll_line_ids">
+                                <list editable="bottom">
+                                    <field name="name"/>
+                                    <field name="amount"/>
+                                    <field name="image" widget="image" filename="image_filename" style="max-width: 70px; max-height: 70px;"/>
+                                    <field name="image_filename" invisible="1"/>
+                                </list>
+                            </field>
+                        </page>
+                        <page string="Comprobantes (Gasolina y Hotel)">
+                            <group>
+                                <group string="Ticket de Gasolina">
+                                    <field name="fuel_ticket" widget="image" filename="fuel_ticket_filename" class="oe_avatar" style="max-width: 300px; max-height: 300px;"/>
+                                    <field name="fuel_ticket_filename" invisible="1"/>
+                                </group>
+                                <group string="Comprobante Hospedaje / Hotel">
+                                    <field name="lodging_ticket" widget="image" filename="lodging_ticket_filename" class="oe_avatar" style="max-width: 300px; max-height: 300px;"/>
+                                    <field name="lodging_ticket_filename" invisible="1"/>
+                                </group>
+                            </group>
+                        </page>
+                        <page string="Comentarios">
+                            <field name="comments"/>
+                            <field name="validation_note"/>
+                        </page>
                     </notebook>
                 </sheet>
                 <chatter/>
