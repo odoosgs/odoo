@@ -27,8 +27,12 @@
         'security/ir.model.access.csv',
         'security/ir_rule.xml',
 
+        # Menús (¡MOVIDO AQUÍ ARRIBA!)
+        # Esto asegura que el menú raíz 'menu_custodia_root' exista antes de que cualquier vista intente usarlo.
+        'views/custodia_menus.xml',
+
         # Catálogos
-        'views/custodia_catalogos_views.xml', # <--- Nuevo        
+        'views/custodia_catalogos_views.xml',        
         'views/custodia_carrier_views.xml',
         'views/custodia_ruta_views.xml',
 
@@ -36,11 +40,8 @@
         'views/custodia_service_views.xml',
         'views/custodia_service_list_view.xml',
 
-        # Asignaciones
+        # Asignaciones (Ahora sí encontrará su menú padre sin problemas)
         'views/custodia_asignacion_views.xml',
-
-        # Menús
-        'views/custodia_menus.xml',
 
         # Portal
         'views/portal_templates.xml',
