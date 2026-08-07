@@ -19,32 +19,33 @@
         'planning',
     ],
     'data': [
-        # 1. Configuración inicial y Datos básicos
+        # Datos
         'data/sequence.xml',
 
-        # 2. Seguridad (Siempre va primero para mapear accesos a modelos)
+        # Seguridad
         'security/security.xml',
         'security/ir.model.access.csv',
         'security/ir_rule.xml',
 
-        # 3. Archivos de Negocio que contienen las Acciones (act_window)
-        # Cargamos las rutas primero para que 'action_custodia_ruta_maestra' ya exista
-        'views/custodia_ruta_views.xml', 
-        'views/custodia_catalogos_views.xml',        
+        # Catálogos
+        'views/custodia_catalogos_views.xml', # <--- Nuevo        
         'views/custodia_carrier_views.xml',
+        'views/custodia_ruta_views.xml',
+
+        # Servicio principal
         'views/custodia_service_views.xml',
         'views/custodia_service_list_view.xml',
 
-        # 4. Declaración de Menús 
-        # Aquí ya existen todas las acciones de arriba y sigue estando antes de asignaciones
-        'views/custodia_menus.xml',
-
-        # 5. Archivos secundarios que dependen de los menús cargados
+        # Asignaciones
         'views/custodia_asignacion_views.xml',
 
-        # 6. Portal Frontend
+        # Menús
+        'views/custodia_menus.xml',
+
+        # Portal
         'views/portal_templates.xml',
         'views/portal_service_form.xml',
+        #'views/portal_service_detail.xml',
     ],
     'assets': {
         'web.assets_frontend': [
