@@ -50,6 +50,39 @@ class CustodiaService(models.Model):
     last_update = fields.Datetime(string='Última Actualización', tracking=True)
     gps_tracking_url = fields.Char(string='Liga GPS en tiempo real', tracking=True)
 
+    # ---------------------------------------------------------
+    # VEHÍCULOS Y KIT VEHICULAR ASOCIADO
+    # ---------------------------------------------------------
+    vehicle_ids = fields.Many2many(
+        'fleet.vehicle',
+        'custodia_service_fleet_vehicle_rel',
+        'service_id',
+        'vehicle_id',
+        string='Vehículos Asignados',
+        tracking=True
+    )
+    vehicle_id = fields.Many2one(
+        'fleet.vehicle',
+        string='Vehículo Principal',
+        compute='_compute_vehicle_principal',
+        store=True
+    )
+
+    # Campos automáticos del Kit Vehicular del Vehículo Principal
+    kit_asset_id = fields.Char(related='vehicle_id.kit_asset_id', string="ID Activo Kit", readonly=True)
+    gps_vehicular = fields.Char(related='vehicle_id.gps_vehicular', string="GPS Vehicular", readonly=True)
+    gps_portatil = fields.Char(related='vehicle_id.gps_portatil', string="GPS Portátil", readonly=True)
+    gps_portatil_serial = fields.Char(related='vehicle_id.gps_portatil_serial', string="No. Serie GPS Portátil", readonly=True)
+    gps_portatil_sim = fields.Char(related='vehicle_id.gps_portatil_sim', string="SIM GPS", readonly=True)
+    candado_digital = fields.Char(related='vehicle_id.candado_digital', string="Candado Digital", readonly=True)
+    candado_mecanico = fields.Char(related='vehicle_id.candado_mecanico', string="Candado Mecánico", readonly=True)
+    radio_portatil = fields.Char(related='vehicle_id.radio_portatil', string="Radio Portátil", readonly=True)
+
+    @api.depends('vehicle_ids')
+    def _compute_vehicle_principal(self):
+        for rec in self:
+            rec.vehicle_id = rec.vehicle_ids[0] if rec.vehicle_ids else False    
+
     hora_llegada = fields.Datetime(string='Hora de llegada custodio', tracking=True)
     hora_inicio_real = fields.Datetime(string='Hora de inicio real', tracking=True)
 
