@@ -38,6 +38,7 @@
 
         # Asignaciones
         'views/custodia_asignacion_views.xml',
+        'views/fleet_vehicle_views.xml',
 
         # Menús
         'views/custodia_menus.xml',
