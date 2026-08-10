@@ -42,6 +42,23 @@
             <page string="Tracking">
               <field name="tracking_ids" mode="list,form"/>
             </page>
+            <page string="Kit de Seguridad Vehicular" invisible="not vehicle_id">
+            <group>
+                <group string="Identificación y GPS">
+                    <field name="vehicle_id" readonly="1"/>
+                    <field name="kit_asset_id"/>
+                    <field name="gps_vehicular"/>
+                    <field name="gps_portatil"/>
+                    <field name="gps_portatil_serial"/>
+                    <field name="gps_portatil_sim"/>
+                </group>
+                <group string="Candados y Radio">
+                    <field name="candado_digital"/>
+                    <field name="candado_mecanico"/>
+                    <field name="radio_portatil"/>
+                </group>
+            </group>
+          </page>
           </notebook>
         </sheet>
         <chatter/>
