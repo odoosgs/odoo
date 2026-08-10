@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_fleet_vehicle_form_inherit_kit" model="ir.ui.view">
+        <field name="name">fleet.vehicle.form.inherit.kit</field>
+        <field name="model">fleet.vehicle</field>
+        <field name="inherit_id" ref="fleet.fleet_vehicle_view_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//notebook" position="inside">
+                <page string="Kit Vehicular" name="page_kit_vehicular">
+                    <group>
+                        <group string="Identificación y GPS Vehicular">
+                            <field name="kit_asset_id"/>
+                            <field name="gps_vehicular"/>
+                            <field name="gps_vehicular_imei"/>
+                            <field name="dashcam_vehicular"/>
+                            <field name="dashcam_imei"/>
+                        </group>
+                        <group string="GPS Portátil / Rastreo">
+                            <field name="gps_portatil"/>
+                            <field name="gps_portatil_serial"/>
+                            <field name="gps_portatil_sim"/>
+                            <field name="gps_portatil_imei"/>
+                        </group>
+                    </group>
+                    <group>
+                        <group string="Seguridad y Comunicación">
+                            <field name="candado_digital"/>
+                            <field name="candado_mecanico"/>
+                            <field name="radio_portatil"/>
+                        </group>
+                        <group string="Notas">
+                            <field name="kit_observaciones" placeholder="Escribe observaciones o estado del kit..."/>
+                        </group>
+                    </group>
+                </page>
+            </xpath>
+        </field>
+    </record>
+</odoo>
