@@ -5,7 +5,8 @@
         <field name="model">fleet.vehicle</field>
         <field name="inherit_id" ref="fleet.fleet_vehicle_view_form"/>
         <field name="arch" type="xml">
-            <xpath expr="//notebook" position="inside">
+            <!-- Insertamos la pestaña después de la pestaña de Nota -->
+            <xpath expr="//page[@name='note']" position="after">
                 <page string="Kit Vehicular" name="page_kit_vehicular">
                     <group>
                         <group string="Identificación y GPS Vehicular">
@@ -28,7 +29,7 @@
                             <field name="candado_mecanico"/>
                             <field name="radio_portatil"/>
                         </group>
-                        <group string="Notas">
+                        <group string="Notas del Kit">
                             <field name="kit_observaciones" placeholder="Escribe observaciones o estado del kit..."/>
                         </group>
                     </group>
