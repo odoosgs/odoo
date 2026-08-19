@@ -5,17 +5,28 @@ from datetime import datetime, timedelta, time
 from odoo import api, fields, models, _
 from odoo.exceptions import UserError, ValidationError
 
-
 class SgsCustodian(models.Model):
     _name = 'sgs.custodian'
     _description = 'Custodio SGS'
     _inherit = ['mail.thread', 'mail.activity.mixin', 'portal.mixin']
     _order = 'name'
 
-    name = fields.Char('Nombre completo', required=True, tracking=True)
-    employee_number = fields.Char('No. empleado', tracking=True, index=True)
-    position = fields.Char('Posición', tracking=True)
-    phone = fields.Char('Teléfono WhatsApp')
+    employee_id = fields.Many2one('hr.employee', string='Empleado Relacionado', tracking=True, ondelete='restrict')
+
+    # NIP de Acceso para el inicio de sesión en la PWA
+    pin_access = fields.Char('NIP de Acceso (4 dígitos)', size=4, help="NIP numérico para ingresar al portal", default="1234", tracking=True)
+
+    # --- CAMPO INDEPENDIENTE Y FIJO ---
+    ref_viaticos = fields.Char('Referencia Viáticos', required=True, copy=False, readonly=True, index=True, default=lambda self: _('Nuevo'))
+
+    # Regresamos el compute e inverse al campo name para que Odoo jale el nombre del empleado automáticamente
+    name = fields.Char('Nombre completo', compute='_compute_employee_data', inverse='_inverse_name', required=True, store=True, tracking=True)
+    employee_number = fields.Char('No. empleado', compute='_compute_employee_data', store=True)
+    
+    # Estos siguen como related porque job_title y work_phone sí son campos de tipo Char nativos
+    position = fields.Char('Posición', related='employee_id.job_title', readonly=True, store=True, tracking=True)
+    phone = fields.Char('Teléfono WhatsApp', related='employee_id.work_phone', readonly=True, store=True)
+    
     active = fields.Boolean(default=True)
     company_id = fields.Many2one('res.company', default=lambda self: self.env.company, required=True)
     currency_id = fields.Many2one('res.currency', related='company_id.currency_id', readonly=True)
@@ -41,23 +52,56 @@ class SgsCustodian(models.Model):
         ('red', 'Atrasado / Rechazado'),
     ], string='Semáforo', compute='_compute_amounts')
 
-    _sql_constraints = [
-        ('employee_number_unique', 'unique(employee_number, company_id)', 'El número de empleado debe ser único por compañía.'),
-    ]
+    # Sobrescribimos el create del Custodio para generarle su número secuencial único e inalterable
+    @api.model_create_multi
+    def create(self, vals_list):
+        for vals in vals_list:
+            if vals.get('ref_viaticos', _('Nuevo')) == _('Nuevo'):
+                # Busca la secuencia que vas a dar de alta manualmente
+                vals['ref_viaticos'] = self.env['ir.sequence'].next_by_code('sgs.custodian.sequence') or '/'
+        return super(SgsCustodian, self).create(vals_list)
 
-    @api.depends('portal_token', 'phone')
+    # El método compute corregido para que calcule el Nombre automáticamente y mantenga el ID del empleado
+    @api.depends('employee_id')
+    def _compute_employee_data(self):
+        for rec in self:
+            if rec.employee_id:
+                rec.name = rec.employee_id.name
+                rec.employee_number = str(rec.employee_id.id)
+            else:
+                if not rec.name:
+                    rec.name = ''
+                rec.employee_number = ''
+
+    def _inverse_name(self):
+        for rec in self:
+            if rec.employee_id and not rec.employee_id.name:
+                rec.employee_id.name = rec.name
+                
+
+    @api.depends('phone', 'ref_viaticos', 'pin_access')
     def _compute_portal_url(self):
         base = self.env['ir.config_parameter'].sudo().get_param('web.base.url', '')
         for rec in self:
-            rec.portal_url = f'{base}/sgs/custodio/{rec.portal_token}' if rec.portal_token else ''
+            # La URL oficial ahora apunta al Login unificado de la PWA
+            rec.portal_url = f'{base}/sgs/login'
+            
             phone = ''.join(ch for ch in (rec.phone or '') if ch.isdigit())
-            if phone and rec.portal_url:
+            if phone:
                 if len(phone) == 10:
                     phone = '52' + phone
-                msg = f'Hola {rec.name.split()[0] if rec.name else ""}, este es tu enlace de viáticos SGS: {rec.portal_url}'
+                
+                # Armamos el mensaje usando la nueva Referencia de Viáticos (SGS-Cxxxx) y su NIP
+                primer_nombre = rec.name.split()[0] if rec.name else "Custodio"
+                msg = f'Hola {primer_nombre}, este es tu portal de viáticos SGS: {rec.portal_url} ' \
+                      f'Tu Usuario es: {rec.ref_viaticos} y tu NIP es: {rec.pin_access or "1234"}'
+                
                 rec.whatsapp_url = 'https://wa.me/%s?text=%s' % (phone, msg.replace(' ', '%20'))
             else:
                 rec.whatsapp_url = ''
+
+    # Campo técnico para controlar que no se dupliquen las alertas por correo
+    low_balance_alert_sent = fields.Boolean(default=False, string='Alerta de saldo bajo enviada')
 
     @api.depends('initial_fund', 'deposit_ids.amount', 'service_ids.amount_total', 'service_ids.status', 'service_ids.is_late', 'fiscal_receipt_ids.amount')
     def _compute_amounts(self):
@@ -68,12 +112,18 @@ class SgsCustodian(models.Model):
             pending = len(rec.service_ids.filtered(lambda s: s.status == 'pending'))
             late = len(rec.service_ids.filtered(lambda s: s.is_late and s.status != 'approved'))
             rejected = len(rec.service_ids.filtered(lambda s: s.status == 'rejected'))
+            
             rec.total_deposits = deposits
             rec.total_expenses = expenses
             rec.total_fiscal = fiscal
-            rec.balance = rec.initial_fund + deposits - expenses
+            
+            # Cálculo del saldo actual
+            current_balance = rec.initial_fund + deposits - expenses
+            rec.balance = current_balance
+            
             rec.pending_service_count = pending
             rec.late_service_count = late
+            
             if not rec.service_ids:
                 rec.compliance_state = 'blue'
             elif rejected or late:
@@ -82,6 +132,16 @@ class SgsCustodian(models.Model):
                 rec.compliance_state = 'yellow'
             else:
                 rec.compliance_state = 'green'
+
+            # --- LÓGICA DE ALERTA DE SALDO BAJO ---
+            if current_balance < 2000.00 and not rec.low_balance_alert_sent and (rec.initial_fund > 0 or deposits > 0):
+                rec.low_balance_alert_sent = True
+                template = rec.env.ref('sgs_custody_perdiem.email_template_custodian_low_balance', raise_if_not_found=False)
+                if template:
+                    template.sudo().send_mail(rec.id, force_send=True)
+            
+            elif current_balance >= 2000.00 and rec.low_balance_alert_sent:
+                rec.low_balance_alert_sent = False
 
     def action_regenerate_portal_token(self):
         for rec in self:
@@ -135,9 +195,12 @@ class SgsClient(models.Model):
     name = fields.Char('Cliente / Razón social', required=True)
     active = fields.Boolean(default=True)
 
-    _sql_constraints = [('name_unique', 'unique(name)', 'El cliente ya existe.')]
-
-
+class Constraint:
+    _name = 'name_unique'
+    _type = 'unique'
+    _fields = ['name']
+    _message = 'El cliente ya existe.'
+    
 class SgsVehicle(models.Model):
     _name = 'sgs.vehicle'
     _description = 'Vehículo SGS'
@@ -174,28 +237,38 @@ class SgsRouteService(models.Model):
     _inherit = ['mail.thread', 'mail.activity.mixin', 'portal.mixin']
     _order = 'date desc, id desc'
 
-    name = fields.Char('Folio', default='Nuevo', copy=False, readonly=True, tracking=True)
+    name = fields.Char('Folio', default="Nuevo", copy=False, readonly=True, tracking=True)
     custodian_id = fields.Many2one('sgs.custodian', string='Custodio', required=True, ondelete='cascade', tracking=True)
-    company_id = fields.Many2one(related='custodian_id.company_id', store=True, readonly=True)
-    currency_id = fields.Many2one(related='custodian_id.currency_id', readonly=True)
+    company_id = fields.Many2one('res.company', string='Compañía', related='custodian_id.company_id', store=True, readonly=True)
+    currency_id = fields.Many2one('res.currency', related='custodian_id.currency_id', readonly=True)
+    
+    vehicle_id = fields.Many2one('fleet.vehicle', string='Vehículo')
+    
     date = fields.Date('Fecha del servicio', required=True, default=fields.Date.context_today, tracking=True)
+    start_datetime = fields.Datetime('Inicio del servicio', tracking=True)
+    end_datetime = fields.Datetime('Término del servicio', tracking=True)
     submit_datetime = fields.Datetime('Fecha/hora de captura', default=fields.Datetime.now, readonly=True)
     client_id = fields.Many2one('sgs.client', string='Cliente')
     origin = fields.Char('Origen')
     destination = fields.Char('Destino')
     companion = fields.Char('Compañero / segundo custodio')
-    vehicle_id = fields.Many2one('sgs.vehicle', string='Vehículo')
+    
     vehicle_snapshot = fields.Char('Vehículo usado')
     plate_snapshot = fields.Char('Placas')
     comments = fields.Text('Comentarios / aclaraciones')
-
     amount_perdiem = fields.Monetary('Viáticos', currency_field='currency_id', default=0.0)
     amount_fuel = fields.Monetary('Gasolina', currency_field='currency_id', default=0.0)
     amount_lodging = fields.Monetary('Hospedaje', currency_field='currency_id', default=0.0)
+
+    fuel_ticket = fields.Binary('Ticket de Gasolina', attachment=True)
+    fuel_ticket_filename = fields.Char('Nombre del Archivo de Gasolina')
+    
+    lodging_ticket = fields.Binary('Comprobante de Hospedaje', attachment=True)
+    lodging_ticket_filename = fields.Char('Nombre del Archivo de Hospedaje')
     amount_misc = fields.Monetary('Gastos varios', currency_field='currency_id', default=0.0)
     misc_detail = fields.Char('Especificación gastos varios')
-    toll_line_ids = fields.One2many('sgs.toll.line', 'service_id', string='Casetas')
-    amount_tolls = fields.Monetary('Casetas', compute='_compute_total', currency_field='currency_id', store=True)
+    toll_line_ids = fields.One2many('sgs.toll.line', 'service_id', string='Detalle de Casetas')
+    amount_tolls = fields.Monetary('Total Casetas', compute='_compute_total', currency_field='currency_id', store=True)
     amount_total = fields.Monetary('Total servicio', compute='_compute_total', currency_field='currency_id', store=True)
 
     evidence_image = fields.Binary('Evidencia general')
@@ -219,7 +292,6 @@ class SgsRouteService(models.Model):
         for rec in self:
             if rec.date and rec.submit_datetime:
                 deadline = datetime.combine(rec.date, time.min) + timedelta(hours=36)
-                # Se usa el cierre del día del servicio + 12 horas como ventana práctica.
                 rec.is_late = rec.submit_datetime > deadline
             else:
                 rec.is_late = False
@@ -243,12 +315,22 @@ class SgsRouteService(models.Model):
             if vals.get('name', 'Nuevo') == 'Nuevo':
                 cust = self.env['sgs.custodian'].browse(vals.get('custodian_id'))
                 seq = self.env['ir.sequence'].next_by_code('sgs.route.service') or '0001'
-                emp = cust.employee_number or str(cust.id or '')
+                # Usamos la nueva referencia fija ref_viaticos para construir el Folio del servicio
+                emp = cust.ref_viaticos or str(cust.id or '')
                 vals['name'] = 'F-%s-%s' % (emp, seq)
-            if vals.get('vehicle_id') and not vals.get('vehicle_snapshot'):
-                veh = self.env['sgs.vehicle'].browse(vals['vehicle_id'])
-                vals['vehicle_snapshot'] = veh.name
-                vals['plate_snapshot'] = veh.plate
+            
+            if vals.get('vehicle_id'):
+                if not vals.get('vehicle_snapshot'):
+                    veh = self.env['fleet.vehicle'].sudo().browse(vals['vehicle_id'])
+                    if veh.exists():
+                        brand_name = veh.model_id.brand_id.name or ''
+                        model_name = veh.model_id.name or ''
+                        vals['vehicle_snapshot'] = f"{brand_name} {model_name}".strip() or veh.name
+                        vals['plate_snapshot'] = veh.license_plate or ''
+            else:
+                vals['vehicle_snapshot'] = 'Abordo'
+                vals['plate_snapshot'] = 'N/A'
+                
         return super().create(vals_list)
 
     def action_approve(self):
@@ -321,7 +403,5 @@ class SgsFiscalReceipt(models.Model):
     @api.constrains('amount', 'ocr_status')
     def _check_amount(self):
         for rec in self:
-            # Permitimos monto 0 si el OCR no ha terminado exitosamente
-            # Esto evita bloqueos durante el proceso de carga y análisis
             if rec.amount <= 0 and rec.ocr_status == 'success':
                 raise ValidationError(_('El monto del comprobante fiscal debe ser mayor a cero.'))

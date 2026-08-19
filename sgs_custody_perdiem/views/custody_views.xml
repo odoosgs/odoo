@@ -57,15 +57,20 @@
                     <button name="action_regenerate_portal_token" type="object" string="Regenerar token" class="btn-secondary" confirm="El enlace anterior dejará de funcionar. ¿Continuar?"/>
                 </header>
                 <sheet>
-                    <div class="oe_title"><h1><field name="name" placeholder="Nombre del custodio"/></h1></div>
+                    <div class="oe_title">
+                        <label for="name" string="Nombre del Custodio"/>
+                        <h1><field name="name" placeholder="Nombre del custodio"/></h1>
+                    </div>
                     <group>
-                        <group>
-                            <field name="employee_number"/>
+                        <group string="Vinculación de Personal">
+                            <field name="employee_id" placeholder="Vincular con empleado oficial..."/>
+                            <field name="ref_viaticos"/>
+                            <field name="pin_access" password="True" string="NIP de Acceso"/>
                             <field name="position"/>
                             <field name="phone"/>
                             <field name="initial_fund"/>
                         </group>
-                        <group>
+                        <group string="Resumen Financiero">
                             <field name="total_deposits" readonly="1"/>
                             <field name="total_expenses" readonly="1"/>
                             <field name="total_fiscal" readonly="1"/>
@@ -78,16 +83,48 @@
                         <field name="whatsapp_url" readonly="1" widget="url"/>
                     </group>
                     <notebook>
-                        <page string="Depósitos"><field name="deposit_ids"><list editable="bottom"><field name="date"/><field name="week"/><field name="concept"/><field name="amount"/></list></field></page>
-                        <page string="Servicios"><field name="service_ids"><list><field name="name"/><field name="date"/><field name="client_id"/><field name="origin"/><field name="destination"/><field name="amount_total"/><field name="status" widget="badge"/><field name="is_late"/></list></field></page>
-                        <page string="Comprobantes fiscales"><field name="fiscal_receipt_ids"><list editable="bottom"><field name="date"/><field name="description"/><field name="provider"/><field name="provider_vat"/><field name="amount"/></list></field></page>
+                        <page string="Depósitos" name="page_deposits">
+                            <field name="deposit_ids">
+                                <list editable="bottom">
+                                    <field name="date"/>
+                                    <field name="week"/>
+                                    <field name="concept"/>
+                                    <field name="amount" sum="Total Depósitos"/>
+                                </list>
+                            </field>
+                        </page>
+                        <page string="Servicios" name="page_services">
+                            <field name="service_ids">
+                                <list>
+                                    <field name="name"/>
+                                    <field name="date"/>
+                                    <field name="client_id"/>
+                                    <field name="origin"/>
+                                    <field name="destination"/>
+                                    <field name="amount_total" sum="Total Servicios"/>
+                                    <field name="status" widget="badge"/>
+                                    <field name="is_late" widget="boolean_toggle"/>
+                                </list>
+                            </field>
+                        </page>
+                        <page string="Comprobantes fiscales" name="page_fiscal_receipts">
+                            <field name="fiscal_receipt_ids">
+                                <list editable="bottom">
+                                    <field name="date"/>
+                                    <field name="description"/>
+                                    <field name="provider"/>
+                                    <field name="provider_vat"/>
+                                    <field name="amount" sum="Total Fiscal"/>
+                                </list>
+                            </field>
+                        </page>
                     </notebook>
                 </sheet>
                 <chatter/>
             </form>
         </field>
     </record>
-
+        
     <record id="view_sgs_service_list" model="ir.ui.view">
         <field name="name">sgs.route.service.list</field>
         <field name="model">sgs.route.service</field>
@@ -106,8 +143,6 @@
             </list>
         </field>
     </record>
-
-<!-- Vista de búsqueda eliminada temporalmente para depuración -->
 
     <record id="view_sgs_service_form" model="ir.ui.view">
         <field name="name">sgs.route.service.form</field>
@@ -150,13 +185,37 @@
                         <group>
                             <field name="amount_tolls" readonly="1"/>
                             <field name="amount_total" readonly="1"/>
-                            <field name="evidence_image" widget="image" filename="evidence_filename"/>
+                            <field name="evidence_image" widget="image" filename="evidence_filename" style="max-width: 150px; max-height: 150px;"/>
                             <field name="evidence_filename" invisible="1"/>
                         </group>
                     </group>
                     <notebook>
-                        <page string="Casetas"><field name="toll_line_ids"><list editable="bottom"><field name="name"/><field name="amount"/><field name="image" widget="image" filename="image_filename"/><field name="image_filename" invisible="1"/></list></field></page>
-                        <page string="Comentarios"><field name="comments"/><field name="validation_note"/></page>
+                        <page string="Casetas">
+                            <field name="toll_line_ids">
+                                <list editable="bottom">
+                                    <field name="name"/>
+                                    <field name="amount"/>
+                                    <field name="image" widget="image" filename="image_filename" style="max-width: 70px; max-height: 70px;"/>
+                                    <field name="image_filename" invisible="1"/>
+                                </list>
+                            </field>
+                        </page>
+                        <page string="Comprobantes (Gasolina y Hotel)">
+                            <group>
+                                <group string="Ticket de Gasolina">
+                                    <field name="fuel_ticket" widget="image" filename="fuel_ticket_filename" class="oe_avatar" style="max-width: 300px; max-height: 300px;"/>
+                                    <field name="fuel_ticket_filename" invisible="1"/>
+                                </group>
+                                <group string="Comprobante Hospedaje / Hotel">
+                                    <field name="lodging_ticket" widget="image" filename="lodging_ticket_filename" class="oe_avatar" style="max-width: 300px; max-height: 300px;"/>
+                                    <field name="lodging_ticket_filename" invisible="1"/>
+                                </group>
+                            </group>
+                        </page>
+                        <page string="Comentarios">
+                            <field name="comments"/>
+                            <field name="validation_note"/>
+                        </page>
                     </notebook>
                 </sheet>
                 <chatter/>

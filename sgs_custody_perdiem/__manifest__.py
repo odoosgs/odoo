@@ -1,6 +1,6 @@
 {
     'name': 'SGS Control de Viáticos y Custodias',
-    'version': '19.0.1.0.1',
+    'version': '19.0.1.0.2',  # Incrementamos la versión para actualizar la caché del cliente
     'category': 'Operations/Logistics',
     'summary': 'Gestión de custodios, rutas, viáticos, comprobación de gastos y portal público por token.',
     'description': '''
@@ -12,7 +12,7 @@ Módulo para administrar custodios de vehículos pesados, depósitos de viático
     'author': 'Manus AI',
     'website': 'https://www.odoo.com',
     'license': 'LGPL-3',
-    'depends': ['base', 'web', 'mail', 'portal'],
+    'depends': ['base', 'web', 'mail', 'fleet', 'hr', 'portal'],
     'data': [
         'security/security.xml',
         'security/ir.model.access.csv',
@@ -21,6 +21,7 @@ Módulo para administrar custodios de vehículos pesados, depósitos de viático
         'views/menu.xml',
         'views/custody_views.xml',
         'views/portal_templates.xml',
+        'wizard/batch_deposit_wizard_views.xml',
     ],
     'demo': [
         'demo/demo.xml',
