@@ -151,6 +151,17 @@ class SgsCustodyPortal(http.Controller):
         if end_dt:
             end_dt = end_dt.replace('T', ' ')
 
+        # Procesamiento de Pernocta / Estadía
+        has_overnight = bool(post.get('has_overnight'))
+        overnight_start_dt = post.get('overnight_start_datetime')
+        overnight_end_dt = post.get('overnight_end_datetime')
+        overnight_location = post.get('overnight_location')
+        
+        if overnight_start_dt:
+            overnight_start_dt = overnight_start_dt.replace('T', ' ')
+        if overnight_end_dt:
+            overnight_end_dt = overnight_end_dt.replace('T', ' ')
+
         vals = {
             'custodian_id': custodian.id,
             'date': start_dt[:10] if start_dt else fields.Date.today(),
@@ -168,6 +179,11 @@ class SgsCustodyPortal(http.Controller):
             'amount_misc': float(post.get('amount_misc') or 0),
             'misc_detail': post.get('misc_detail'),
             'status': 'pending',
+            # Nuevos campos guardados
+            'has_overnight': has_overnight,
+            'overnight_start_datetime': overnight_start_dt if has_overnight else False,
+            'overnight_end_datetime': overnight_end_dt if has_overnight else False,
+            'overnight_location': overnight_location if has_overnight else False,
         }
 
         if fuel_file and fuel_file.filename:
