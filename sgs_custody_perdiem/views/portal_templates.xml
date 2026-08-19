@@ -50,6 +50,16 @@
                         .sgs-add-toll-btn:hover {
                             background: rgba(23, 162, 184, 0.1);
                         }
+
+                        /* Estilos para el contenedor de Pernocta / Estadía */
+                        .sgs-overnight-box {
+                            background: #f8f9fa;
+                            padding: 14px;
+                            border-radius: 6px;
+                            margin-top: 15px;
+                            margin-bottom: 15px;
+                            border-left: 4px solid #6f42c1;
+                        }
                     </style>
                 </t>
 
@@ -127,6 +137,28 @@
                                         </t>
                                     </select>
                                 </label>
+
+                                <!-- SECCIÓN PERNOCTA / ESTADÍA -->
+                                <div class="sgs-overnight-box">
+                                    <label style="font-weight: bold; margin-bottom: 8px; color: #495057; display: flex; align-items: center; gap: 8px;">
+                                        <input type="checkbox" id="check_has_overnight" name="has_overnight" value="1" onchange="toggleOvernightFields()" style="width: auto; margin: 0;"/>
+                                        ¿Hubo Pernocta o Estadía en este servicio?
+                                    </label>
+                                    
+                                    <div id="overnight_container" style="display: none; margin-top: 10px;">
+                                        <div class="sgs-two">
+                                            <label>Inicio Pernocta / Espera
+                                                <input type="datetime-local" name="overnight_start_datetime" id="overnight_start_datetime"/>
+                                            </label>
+                                            <label>Fin Pernocta / Espera
+                                                <input type="datetime-local" name="overnight_end_datetime" id="overnight_end_datetime"/>
+                                            </label>
+                                        </div>
+                                        <label style="margin-top: 8px;">Lugar de Espera / Pernocta (Municipio / Hotel / Punto)
+                                            <input type="text" name="overnight_location" id="overnight_location" placeholder="Ej. Caseta Palmillas / Hotel Real San Juan..." list="municipios_list" autocomplete="off"/>
+                                        </label>
+                                    </div>
+                                </div>
                                 
                                 <div class="sgs-expenses-section" style="margin-top: 20px; border-top: 2px solid #e9ecef; padding-top: 15px;">
                                     <h3 style="font-size: 1.1em; margin-bottom: 5px; color: #333;">Desglose de Gastos y Comprobantes</h3>
@@ -208,6 +240,30 @@
                                 <datalist id="municipios_list"></datalist>
 
                                 <script type="text/javascript">
+                                    // Control de visibilidad y validación de Pernocta
+                                    function toggleOvernightFields() {
+                                        var check = document.getElementById('check_has_overnight');
+                                        var container = document.getElementById('overnight_container');
+                                        var start = document.getElementById('overnight_start_datetime');
+                                        var end = document.getElementById('overnight_end_datetime');
+                                        var loc = document.getElementById('overnight_location');
+                                        
+                                        if (check &amp;&amp; check.checked) {
+                                            container.style.display = 'block';
+                                            start.setAttribute('required', 'required');
+                                            end.setAttribute('required', 'required');
+                                            loc.setAttribute('required', 'required');
+                                        } else {
+                                            container.style.display = 'none';
+                                            start.removeAttribute('required');
+                                            end.removeAttribute('required');
+                                            loc.removeAttribute('required');
+                                            start.value = '';
+                                            end.value = '';
+                                            loc.value = '';
+                                        }
+                                    }
+
                                     // Función mandatoria de validación de Gasolina/Hospedaje
                                     function validateGastoRequired(amountId, fileId) {
                                         var amountInput = document.getElementById(amountId);
