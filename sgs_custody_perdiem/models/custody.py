@@ -271,6 +271,11 @@ class SgsRouteService(models.Model):
     amount_tolls = fields.Monetary('Total Casetas', compute='_compute_total', currency_field='currency_id', store=True)
     amount_total = fields.Monetary('Total servicio', compute='_compute_total', currency_field='currency_id', store=True)
 
+    has_overnight = fields.Boolean(string="¿Hubo Pernocta/Estadía?", default=False)
+    overnight_start_datetime = fields.Datetime(string="Inicio Pernocta")
+    overnight_end_datetime = fields.Datetime(string="Fin Pernocta")
+    overnight_location = fields.Char(string="Lugar de Pernocta/Espera")
+
     evidence_image = fields.Binary('Evidencia general')
     evidence_filename = fields.Char('Nombre archivo evidencia')
     status = fields.Selection([
