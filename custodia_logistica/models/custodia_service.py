@@ -15,8 +15,23 @@ class CustodiaService(models.Model):
 
     sequence = fields.Char(string='Consecutivo', copy=False, readonly=True, default='Nuevo', index=True)
 
-    partner_id = fields.Many2one('res.partner', string='Cliente', required=True, tracking=True)
-    contact_id = fields.Many2one('res.partner', string='Persona solicitante', required=True, tracking=True)
+    #partner_id = fields.Many2one('res.partner', string='Cliente', required=True, tracking=True)
+    #contact_id = fields.Many2one('res.partner', string='Persona solicitante', required=True, tracking=True)
+
+    partner_id = fields.Many2one(
+        'res.partner',
+        string='Cliente',
+        required=True,
+        tracking=True,
+        domain="[('is_company', '=', True)]",  # Muestra solo empresas/clientes padre
+    )
+    contact_id = fields.Many2one(
+        'res.partner',
+        string='Persona solicitante',
+        required=True,
+        tracking=True,
+        domain="[('parent_id', '=', partner_id)]",  # Filtra personas ligadas al cliente elegido
+    )
 
     planner_id = fields.Many2one('res.users', string='Planeador', tracking=True)
 
