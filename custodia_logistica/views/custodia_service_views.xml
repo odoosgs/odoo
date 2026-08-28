@@ -6,59 +6,141 @@
     <field name="arch" type="xml">
       <form string="Servicio de Custodia">
         <header>
-          <button name="action_convert_to_service" type="object" string="Convertir a solicitud" class="btn-primary"
-                  invisible="request_type != 'alerta'"/>
+          <!-- Botón cuando está en alerta -->
+          <button name="action_convert_to_service" type="object" string="Convertir a Solicitud" class="btn-primary"
+                  invisible="state != 'alerta' and request_type != 'alerta'"/>
+
+          <!-- Botones de flujo normal de estados -->
+          <button name="action_solicitar" type="object" string="Pasar a Solicitado" class="btn-secondary"
+                  invisible="state != 'alerta'"/>
           <button name="action_aprobar" type="object" string="Aprobar" class="btn-primary"
-                  invisible="state != 'solicitado'"/>
+                  invisible="state not in ('solicitado', 'alerta')"/>
           <button name="action_asignar" type="object" string="Asignar" class="btn-secondary"
                   invisible="state != 'aprobado'"/>
-          <button name="action_ejecutar" type="object" string="Ejecutar" class="btn-secondary"
-                  invisible="state != 'asignado'"/>
-          <button name="action_finalizar" type="object" string="Finalizar" class="btn-success"
+          <button name="action_ejecutar" type="object" string="Iniciar Ejecución" class="btn-primary"
+                  invisible="state not in ('asignado', 'aprobado')"/>
+          <button name="action_finalizar" type="object" string="Finalizar Servicio" class="btn-success"
                   invisible="state != 'en_ejecucion'"/>
           <button name="action_cancelar" type="object" string="Cancelar" class="btn-danger"
                   invisible="state in ('finalizado', 'cancelado')"/>
+          <button name="action_reset_to_draft" type="object" string="Reabrir / A Solicitado" class="btn-outline-secondary"
+                  invisible="state not in ('cancelado', 'finalizado')"/>
+
           <field name="state" widget="statusbar"
-                 statusbar_visible="alerta,solicitado,aprobado,asignado,en_ejecucion,finalizado,cancelado"/>
+                 statusbar_visible="alerta,solicitado,aprobado,asignado,en_ejecucion,finalizado"/>
         </header>
         <sheet>
+          <div class="oe_title">
+            <span class="o_form_label">Folio del Servicio</span>
+            <h1>
+              <field name="name" readonly="1"/>
+            </h1>
+          </div>
+          
           <group>
-            <field name="name" readonly="1"/>
-            <field name="sequence" readonly="1"/>
-            <field name="request_type"/>
-            <field name="partner_id"/>
-            <field name="contact_id"/>
-            <field name="start_datetime"/>
-            <field name="carrier_id"/>
-            <field name="ruta_id"/>
-            <field name="nivel_seguridad"/>
-            <field name="load_id"/>
-            <field name="gps_tracking_url" widget="url" placeholder="https://gps.example.com/seguimiento/..."/>
+            <group string="Datos del Cliente y Solicitud">
+              <field name="partner_id" options="{'no_create': True}"/>
+              <field name="contact_id" options="{'no_create': True}"/>
+              <field name="request_type"/>
+              <field name="start_datetime"/>
+              <field name="planner_id" options="{'no_create': True}"/>
+            </group>
+            <group string="Ruta y Clasificación">
+              <field name="carrier_id" options="{'no_create': True}"/>
+              <field name="ruta_id" options="{'no_create': True}"/>
+              <field name="nivel_seguridad" widget="priority"/>
+              <field name="load_id"/>
+              <field name="gps_tracking_url" widget="url" placeholder="https://gps.example.com/..."/>
+            </group>
           </group>
+
           <notebook>
+            <!-- Pestaña 1: Tiempos del Custodio en Ruta -->
+            <page string="Tiempos Operativos Custodio">
+              <group>
+                <group string="Registro de Tiempos">
+                  <field name="hora_llegada"/>
+                  <field name="hora_inicio_real"/>
+                  <field name="hora_fin_real"/>
+                </group>
+                <group string="Métricas de Desviación">
+                  <field name="diff_llegada_min"/>
+                  <field name="diff_inicio_min"/>
+                  <field name="duracion_real_horas" widget="float_time"/>
+                </group>
+              </group>
+            </page>
+
+            <!-- Pestaña 2: Datos del Transporte y Operadores de Carga -->
+            <page string="Transporte y Operadores">
+              <group>
+                <group string="Unidad de Carga">
+                  <field name="transporte" placeholder="Ej. Transportes del Norte"/>
+                  <field name="tipo_unidad" placeholder="Ej. Caja seca 53ft, Termo..."/>
+                  <field name="placas" placeholder="Ej. 12-AB-34"/>
+                </group>
+                <group string="Operador Principal">
+                  <field name="operador1_nombre"/>
+                  <field name="operador1_licencia"/>
+                  <field name="tel_monitoreo_1" widget="phone"/>
+                </group>
+              </group>
+              <group>
+                <group string="Segundo Operador (si aplica)">
+                  <field name="operador2_nombre"/>
+                  <field name="operador2_licencia"/>
+                  <field name="tel_monitoreo_2" widget="phone"/>
+                </group>
+                <group string="Coordenadas y Observaciones">
+                  <field name="start_coords"/>
+                  <field name="end_coords"/>
+                  <field name="comentarios_cliente"/>
+                </group>
+              </group>
+            </page>
+
+            <!-- Pestaña 3: Incidencias en Trayecto -->
+            <page string="Incidencias en Trayecto">
+              <field name="incidencia_ids">
+                <list editable="bottom" decoration-danger="tipo_incidencia in ('seguridad', 'mecanica')">
+                  <field name="fecha"/>
+                  <field name="reportado_por"/>
+                  <field name="tipo_incidencia"/>
+                  <field name="ubicacion"/>
+                  <field name="descripcion"/>
+                  <field name="user_id" readonly="1"/>
+                </list>
+              </field>
+            </page>
+
+            <!-- Pestaña 4: Asignaciones de Custodios -->
             <page string="Asignaciones">
               <field name="asignacion_ids" mode="list,form"/>
             </page>
+
+            <!-- Pestaña 5: Tracking GPS -->
             <page string="Tracking">
               <field name="tracking_ids" mode="list,form"/>
             </page>
+
+            <!-- Pestaña 6: Kit de Seguridad Vehicular -->
             <page string="Kit de Seguridad Vehicular" invisible="not vehicle_id">
-            <group>
+              <group>
                 <group string="Identificación y GPS">
-                    <field name="vehicle_id" readonly="1"/>
-                    <field name="kit_asset_id"/>
-                    <field name="gps_vehicular"/>
-                    <field name="gps_portatil"/>
-                    <field name="gps_portatil_serial"/>
-                    <field name="gps_portatil_sim"/>
+                  <field name="vehicle_id" readonly="1"/>
+                  <field name="kit_asset_id"/>
+                  <field name="gps_vehicular"/>
+                  <field name="gps_portatil"/>
+                  <field name="gps_portatil_serial"/>
+                  <field name="gps_portatil_sim"/>
                 </group>
                 <group string="Candados y Radio">
-                    <field name="candado_digital"/>
-                    <field name="candado_mecanico"/>
-                    <field name="radio_portatil"/>
+                  <field name="candado_digital"/>
+                  <field name="candado_mecanico"/>
+                  <field name="radio_portatil"/>
                 </group>
-            </group>
-          </page>
+              </group>
+            </page>
           </notebook>
         </sheet>
         <chatter/>
@@ -70,7 +152,7 @@
     <field name="name">custodia.service.tree</field>
     <field name="model">custodia.service</field>
     <field name="arch" type="xml">
-      <list>
+      <list decoration-warning="state == 'alerta'" decoration-info="state == 'solicitado'" decoration-primary="state == 'aprobado'" decoration-success="state == 'finalizado'" decoration-muted="state == 'cancelado'">
         <field name="name"/>
         <field name="request_type"/>
         <field name="partner_id"/>
@@ -79,7 +161,9 @@
         <field name="carrier_id"/>
         <field name="ruta_id"/>
         <field name="load_id"/>
-        <field name="state"/>
+        <field name="hora_llegada" optional="show"/>
+        <field name="hora_inicio_real" optional="show"/>
+        <field name="state" widget="badge"/>
       </list>
     </field>
   </record>
