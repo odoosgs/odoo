@@ -5,11 +5,9 @@
     <field name="name">custodia.asignacion.list</field>
     <field name="model">custodia.asignacion</field>
     <field name="arch" type="xml">
-      <!-- Odoo 18/19 standard uses <list> instead of <tree> -->
       <list editable="bottom" multi_edit="1">
         <field name="service_id"/>
         <field name="notes" optional="show"/>
-        <!-- x2many fields require widgets to be usable in list views -->
         <field name="employee_ids" widget="many2many_tags_avatar" optional="show"/>
         <field name="vehicle_ids" widget="many2many_tags" optional="show"/>
         <field name="candado_ids" widget="many2many_tags" optional="hide"/>
@@ -48,7 +46,7 @@
     </field>
   </record>
 
-  <!-- Acción -->
+  <!-- Acción de Ventana -->
   <record id="action_custodia_asignacion" model="ir.actions.act_window">
     <field name="name">Asignaciones de Custodia</field>
     <field name="res_model">custodia.asignacion</field>
@@ -59,11 +57,4 @@
       </p>
     </field>
   </record>
-
-  <!-- Menú -->
-  <menuitem id="menu_custodia_asignacion"
-            name="Asignaciones"
-            parent="menu_custodia_root"
-            action="action_custodia_asignacion"
-            sequence="10"/>
 </odoo>
